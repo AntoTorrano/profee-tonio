@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Las 3 formas de la cuadrática — Profee Tonio</title>
+<meta name="description" content="Jugá con los deslizadores y mirá cómo la forma polinómica, canónica y factorizada describen la MISMA parábola. Profee Tonio — matemática del CBC.">
+<meta property="og:title" content="Las 3 formas de la cuadrática — Profee Tonio">
+<meta property="og:description" content="Movés un deslizador y ves qué cambia en la parábola. Polinómica, canónica y factorizada, en vivo.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://www.geogebra.org">
+<style>
+  :root{
+    --azul:#2563EB;
+    --azul-claro:#60A5FA;
+    --naranja:#F59E0B;
+    --verde:#10B981;
+    --verde-claro:#34D399;
+    --navy:#0F2A43;
+    --navy-2:#16395A;
+    --navy-3:#1E4467;
+    --claro:#EAF1FF;
+    --texto:#F8FAFC;
+    --texto-suave:#B9CBE0;
+    --radio:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--navy);
+    background-image:radial-gradient(1200px 600px at 50% -10%, #1B4570 0%, var(--navy) 60%);
+    color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+    padding:0 0 40px;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 0;}
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:16px;}
+  .marca{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--texto-suave);font-weight:700;
+  }
+  .marca .punto{width:9px;height:9px;border-radius:50%;background:var(--naranja);display:inline-block;}
+  h1{
+    font-size:clamp(22px,5.6vw,32px);line-height:1.15;margin:8px 0 6px;font-weight:800;
+    letter-spacing:-.01em;
+  }
+  h1 .hi{color:var(--azul-claro);}
+  .bajada{margin:0;color:var(--texto-suave);font-size:clamp(13px,3.5vw,15px);line-height:1.5;}
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 14px;
+  }
+  .tab{
+    appearance:none;border:1px solid var(--navy-3);background:var(--navy-2);color:var(--texto-suave);
+    padding:12px 6px;border-radius:12px;font-size:clamp(12px,3.3vw,15px);font-weight:700;
+    cursor:pointer;transition:.15s;font-family:inherit;line-height:1.2;
+  }
+  .tab small{display:block;font-weight:500;font-size:11px;opacity:.75;margin-top:3px;}
+  .tab:hover{border-color:var(--azul);}
+  .tab[aria-selected="true"]{
+    background:var(--azul);border-color:var(--azul);color:#fff;
+    box-shadow:0 6px 18px rgba(37,99,235,.35);
+  }
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--navy-2);border:1px solid var(--navy-3);border-radius:var(--radio);
+    padding:16px;margin-bottom:14px;
+  }
+  .card h2{
+    margin:0 0 10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--texto-suave);font-weight:700;
+  }
+
+  /* ---------- fórmula ---------- */
+  .formula{
+    text-align:center;font-size:clamp(20px,6.2vw,30px);font-weight:700;
+    font-family:"Cambria Math",Georgia,"Times New Roman",serif;
+    padding:6px 0 2px;line-height:1.35;word-break:break-word;
+  }
+  .formula .v{color:var(--naranja);}
+  .pista{
+    margin:10px 0 0;text-align:center;color:var(--texto-suave);
+    font-size:clamp(12px,3.4vw,14px);line-height:1.5;
+  }
+  .pista b{color:var(--verde-claro);font-weight:700;}
+
+  /* ---------- applet ---------- */
+  .grafico{padding:10px;background:var(--navy-2);}
+  #ggb{
+    border-radius:10px;overflow:hidden;background:#fff;min-height:260px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #ggb .cargando{color:#64748B;font-size:14px;padding:40px 20px;text-align:center;}
+  .acciones{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
+  .btn{
+    appearance:none;border:1px solid var(--navy-3);background:transparent;color:var(--texto-suave);
+    padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+    transition:.15s;
+  }
+  .btn:hover{border-color:var(--naranja);color:var(--naranja);}
+
+  /* ---------- sliders ---------- */
+  .fila{display:flex;align-items:center;gap:12px;margin:0 0 16px;}
+  .fila:last-child{margin-bottom:0;}
+  .simbolo{
+    flex:0 0 auto;width:86px;font-family:"Cambria Math",Georgia,serif;font-size:17px;font-weight:700;
+  }
+  .simbolo .letra{color:var(--naranja);white-space:nowrap;}
+  .simbolo sub{font-size:.68em;}
+  .simbolo .val{display:block;font-size:13px;color:var(--texto);opacity:.85;font-weight:600;font-family:inherit;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;flex:1 1 auto;width:100%;height:34px;background:transparent;
+    cursor:pointer;margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px;border-radius:999px;background:linear-gradient(90deg,var(--navy-3),var(--navy-3));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;
+    background:var(--naranja);border:3px solid var(--navy-2);margin-top:-10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:var(--navy-3);}
+  input[type=range]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:var(--naranja);border:3px solid var(--navy-2);
+  }
+  input[type=range]:focus-visible{outline:2px solid var(--azul-claro);outline-offset:4px;border-radius:8px;}
+
+  /* ---------- datos ---------- */
+  .datos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .dato{
+    background:rgba(255,255,255,.04);border-radius:12px;padding:10px 8px;text-align:center;
+    border:1px solid transparent;
+  }
+  .dato .et{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-suave);font-weight:700;}
+  .dato .n{display:block;margin-top:5px;font-size:clamp(13px,3.6vw,16px);font-weight:700;
+    font-family:"Cambria Math",Georgia,serif;word-break:break-word;}
+  .dato.vert{border-color:rgba(245,158,11,.45);} .dato.vert .n{color:var(--naranja);}
+  .dato.raiz{border-color:rgba(52,211,153,.45);} .dato.raiz .n{color:var(--verde-claro);}
+  .dato.orde{border-color:rgba(96,165,250,.45);} .dato.orde .n{color:var(--azul-claro);}
+
+  /* ---------- equivalencias ---------- */
+  .eq{display:flex;flex-direction:column;gap:8px;}
+  .eq .linea{
+    display:flex;align-items:baseline;gap:10px;padding:10px 12px;border-radius:10px;
+    background:rgba(255,255,255,.04);
+  }
+  .eq .linea.activa{background:rgba(37,99,235,.18);box-shadow:inset 0 0 0 1px rgba(96,165,250,.4);}
+  .eq .nom{flex:0 0 auto;width:88px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--texto-suave);font-weight:700;}
+  .eq .exp{font-family:"Cambria Math",Georgia,serif;font-size:clamp(14px,4vw,18px);font-weight:600;
+    word-break:break-word;}
+  .eq .exp.gris{font-family:inherit;font-size:13px;font-weight:500;color:var(--texto-suave);}
+  .remate{
+    margin:12px 0 0;text-align:center;font-size:13px;color:var(--texto-suave);line-height:1.5;
+  }
+  .remate b{color:var(--texto);}
+
+  /* ---------- footer ---------- */
+  footer{text-align:center;margin-top:22px;padding-top:18px;border-top:1px solid var(--navy-3);}
+  footer p{margin:0 0 12px;color:var(--texto-suave);font-size:14px;line-height:1.5;}
+  .redes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .red{
+    text-decoration:none;color:#fff;background:var(--azul);padding:11px 18px;border-radius:999px;
+    font-weight:700;font-size:14px;transition:.15s;
+  }
+  .red.alt{background:transparent;border:1px solid var(--navy-3);color:var(--texto-suave);}
+  .red:hover{transform:translateY(-1px);}
+  .chico{margin-top:16px;font-size:11px;color:#6E88A6;}
+  .oculto{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="marca"><span class="punto"></span>Profee Tonio · CBC UBA</div>
+    <h1>Las 3 formas de la <span class="hi">función cuadrática</span></h1>
+    <p class="bajada">Es la <b>misma parábola</b> escrita de tres maneras. Movés un deslizador y mirás qué cambia.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Forma de la cuadrática">
+    <button class="tab" role="tab" id="tab-pol" data-modo="pol" aria-selected="true">Polinómica<small>ax² + bx + c</small></button>
+    <button class="tab" role="tab" id="tab-can" data-modo="can" aria-selected="false">Canónica<small>a(x − X<sub>v</sub>)² + Y<sub>v</sub></small></button>
+    <button class="tab" role="tab" id="tab-fac" data-modo="fac" aria-selected="false">Factorizada<small>a(x − X<sub>1</sub>)(x − X<sub>2</sub>)</small></button>
+  </nav>
+
+  <div class="card">
+    <div class="formula" id="formula">f(x) = x² − 2x − 3</div>
+    <p class="pista" id="pista"></p>
+  </div>
+
+  <div class="card grafico">
+    <div id="ggb"><div class="cargando">Cargando el gráfico…</div></div>
+    <div class="acciones">
+      <button class="btn" id="btn-centrar" type="button">Centrar la vista</button>
+      <button class="btn" id="btn-reset" type="button">Reiniciar valores</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Deslizadores</h2>
+    <div id="grupo-pol">
+      <div class="fila">
+        <div class="simbolo"><span class="letra">a</span> = <span class="val" id="v-a1">1</span></div>
+        <input type="range" id="s-a1" min="-3" max="3" step="0.1" value="1" aria-label="coeficiente a">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">b</span> = <span class="val" id="v-b1">−2</span></div>
+        <input type="range" id="s-b1" min="-8" max="8" step="0.1" value="-2" aria-label="coeficiente b">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">c</span> = <span class="val" id="v-c1">−3</span></div>
+        <input type="range" id="s-c1" min="-8" max="8" step="0.1" value="-3" aria-label="coeficiente c">
+      </div>
+    </div>
+    <div id="grupo-can" class="oculto">
+      <div class="fila">
+        <div class="simbolo"><span class="letra">a</span> = <span class="val" id="v-a2">1</span></div>
+        <input type="range" id="s-a2" min="-3" max="3" step="0.1" value="1" aria-label="coeficiente a">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">X<sub>v</sub></span> = <span class="val" id="v-h2">1</span></div>
+        <input type="range" id="s-h2" min="-6" max="6" step="0.1" value="1" aria-label="Xv, abscisa del vértice">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">Y<sub>v</sub></span> = <span class="val" id="v-k2">−4</span></div>
+        <input type="range" id="s-k2" min="-6" max="6" step="0.1" value="-4" aria-label="Yv, ordenada del vértice">
+      </div>
+    </div>
+    <div id="grupo-fac" class="oculto">
+      <div class="fila">
+        <div class="simbolo"><span class="letra">a</span> = <span class="val" id="v-a3">1</span></div>
+        <input type="range" id="s-a3" min="-3" max="3" step="0.1" value="1" aria-label="coeficiente a">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">X<sub>1</sub></span> = <span class="val" id="v-p3">−1</span></div>
+        <input type="range" id="s-p3" min="-6" max="6" step="0.1" value="-1" aria-label="X1, primera raíz">
+      </div>
+      <div class="fila">
+        <div class="simbolo"><span class="letra">X<sub>2</sub></span> = <span class="val" id="v-q3">3</span></div>
+        <input type="range" id="s-q3" min="-6" max="6" step="0.1" value="3" aria-label="X2, segunda raíz">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lo que se lee en el gráfico</h2>
+    <div class="datos">
+      <div class="dato vert"><span class="et">Vértice</span><span class="n" id="d-vert">(1 ; −4)</span></div>
+      <div class="dato raiz"><span class="et">Raíces</span><span class="n" id="d-raiz">−1 y 3</span></div>
+      <div class="dato orde"><span class="et">Ord. al origen</span><span class="n" id="d-orde">−3</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>La misma parábola, en las 3 formas</h2>
+    <div class="eq">
+      <div class="linea" id="eq-pol"><span class="nom">Polinómica</span><span class="exp" id="e-pol"></span></div>
+      <div class="linea" id="eq-can"><span class="nom">Canónica</span><span class="exp" id="e-can"></span></div>
+      <div class="linea" id="eq-fac"><span class="nom">Factorizada</span><span class="exp" id="e-fac"></span></div>
+    </div>
+    <p class="remate">Cambiá lo que cambies: <b>las tres expresiones siempre describen la misma curva</b>. Elegís la forma según qué dato necesitás leer sin hacer cuentas.</p>
+  </div>
+
+  <footer>
+    <p>Si esto te ordenó la cabeza, en mi cuenta explico todo el CBC así: <b>gráfico primero, fórmula después</b>.</p>
+    <div class="redes">
+      <a class="red" href="https://www.instagram.com/profee_tonio/" target="_blank" rel="noopener">Seguime en Instagram</a>
+      <a class="red alt" href="https://www.tiktok.com/@profee_tonio" target="_blank" rel="noopener">TikTok</a>
+      <a class="red alt" href="https://www.youtube.com/@Profee_tonio" target="_blank" rel="noopener">YouTube</a>
+    </div>
+    <p class="chico">Hecho con GeoGebra · Profee Tonio — la matemática del CBC que se ve.</p>
+  </footer>
+</div>
+
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============ estado ============ */
+  var INICIAL = {
+    pol:{a:1,  b:-2, c:-3},
+    can:{a:1,  h:1,  k:-4},
+    fac:{a:1,  p:-1, q:3}
+  };
+  var st = JSON.parse(JSON.stringify(INICIAL));
+  var modo = "pol";
+  var api = null;
+
+  var PISTAS = {
+    pol:'<b>c</b> es la ordenada al origen (donde corta el eje y). <b>a</b> abre, cierra y da vuelta la parábola. <b>b</b> no se lee directo: mové b y mirá cómo el vértice se desplaza en diagonal.',
+    can:'Esta forma te <b>regala el vértice</b>: es exactamente (X<sub>v</sub> ; Y<sub>v</sub>). Mové X<sub>v</sub> y la parábola va a los costados; mové Y<sub>v</sub> y sube o baja.',
+    fac:'Esta forma te <b>regala las raíces</b>: X<sub>1</sub> y X<sub>2</sub> son los puntos donde toca el eje x. Ojo: solo existe si la parábola corta al eje x.'
+  };
+
+  /* ============ helpers numéricos y de texto ============ */
+  function red(n){ var r = Math.round(n*100)/100; if(Object.is(r,-0)) r = 0; return r; }
+  function fmt(n){
+    var r = red(n);
+    return String(r).replace("-","−").replace(".", ",");
+  }
+  function lead(a){
+    if(red(a) === 1) return "";
+    if(red(a) === -1) return "−";
+    return fmt(a);
+  }
+  function termino(v, vari){
+    var r = red(v);
+    if(r === 0) return "";
+    var signo = r > 0 ? " + " : " − ";
+    var abs = Math.abs(r);
+    var coef = (vari && abs === 1) ? "" : fmt(abs);
+    return signo + coef + vari;
+  }
+  function binomio(h){
+    var r = red(h);
+    if(r === 0) return "x";
+    return "(x " + (r > 0 ? "− " : "+ ") + fmt(Math.abs(r)) + ")";
+  }
+  function expPol(a,b,c){ return lead(a) + "x²" + termino(b,"x") + termino(c,""); }
+  function expCan(a,h,k){
+    var base = (red(h) === 0) ? "x²" : binomio(h) + "²";
+    return lead(a) + base + termino(k,"");
+  }
+  function expFac(a,r1,r2){ return lead(a) + binomio(r1) + binomio(r2); }
+
+  /* ============ coeficientes canónicos (a,b,c) del modo activo ============ */
+  function abc(){
+    var s;
+    if(modo === "pol"){ s = st.pol; return {a:s.a, b:s.b, c:s.c}; }
+    if(modo === "can"){ s = st.can; return {a:s.a, b:-2*s.a*s.h, c:s.a*s.h*s.h + s.k}; }
+    s = st.fac; return {a:s.a, b:-s.a*(s.p + s.q), c:s.a*s.p*s.q};
+  }
+
+  /* ============ GeoGebra ============ */
+  var OBJ = {
+    pol:{f:"f", V:"Vf", R:["Rf1","Rf2"], Y:"Yf", nums:["a1","b1","c1"]},
+    can:{f:"g", V:"Vg", R:["Rg1","Rg2"], Y:"Yg", nums:["a2","h2","k2"]},
+    fac:{f:"u", V:"Vu", R:["Ru1","Ru2"], Y:"Yu", nums:["a3","p3","q3"]}
+  };
+
+  var COMANDOS = [
+    "a1=1","b1=-2","c1=-3",
+    "f(x)=a1*x^2+b1*x+c1",
+    "Vf=(-b1/(2*a1), c1-b1^2/(4*a1))",
+    "Rf1=((-b1-sqrt(b1^2-4*a1*c1))/(2*a1),0)",
+    "Rf2=((-b1+sqrt(b1^2-4*a1*c1))/(2*a1),0)",
+    "Yf=(0,c1)",
+    "a2=1","h2=1","k2=-4",
+    "g(x)=a2*(x-h2)^2+k2",
+    "Vg=(h2,k2)",
+    "Rg1=(h2-sqrt(-k2/a2),0)",
+    "Rg2=(h2+sqrt(-k2/a2),0)",
+    "Yg=(0,a2*h2^2+k2)",
+    "a3=1","p3=-1","q3=3",
+    "u(x)=a3*(x-p3)*(x-q3)",
+    "Vu=((p3+q3)/2, -a3*(q3-p3)^2/4)",
+    "Ru1=(p3,0)","Ru2=(q3,0)",
+    "Yu=(0,a3*p3*q3)"
+  ].join("\n");
+
+  function medidas(){
+    var cont = document.getElementById("ggb");
+    var w = Math.max(260, Math.round(cont.clientWidth || 320));
+    var h = Math.round(Math.min(Math.max(w * 0.78, 280), 430));
+    return {w:w, h:h};
+  }
+
+  function centrar(){
+    if(!api) return;
+    var m = medidas();
+    var ry = 7.5;
+    var rx = ry * (m.w / m.h);
+    try{ api.setCoordSystem(-rx, rx, -ry, ry); }catch(e){}
+  }
+
+  function estilar(){
+    // números auxiliares: fuera de la vista
+    ["a1","b1","c1","a2","h2","k2","a3","p3","q3"].forEach(function(n){
+      try{ api.setVisible(n, false); }catch(e){}
+    });
+    Object.keys(OBJ).forEach(function(k){
+      var o = OBJ[k];
+      try{
+        api.setColor(o.f, 37, 99, 235);
+        api.setLineThickness(o.f, 7);
+        api.setLabelVisible(o.f, false);
+        api.setFixed(o.f, true, false);
+
+        api.setColor(o.V, 245, 158, 11);
+        api.setPointSize(o.V, 7);
+        api.setLabelVisible(o.V, false);
+        api.setFixed(o.V, true, false);
+
+        o.R.forEach(function(r){
+          api.setColor(r, 52, 211, 153);
+          api.setPointSize(r, 6);
+          api.setLabelVisible(r, false);
+          api.setFixed(r, true, false);
+        });
+
+        api.setColor(o.Y, 96, 165, 250);
+        api.setPointSize(o.Y, 6);
+        api.setLabelVisible(o.Y, false);
+        api.setFixed(o.Y, true, false);
+      }catch(e){}
+    });
+  }
+
+  function mostrarModo(){
+    if(!api) return;
+    Object.keys(OBJ).forEach(function(k){
+      var o = OBJ[k];
+      var ver = (k === modo);
+      [o.f, o.V, o.Y].concat(o.R).forEach(function(n){
+        try{ api.setVisible(n, ver); }catch(e){}
+      });
+    });
+  }
+
+  function empujarValores(){
+    if(!api) return;
+    try{
+      api.setRepaintingActive(false);
+      if(modo === "pol"){
+        api.setValue("a1", st.pol.a); api.setValue("b1", st.pol.b); api.setValue("c1", st.pol.c);
+      }else if(modo === "can"){
+        api.setValue("a2", st.can.a); api.setValue("h2", st.can.h); api.setValue("k2", st.can.k);
+      }else{
+        api.setValue("a3", st.fac.a); api.setValue("p3", st.fac.p); api.setValue("q3", st.fac.q);
+      }
+    }catch(e){}
+    try{ api.setRepaintingActive(true); }catch(e){}
+  }
+
+  var parametros = {
+    appName: "graphing",
+    width: 800,
+    height: 500,
+    language: "es",
+    showToolBar: false,
+    showAlgebraInput: false,
+    showMenuBar: false,
+    showResetIcon: false,
+    showZoomButtons: true,
+    enableRightClick: false,
+    enableLabelDrags: false,
+    enableShiftDragZoom: true,
+    showSuggestionButtons: false,
+    showStartTooltip: false,
+    algebraInputPosition: "bottom",
+    preventFocus: true,
+    errorDialogsActive: false,
+    perspective: "G",
+    appletOnLoad: function(_api){
+      api = _api;
+      try{
+        api.setErrorDialogsActive(false);
+        api.evalCommand(COMANDOS);
+        api.setGridVisible(true);
+        api.setAxesVisible(true, true);
+        estilar();
+        mostrarModo();
+        empujarValores();
+        centrar();
+        api.setUndoPoint();
+      }catch(e){}
+      var carga = document.querySelector("#ggb .cargando");
+      if(carga) carga.remove();
+    }
+  };
+
+  function inyectar(){
+    var m = medidas();
+    parametros.width = m.w;
+    parametros.height = m.h;
+    var applet = new GGBApplet(parametros, true);
+    applet.inject("ggb");
+  }
+
+  /* ============ UI ============ */
+  function pintarFormula(){
+    var t;
+    if(modo === "pol"){
+      t = "f(x) = " + expPol(st.pol.a, st.pol.b, st.pol.c);
+    }else if(modo === "can"){
+      t = "f(x) = " + expCan(st.can.a, st.can.h, st.can.k);
+    }else{
+      t = "f(x) = " + expFac(st.fac.a, st.fac.p, st.fac.q);
+    }
+    document.getElementById("formula").textContent = t;
+    document.getElementById("pista").innerHTML = PISTAS[modo];
+  }
+
+  function pintarDatos(){
+    var k = abc();
+    var xv = -k.b / (2*k.a);
+    var yv = k.c - (k.b*k.b) / (4*k.a);
+    document.getElementById("d-vert").textContent = "(" + fmt(xv) + " ; " + fmt(yv) + ")";
+
+    var disc = k.b*k.b - 4*k.a*k.c;
+    var txtR;
+    if(disc > 1e-9){
+      var r1 = (-k.b - Math.sqrt(disc)) / (2*k.a);
+      var r2 = (-k.b + Math.sqrt(disc)) / (2*k.a);
+      txtR = fmt(Math.min(r1,r2)) + " y " + fmt(Math.max(r1,r2));
+    }else if(disc > -1e-9){
+      txtR = fmt(xv) + " (doble)";
+    }else{
+      txtR = "no tiene";
+    }
+    document.getElementById("d-raiz").textContent = txtR;
+    document.getElementById("d-orde").textContent = fmt(k.c);
+  }
+
+  function pintarEquivalencias(){
+    var k = abc();
+    var xv = -k.b / (2*k.a);
+    var yv = k.c - (k.b*k.b) / (4*k.a);
+    var disc = k.b*k.b - 4*k.a*k.c;
+
+    document.getElementById("e-pol").textContent = expPol(k.a, k.b, k.c);
+    document.getElementById("e-pol").className = "exp";
+    document.getElementById("e-can").textContent = expCan(k.a, xv, yv);
+    document.getElementById("e-can").className = "exp";
+
+    var fac = document.getElementById("e-fac");
+    if(disc >= -1e-9){
+      var d = Math.sqrt(Math.max(disc, 0));
+      var r1 = (-k.b - d) / (2*k.a);
+      var r2 = (-k.b + d) / (2*k.a);
+      fac.textContent = expFac(k.a, r1, r2);
+      fac.className = "exp";
+    }else{
+      fac.textContent = "No existe en ℝ: la parábola no corta al eje x.";
+      fac.className = "exp gris";
+    }
+
+    ["pol","can","fac"].forEach(function(m){
+      document.getElementById("eq-" + m).classList.toggle("activa", m === modo);
+    });
+  }
+
+  function refrescar(){
+    pintarFormula();
+    pintarDatos();
+    pintarEquivalencias();
+    empujarValores();
+  }
+
+  /* ---- deslizadores ---- */
+  var SLIDERS = [
+    {id:"s-a1", val:"v-a1", modo:"pol", campo:"a", noCero:true},
+    {id:"s-b1", val:"v-b1", modo:"pol", campo:"b"},
+    {id:"s-c1", val:"v-c1", modo:"pol", campo:"c"},
+    {id:"s-a2", val:"v-a2", modo:"can", campo:"a", noCero:true},
+    {id:"s-h2", val:"v-h2", modo:"can", campo:"h"},
+    {id:"s-k2", val:"v-k2", modo:"can", campo:"k"},
+    {id:"s-a3", val:"v-a3", modo:"fac", campo:"a", noCero:true},
+    {id:"s-p3", val:"v-p3", modo:"fac", campo:"p"},
+    {id:"s-q3", val:"v-q3", modo:"fac", campo:"q"}
+  ];
+
+  SLIDERS.forEach(function(s){
+    var el = document.getElementById(s.id);
+    el.addEventListener("input", function(){
+      var v = parseFloat(el.value);
+      if(s.noCero && Math.abs(v) < 0.05){
+        v = (st[s.modo][s.campo] < 0) ? -0.1 : 0.1;
+        el.value = v;
+      }
+      st[s.modo][s.campo] = v;
+      document.getElementById(s.val).textContent = fmt(v);
+      refrescar();
+    });
+  });
+
+  function sincronizarSliders(){
+    SLIDERS.forEach(function(s){
+      var v = st[s.modo][s.campo];
+      document.getElementById(s.id).value = v;
+      document.getElementById(s.val).textContent = fmt(v);
+    });
+  }
+
+  /* ---- tabs ---- */
+  var ALIAS = {pol:"polinomica", can:"canonica", fac:"factorizada"};
+  function cambiarModo(nuevo, tocarHash){
+    modo = nuevo;
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.setAttribute("aria-selected", String(t.dataset.modo === modo));
+    });
+    ["pol","can","fac"].forEach(function(m){
+      document.getElementById("grupo-" + m).classList.toggle("oculto", m !== modo);
+    });
+    mostrarModo();
+    refrescar();
+    if(tocarHash !== false){
+      try{ history.replaceState(null, "", "#" + ALIAS[modo]); }catch(e){}
+    }
+  }
+
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){ cambiarModo(t.dataset.modo); });
+  });
+
+  document.getElementById("btn-centrar").addEventListener("click", centrar);
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    st = JSON.parse(JSON.stringify(INICIAL));
+    sincronizarSliders();
+    refrescar();
+    centrar();
+  });
+
+  /* ---- resize ---- */
+  var t = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(t);
+    t = setTimeout(function(){
+      if(!api) return;
+      var m = medidas();
+      try{ api.setSize(m.w, m.h); }catch(e){}
+      centrar();
+    }, 250);
+  });
+
+  /* ---- arranque ---- */
+  var hash = (location.hash || "").replace("#","").toLowerCase();
+  Object.keys(ALIAS).forEach(function(k){ if(ALIAS[k] === hash) modo = k; });
+
+  document.querySelectorAll(".tab").forEach(function(tb){
+    tb.setAttribute("aria-selected", String(tb.dataset.modo === modo));
+  });
+  ["pol","can","fac"].forEach(function(m){
+    document.getElementById("grupo-" + m).classList.toggle("oculto", m !== modo);
+  });
+  sincronizarSliders();
+  pintarFormula();
+  pintarDatos();
+  pintarEquivalencias();
+  inyectar();
+})();
+</script>
+</body>
+</html>
