@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Recurso interactivo de límites para Análisis Matemático A (66) del CBC UBA — Profee Tonio.">
-<style>*{}img{max-width:100%}[hidden]{display:none!important}html{color-scheme:light dark}body{margin:0}</style>
+<style>img{max-width:100%}[hidden]{display:none!important}html{color-scheme:light dark}body{margin:0}</style>
 <title>Límites que se ven</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
@@ -78,10 +78,16 @@ section{scroll-margin-top:72px}
 .navlinks a{
   font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;
   text-decoration:none;color:var(--ink-2);padding:7px 11px;border-radius:8px;border:1px solid transparent;
+  white-space:nowrap;
 }
 .navlinks a:hover{color:var(--ink);background:var(--soft);border-color:var(--line)}
 .navlinks a.on{color:var(--accent);border-color:var(--line-2);background:var(--soft)}
-@media(max-width:560px){.navlinks a{padding:6px 8px;font-size:11px}}
+@media(max-width:560px){.navlinks a{padding:6px 9px;font-size:11px}}
+@media(max-width:430px){
+  .brand .bname{display:none}
+  .navlinks a{font-size:10.5px;padding:6px 8px;letter-spacing:.01em}
+  .nav-in{height:52px}
+}
 
 /* ---------- hero ---------- */
 .hero{padding:52px 0 8px}
@@ -249,6 +255,33 @@ footer{padding:34px 0 60px;color:var(--ink-3);font-size:14px;border-top:1px soli
 .foot-in{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ---------- mobile ---------- */
+@media(max-width:520px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  .hero{padding:36px 0 4px}
+  .lead{font-size:17.5px}
+  .lab-body{padding:13px}
+  .lab-head{padding:11px 13px;gap:8px}
+  .lab-foot{padding:11px 13px;font-size:14px}
+  .readout{gap:14px}
+  .readout strong{font-size:18px}
+  .readout span{font-size:10px;letter-spacing:.05em}
+  th,td{padding:8px 9px;font-size:13.5px}
+  .note{padding:13px 14px}
+  .statement{padding:13px 10px;font-size:17px}
+  .ex-head{padding:15px 14px;gap:11px}
+  .ex-body{padding:15px 14px}
+  .ex-n{width:32px;height:32px;font-size:14px}
+  .ex-title{font-size:17.5px}
+  .step{grid-template-columns:22px minmax(0,1fr);gap:10px}
+  .step-x{font-size:15px}
+  .map-row>div{padding:12px 14px}
+  .cta-in{padding:22px 18px}
+  .seg button{padding:8px 11px;font-size:13.5px}
+  .chip{font-size:12.5px;padding:5px 9px}
+}
+@media(max-width:760px){ .trio{gap:12px} }
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 </style>
 
@@ -256,7 +289,7 @@ footer{padding:34px 0 60px;color:var(--ink-3);font-size:14px;border-top:1px soli
 <body>
 <nav class="nav">
   <div class="wrap nav-in">
-    <a class="brand" href="#top"><span class="mark">∞</span>Profee&nbsp;Tonio</a>
+    <a class="brand" href="#top"><span class="mark">∞</span><span class="bname">Profee&nbsp;Tonio</span></a>
     <div class="navlinks">
       <a href="#idea" class="on">01 · La idea</a>
       <a href="#ejercicios">02 · Ejercicios</a>
@@ -761,44 +794,51 @@ window.MathJax = {
   var figures = [];
   function fig(canvas, cfg){
     if(!canvas) return null;
-    var f = { c:canvas, cfg:cfg, ctx:canvas.getContext('2d') };
+    var baseH = parseInt(canvas.getAttribute('height'),10) || 220;
+    canvas.style.height = baseH+'px';
+    var f = { c:canvas, cfg:cfg, ctx:canvas.getContext('2d'), baseH:baseH };
     f.render = function(){
       var c=f.c, ctx=f.ctx, col=C();
-      var w = c.clientWidth || c.parentNode.clientWidth || 320;
-      var h = parseInt(c.getAttribute('height'),10) || 220;
+      var w = c.clientWidth || (c.parentNode ? c.parentNode.clientWidth : 0) || 0;
+      if(w < 60) return;                       // todavia oculto: no dibujar
+      var narrow = w < 430;
+      var h = f.baseH;
       var dpr = Math.min(window.devicePixelRatio||1, 2);
       c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
       c.style.height = h+'px';
       ctx.setTransform(dpr,0,0,dpr,0,0);
       ctx.clearRect(0,0,w,h);
-      var m = cfg.margin || {l:42,r:16,t:14,b:26};
+      var m0 = cfg.margin || {l:42,r:16,t:14,b:26};
+      var m = narrow ? {l:Math.max(30,m0.l-8), r:Math.max(10,m0.r-5), t:Math.max(10,m0.t-4), b:Math.max(22,m0.b-4)} : m0;
       var xs=cfg.xmin, xe=cfg.xmax, ys=cfg.ymin, ye=cfg.ymax;
       var pw = w-m.l-m.r, ph = h-m.t-m.b;
       var api = {
-        ctx:ctx, col:col, w:w, h:h, m:m,
+        ctx:ctx, col:col, w:w, h:h, m:m, narrow:narrow,
         X:function(x){ return m.l + (x-xs)/(xe-xs)*pw; },
         Y:function(y){ return m.t + (1-(y-ys)/(ye-ys))*ph; }
       };
       api.clip = function(fn){ ctx.save(); ctx.beginPath(); ctx.rect(m.l,m.t,pw,ph); ctx.clip(); fn(); ctx.restore(); };
       api.frame = function(opt){
         opt = opt||{};
+        var xt = (narrow && opt.xticksN) ? opt.xticksN : opt.xticks;
+        var yt = (narrow && opt.yticksN) ? opt.yticksN : opt.yticks;
         ctx.save();
         // grid
         ctx.strokeStyle = col.grid; ctx.lineWidth = 1;
         var i;
-        if(opt.xticks) for(i=0;i<opt.xticks.length;i++){ var gx=Math.round(api.X(opt.xticks[i]))+.5; ctx.beginPath(); ctx.moveTo(gx,m.t); ctx.lineTo(gx,m.t+ph); ctx.stroke(); }
-        if(opt.yticks) for(i=0;i<opt.yticks.length;i++){ var gy=Math.round(api.Y(opt.yticks[i]))+.5; ctx.beginPath(); ctx.moveTo(m.l,gy); ctx.lineTo(m.l+pw,gy); ctx.stroke(); }
+        if(xt) for(i=0;i<xt.length;i++){ var gx=Math.round(api.X(xt[i]))+.5; ctx.beginPath(); ctx.moveTo(gx,m.t); ctx.lineTo(gx,m.t+ph); ctx.stroke(); }
+        if(yt) for(i=0;i<yt.length;i++){ var gy=Math.round(api.Y(yt[i]))+.5; ctx.beginPath(); ctx.moveTo(m.l,gy); ctx.lineTo(m.l+pw,gy); ctx.stroke(); }
         // axes
         ctx.strokeStyle = col.line2; ctx.lineWidth = 1.4;
         var y0 = api.Y(0), x0 = api.X(0);
         if(ys<=0 && ye>=0){ ctx.beginPath(); ctx.moveTo(m.l,Math.round(y0)+.5); ctx.lineTo(m.l+pw,Math.round(y0)+.5); ctx.stroke(); }
         if(xs<=0 && xe>=0){ ctx.beginPath(); ctx.moveTo(Math.round(x0)+.5,m.t); ctx.lineTo(Math.round(x0)+.5,m.t+ph); ctx.stroke(); }
         // tick labels
-        ctx.fillStyle = col.ink3; ctx.font = '500 11px "IBM Plex Mono", monospace';
+        ctx.fillStyle = col.ink3; ctx.font = '500 '+(narrow?10:11)+'px "IBM Plex Mono", monospace';
         ctx.textAlign='center'; ctx.textBaseline='top';
-        if(opt.xticks) for(i=0;i<opt.xticks.length;i++){ var t=opt.xticks[i]; if(opt.hideZero&&t===0) continue; ctx.fillText(fmt(t), api.X(t), m.t+ph+6); }
+        if(xt) for(i=0;i<xt.length;i++){ var t=xt[i]; if(opt.hideZero&&t===0) continue; ctx.fillText(fmt(t), api.X(t), m.t+ph+6); }
         ctx.textAlign='right'; ctx.textBaseline='middle';
-        if(opt.yticks) for(i=0;i<opt.yticks.length;i++){ var u=opt.yticks[i]; if(opt.hideZero&&u===0) continue; ctx.fillText(fmt(u), m.l-8, api.Y(u)); }
+        if(yt) for(i=0;i<yt.length;i++){ var u=yt[i]; if(opt.hideZero&&u===0) continue; ctx.fillText(fmt(u), m.l-6, api.Y(u)); }
         ctx.restore();
       };
       api.curve = function(f2, opt){
@@ -830,7 +870,7 @@ window.MathJax = {
       };
       api.hole = function(x,y,color){
         ctx.save();
-        ctx.beginPath(); ctx.arc(api.X(x),api.Y(y),5.5,0,6.2832);
+        ctx.beginPath(); ctx.arc(api.X(x),api.Y(y),narrow?5:5.5,0,6.2832);
         ctx.fillStyle = col.surface; ctx.fill();
         ctx.lineWidth=2.4; ctx.strokeStyle = color||col.accent; ctx.stroke();
         ctx.restore();
@@ -865,7 +905,7 @@ window.MathJax = {
       };
       api.tag = function(px,py,text,color,align){
         ctx.save();
-        ctx.font='600 12px "IBM Plex Mono", monospace';
+        ctx.font='600 '+(narrow?11:12)+'px "IBM Plex Mono", monospace';
         ctx.textAlign=align||'left'; ctx.textBaseline='middle';
         var tw=ctx.measureText(text).width;
         var bx = align==='right' ? px-tw-7 : px-4;
@@ -892,7 +932,7 @@ window.MathJax = {
   var senderoFig = fig(document.getElementById('cvSendero'), {
     xmin:0, xmax:1, ymin:0, ymax:1, margin:{l:22,r:22,t:30,b:30},
     draw:function(a){
-      var ctx=a.ctx, col=a.col, y=a.h/2 + 6;
+      var ctx=a.ctx, col=a.col, y=a.h/2 + 6, narrow=a.narrow;
       var x0=a.X(0), x1=a.X(1);
       // track
       ctx.save();
@@ -917,11 +957,11 @@ window.MathJax = {
       ctx.beginPath(); ctx.arc(a.X(sen.pos), y, 9, 0, 6.2832);
       ctx.fillStyle=col.calc; ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle=col.surface; ctx.stroke();
       // labels
-      ctx.font='600 12px "IBM Plex Mono", monospace'; ctx.fillStyle=col.ink3;
+      ctx.font='600 '+(narrow?11:12)+'px "IBM Plex Mono", monospace'; ctx.fillStyle=col.ink3;
       ctx.textAlign='left'; ctx.textBaseline='alphabetic';
       ctx.fillText('inicio', x0, y-30);
       ctx.textAlign='right'; ctx.fillStyle=col.no;
-      ctx.fillText('el final (nunca)', x1, y-32);
+      ctx.fillText(a.narrow?'el final':'el final (nunca)', x1, y-32);
       ctx.restore();
     }
   });
@@ -965,7 +1005,7 @@ window.MathJax = {
   var acercFig = fig(document.getElementById('cvAcerc'), {
     xmin:1.85, xmax:4.6, ymin:1.6, ymax:6.2, margin:{l:40,r:18,t:18,b:28},
     draw:function(a){
-      a.frame({xticks:[2,2.5,3,3.5,4,4.5], yticks:[2,3,4,5,6]});
+      a.frame({xticks:[2,2.5,3,3.5,4,4.5], xticksN:[2,3,4], yticks:[2,3,4,5,6]});
       a.curve(f1,{color:a.col.accent});
       var x=acX(), y=f1(x);
       a.hline(3, a.col.ok, 'L = 3');
@@ -1060,17 +1100,17 @@ window.MathJax = {
   fig(document.getElementById('cvE1'), {
     xmin:1.85, xmax:5, ymin:1.5, ymax:6.2, margin:{l:36,r:16,t:16,b:26},
     draw:function(a){
-      a.frame({xticks:[2,3,4,5], yticks:[2,3,4,5,6]});
+      a.frame({xticks:[2,3,4,5], yticks:[2,3,4,5,6], yticksN:[2,4,6]});
       a.curve(f1,{color:a.col.accent});
       a.hline(3,a.col.ok,'y = 3');
       a.hole(3,3,a.col.accent);
-      a.tag(a.X(3)+8, a.Y(5.7), 'agujero en x = 3', a.col.ink2);
+      a.tag(a.X(3)+8, a.Y(5.7), a.narrow?'agujero' : 'agujero en x = 3', a.col.ink2);
     }
   });
   fig(document.getElementById('cvE2'), {
     xmin:0, xmax:10, ymin:0.15, ymax:0.55, margin:{l:44,r:16,t:16,b:26},
     draw:function(a){
-      a.frame({xticks:[0,2,4,6,8,10], yticks:[0.2,0.25,0.3,0.4,0.5]});
+      a.frame({xticks:[0,2,4,6,8,10], xticksN:[0,4,8], yticks:[0.2,0.25,0.3,0.4,0.5], yticksN:[0.25,0.5]});
       a.curve(function(x){ return 1/(Math.sqrt(Math.max(x,0))+2); },{color:a.col.accent, from:0.02});
       a.hline(0.25,a.col.ok,'y = 0,25');
       a.hole(4,0.25,a.col.accent);
@@ -1080,10 +1120,10 @@ window.MathJax = {
   fig(document.getElementById('cvE3'), {
     xmin:0.8, xmax:20, ymin:0, ymax:2, margin:{l:36,r:16,t:16,b:26},
     draw:function(a){
-      a.frame({xticks:[5,10,15,20], yticks:[0.5,1,1.5,2]});
+      a.frame({xticks:[5,10,15,20], xticksN:[5,10,20], yticks:[0.5,1,1.5,2]});
       a.curve(function(x){ return (3*x*x*x-2*x+5)/(6*x*x*x+x*x-1); },{color:a.col.accent});
       a.hline(0.5,a.col.ok,'y = 1/2');
-      a.tag(a.X(14), a.Y(1.75), 'asíntota horizontal', a.col.ink2);
+      a.tag(a.X(a.narrow?8:14), a.Y(1.78), a.narrow?'asíntota':'asíntota horizontal', a.col.ink2);
     }
   });
   fig(document.getElementById('cvE4'), {
@@ -1103,7 +1143,7 @@ window.MathJax = {
       a.frame({xticks:[-1,0,1,2,3], yticks:[2,6,10,14], hideZero:true});
       a.curve(function(x){ return (x+2)/((x-1)*(x-1)); },{color:a.col.accent, skip:1});
       a.vline(1,a.col.no,'x = 1');
-      a.tag(a.X(2.1), a.Y(12.4), 'trepa por los dos lados', a.col.ink2);
+      a.tag(a.X(a.narrow?1.35:2.1), a.Y(12.6), a.narrow?'sube por los dos lados':'trepa por los dos lados', a.col.ink2);
     }
   });
 
@@ -1141,7 +1181,14 @@ window.MathJax = {
   acUpdate(); latUpdate(); renderAll(); onScroll();
 
   var rt;
-  window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(renderAll,120); });
+  function onResize(){ clearTimeout(rt); rt=setTimeout(renderAll,120); }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function(){ setTimeout(renderAll,250); });
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(onResize);
+    for(var q=0;q<figures.length;q++){ if(figures[q].c.parentNode) ro.observe(figures[q].c.parentNode); }
+  }
+  setTimeout(renderAll, 400);
   var mq = window.matchMedia('(prefers-color-scheme: dark)');
   if(mq.addEventListener) mq.addEventListener('change', renderAll);
   new MutationObserver(renderAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
