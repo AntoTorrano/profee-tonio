@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>De la secante a la tangente</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// La derivada como límite de pendientes: m(h) = [f(x₀+h) − f(x₀)] / h  →  f'(x₀) cuando h → 0.
+const f = x => .18 * x ** 3 - .9 * x + 1.6, df = x => .54 * x * x - .9;
+let animando = null;
+Sim({
+  titulo: "De la secante a la tangente",
+  vista: { x: [-3.4, 3.6], y: [-1.6, 5.2], igual: true },
+  controles: [
+    { id: "x0", et: "x₀ (el punto)", min: -2.6, max: 2.6, paso: .01, valor: -.4, fmt: v => v.toFixed(2) },
+    { id: "h", et: "h (la distancia al segundo punto)", min: -2.4, max: 2.4, paso: .01, valor: 1.9, fmt: v => v.toFixed(2) },
+  ],
+  acciones: [{ et: "Achicar h hasta 0", fn: s => { const h0 = s.v.h || 1.9, t0 = performance.now();
+      cancelAnimationFrame(animando); const paso = () => { const k = Math.min(1, (performance.now() - t0) / 2600), h = h0 * (1 - k) ** 2.2;
+        s.fijar("h", +h.toFixed(3)); if (k < 1) animando = requestAnimationFrame(paso); }; paso(); } }],
+  lecturas: [
+    { id: "ms", et: "pendiente de la secante", tipo: "calc" },
+    { id: "mt", et: "f'(x₀) (tangente)", tipo: "res" },
+    { id: "dif", et: "diferencia", ancho: true },
+  ],
+  nota: "La secante une dos puntos de la curva. Achicá <b>h</b>: el segundo punto se acerca al primero y la secante <b>gira hasta pegarse a la tangente</b>. Esa pendiente límite es la derivada.",
+  dibujar(g, v) {
+    const C = g.C, x0 = v.x0, h = Math.abs(v.h) < 1e-3 ? 1e-3 : v.h, x1 = x0 + h;
+    const y0 = f(x0), y1 = f(x1), ms = (y1 - y0) / h, mt = df(x0);
+    g.cuadricula(.5); g.ejes({ marcas: 1, x: "x", y: "y" });
+    g.recta(mt, y0 - mt * x0, { color: C.verde, dash: [7, 6], ancho: 2, alfa: .85 });
+    g.recta(ms, y0 - ms * x0, { color: C.amarillo, ancho: 2.4, glow: true, alfaGlow: .25 });
+    g.curva(f);
+    // Δx y Δy: el triángulo de la pendiente
+    g.linea(x0, y0, x1, y0, { color: C.amarillo, dash: [3, 4], alfa: .7 }); g.linea(x1, y0, x1, y1, { color: C.amarillo, dash: [3, 4], alfa: .7 });
+    if (Math.abs(h) > .25) { g.texto("h", (x0 + x1) / 2, y0, { dy: 13, alin: "center", color: C.amarillo, tam: 12 }); g.texto("Δy", x1, (y0 + y1) / 2, { dx: 8, color: C.amarillo, tam: 12 }); }
+    g.punto(x0, y0, { r: 6 }); g.punto(x1, y1, { color: C.amarillo, r: 5 });
+    return { ms: ms.toFixed(3), mt: mt.toFixed(3), dif: Math.abs(ms - mt).toFixed(4) };
+  },
+});
+</script>
+</body>
+</html>

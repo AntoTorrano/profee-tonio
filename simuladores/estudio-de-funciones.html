@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudio de funciones</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// f(x) = a·x³ + b·x² + c·x + d. Donde f' > 0 la función crece; donde f' = 0 hay candidatos a extremo;
+// donde f'' cambia de signo, punto de inflexión. f' se dibuja abajo, finita, para leerlas juntas.
+const fmt = x => (Math.abs(x) < 5e-4 ? 0 : x).toFixed(2);
+Sim({
+  titulo: "Estudio de funciones: f, f' y extremos",
+  vista: { x: [-4.2, 4.2], y: [-4.6, 4.6], igual: true },
+  controles: [
+    { id: "a", et: "a (x³)", min: -1, max: 1, paso: .05, valor: .35, fmt: fmt },
+    { id: "b", et: "b (x²)", min: -2, max: 2, paso: .05, valor: .3, fmt: fmt },
+    { id: "c", et: "c (x)", min: -4, max: 4, paso: .05, valor: -2.4, fmt: fmt },
+    { id: "d", et: "d", min: -3, max: 3, paso: .05, valor: .4, fmt: fmt },
+  ],
+  botones: [{ id: "deriv", opciones: [["si", "Ver f'(x)"], ["no", "Ocultar f'"]], valor: "si" }],
+  lecturas: [
+    { id: "max", et: "máximo local", tipo: "calc" },
+    { id: "min", et: "mínimo local", tipo: "calc" },
+    { id: "inf", et: "inflexión", tipo: "res" },
+    { id: "f", et: "f(x)", ancho: true },
+  ],
+  nota: "La franja <b>verde</b> sobre el eje marca dónde la función crece. En los <b>extremos</b> (amarillo) la tangente es horizontal: justo ahí f'(x) cruza el cero. Donde f' es positiva la curva sube; donde es negativa, baja.",
+  dibujar(g, v) {
+    const C = g.C, { a, b, c, d } = v;
+    const f = x => a * x ** 3 + b * x * x + c * x + d, df = x => 3 * a * x * x + 2 * b * x + c;
+    g.cuadricula(1); g.ejes({ marcas: 1, x: "x", y: "y" });
+    // intervalos de crecimiento: franjas suaves sobre el eje
+    const n = 240, x0 = g.vista.x0, x1 = g.vista.x1;
+    for (let i = 0; i < n; i++) { const xa = x0 + (x1 - x0) * i / n, xb = x0 + (x1 - x0) * (i + 1) / n;
+      if (df((xa + xb) / 2) > 0) g.poligono([[xa, -.07], [xb, -.07], [xb, .07], [xa, .07]], { relleno: C.verde, alfa: .55 }); }
+    if (v.deriv === "si") g.curva(df, { color: C.cian, colorGlow: C.cian, ancho: 1.8, alfaGlow: .25 });
+    g.curva(f);
+    // críticos: 3a x² + 2b x + c = 0
+    const res = { max: "no tiene", min: "no tiene", inf: "no tiene" };
+    let crit = [];
+    if (Math.abs(a) < 1e-9) { if (Math.abs(b) > 1e-9) crit = [-c / (2 * b)]; }
+    else { const D = 4 * b * b - 12 * a * c; if (D > 0) crit = [(-2 * b - Math.sqrt(D)) / (6 * a), (-2 * b + Math.sqrt(D)) / (6 * a)]; }
+    crit.forEach(x => {
+      const curv = 6 * a * x + 2 * b; if (Math.abs(curv) < 1e-9) return;
+      const tipo = curv < 0 ? "max" : "min";
+      g.linea(x - .7, f(x), x + .7, f(x), { color: C.amarillo, ancho: 2 });
+      g.punto(x, f(x), { color: C.amarillo, r: 6 });
+      g.texto(tipo === "max" ? "máx" : "mín", x, f(x), { dy: tipo === "max" ? -18 : 18, alin: "center", color: C.amarillo, tam: 12, peso: 700 });
+      res[tipo] = `(${fmt(x)}; ${fmt(f(x))})`;
+    });
+    if (Math.abs(a) > 1e-9) { const xi = -b / (3 * a); g.punto(xi, f(xi), { color: C.verde, r: 5 }); res.inf = `(${fmt(xi)}; ${fmt(f(xi))})`; }
+    res.f = `${fmt(a)}x³ ${b < 0 ? "−" : "+"} ${fmt(Math.abs(b))}x² ${c < 0 ? "−" : "+"} ${fmt(Math.abs(c))}x ${d < 0 ? "−" : "+"} ${fmt(Math.abs(d))}`;
+    if (v.deriv === "si") g.texto("f'(x)", g.vista.x1, df(g.vista.x1 - .3), { dx: -8, alin: "right", color: C.cian, tam: 12 });
+    return res;
+  },
+});
+</script>
+</body>
+</html>

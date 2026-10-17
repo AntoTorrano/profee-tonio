@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sumas de Riemann</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Área bajo f en [a, b] aproximada con n rectángulos. Con más rectángulos, la suma converge a la integral.
+// f(x) = sen(1,4x)/2 + 0,15x + 1,5 (siempre positiva en el intervalo)
+// primitiva F(x) = −cos(1,4x)/2,8 + 0,075x² + 1,5x
+const f = x => Math.sin(1.4 * x) / 2 + .15 * x + 1.5, F = x => -Math.cos(1.4 * x) / 2.8 + .075 * x * x + 1.5 * x;
+Sim({
+  titulo: "Sumas de Riemann",
+  vista: { x: [-.5, 6.6], y: [-.6, 3.6], igual: true },
+  botones: [{ id: "tipo", et: "altura de cada rectángulo", opciones: [["izq", "Izquierda"], ["med", "Punto medio"], ["der", "Derecha"]], valor: "izq" }],
+  controles: [
+    { id: "n", et: "n (cantidad de rectángulos)", min: 1, max: 80, paso: 1, valor: 6, fmt: v => v },
+    { id: "a", et: "a (desde)", min: 0, max: 3, paso: .05, valor: .4, fmt: v => v.toFixed(2) },
+    { id: "b", et: "b (hasta)", min: 3.2, max: 6.2, paso: .05, valor: 5.6, fmt: v => v.toFixed(2) },
+  ],
+  lecturas: [
+    { id: "s", et: "suma de rectángulos", tipo: "calc" },
+    { id: "i", et: "integral exacta", tipo: "res" },
+    { id: "e", et: "error", ancho: true },
+  ],
+  nota: "Subí <b>n</b>: los rectángulos se afinan y la suma se acerca a la integral. El punto medio converge mucho más rápido que izquierda o derecha.",
+  dibujar(g, v) {
+    const C = g.C, { a, b, n } = v, dx = (b - a) / n;
+    g.cuadricula(.5); g.ejes({ marcas: 1, x: "x", y: "y" });
+    let S = 0;
+    for (let i = 0; i < n; i++) {
+      const xi = a + i * dx, xm = v.tipo === "izq" ? xi : v.tipo === "der" ? xi + dx : xi + dx / 2, h = f(xm);
+      S += h * dx;
+      g.poligono([[xi, 0], [xi + dx, 0], [xi + dx, h], [xi, h]], { relleno: C.neon, alfa: .16, borde: C.neonSuave, alfaBorde: n > 40 ? .25 : .7, ancho: 1 });
+      if (n <= 24) g.punto(xm, h, { color: C.amarillo, r: 3.2, glow: false });
+    }
+    g.curva(f);
+    g.linea(a, 0, a, f(a), { dash: [4, 5] }); g.linea(b, 0, b, f(b), { dash: [4, 5] });
+    g.texto("a", a, 0, { dy: 16, alin: "center", color: C.texto, peso: 700 }); g.texto("b", b, 0, { dy: 16, alin: "center", color: C.texto, peso: 700 });
+    g.texto("f(x) = sen(1,4x)/2 + 0,15x + 1,5", -.4, 3.45, { mono: true, tam: 13, color: C.medio });
+    const I = F(b) - F(a);
+    return { s: S.toFixed(4), i: I.toFixed(4), e: Math.abs(S - I).toFixed(4) + `  (${(Math.abs(S - I) / I * 100).toFixed(2)} %)` };
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistemas de 2×2</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Cada ecuación a·x + b·y = c es una recta. Resolver el sistema es encontrar dónde se cortan:
+// una solución (se cortan), ninguna (paralelas) o infinitas (la misma recta).
+const n = x => (Math.abs(x) < 5e-3 ? 0 : x).toFixed(1).replace(/\.0$/, "");
+const ec = (a, b, c) => `${n(a)}x ${b < 0 ? "−" : "+"} ${n(Math.abs(b))}y = ${n(c)}`;
+function recta(g, a, b, c, o) {
+  if (Math.abs(b) > 1e-6) g.recta(-a / b, c / b, o);
+  else if (Math.abs(a) > 1e-6) g.linea(c / a, g.vista.y0, c / a, g.vista.y1, o);
+}
+Sim({
+  titulo: "Sistemas de ecuaciones de 2×2",
+  vista: { x: [-6, 6], y: [-4.5, 4.5], igual: true },
+  controles: [
+    { id: "a1", et: "a₁", min: -4, max: 4, paso: .1, valor: 1, fmt: n }, { id: "b1", et: "b₁", min: -4, max: 4, paso: .1, valor: 1, fmt: n }, { id: "c1", et: "c₁", min: -6, max: 6, paso: .1, valor: 3, fmt: n },
+    { id: "a2", et: "a₂", min: -4, max: 4, paso: .1, valor: 2, fmt: n }, { id: "b2", et: "b₂", min: -4, max: 4, paso: .1, valor: -1, fmt: n }, { id: "c2", et: "c₂", min: -6, max: 6, paso: .1, valor: 0, fmt: n },
+  ],
+  lecturas: [
+    { id: "e1", et: "ecuación 1", ancho: true }, { id: "e2", et: "ecuación 2", ancho: true },
+    { id: "det", et: "determinante", tipo: "calc" }, { id: "sol", et: "solución", tipo: "res" },
+    { id: "tipo", et: "el sistema es", ancho: true },
+  ],
+  nota: "Si el <b>determinante</b> es 0 las rectas son paralelas: o no se cortan nunca (incompatible) o son la misma (infinitas soluciones). Probá a₂ = 2, b₂ = 2 y movés c₂.",
+  dibujar(g, v) {
+    const C = g.C, { a1, b1, c1, a2, b2, c2 } = v;
+    g.cuadricula(1); g.ejes({ marcas: 1, x: "x", y: "y" });
+    const det = a1 * b2 - a2 * b1;
+    recta(g, a1, b1, c1, { color: C.core, ancho: 2.6, glow: true });
+    recta(g, a2, b2, c2, { color: C.cian, ancho: 2.6, glow: true, colorGlow: C.cian });
+    let sol = "—", tipo;
+    if (Math.abs(det) > 1e-6) {
+      const x = (c1 * b2 - c2 * b1) / det, y = (a1 * c2 - a2 * c1) / det;
+      g.punto(x, y, { color: C.verde, r: 7 }); g.texto(`(${n(x)}; ${n(y)})`, x, y, { dx: 12, dy: -14, color: C.verde, mono: true, tam: 12, fondo: true });
+      sol = `x = ${x.toFixed(2)}, y = ${y.toFixed(2)}`; tipo = "Compatible determinado: una solución";
+    } else {
+      const mismo = Math.abs(a1 * c2 - a2 * c1) < 1e-6 && Math.abs(b1 * c2 - b2 * c1) < 1e-6;
+      tipo = mismo ? "Compatible indeterminado: infinitas soluciones" : "Incompatible: no tiene solución"; sol = mismo ? "infinitas" : "ninguna";
+    }
+    return { e1: ec(a1, b1, c1), e2: ec(a2, b2, c2), det: det.toFixed(2), sol, tipo };
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Conocé a los profesores de Profee Tonio.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Profesor · Profee Tonio">
+<meta property="og:description" content="Conocé a los profesores de Profee Tonio.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Profesor · Profee Tonio</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .nav { position: fixed; }
+
+  /* ================================================ cabecera: foto con aro, nombre, bio, acciones */
+  .perfil { position: relative; overflow: hidden; padding: 132px var(--gutter) 72px; }
+  .perfil .cuadricula { -webkit-mask-image: radial-gradient(ellipse 50% 70% at 25% 45%, #000 10%, transparent 75%); mask-image: radial-gradient(ellipse 50% 70% at 25% 45%, #000 10%, transparent 75%); }
+  .perfil-dentro { position: relative; max-width: var(--ancho-max); margin: 0 auto; display: grid; grid-template-columns: 340px 1fr; gap: 72px; align-items: center; }
+  .migas { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--texto-tenue); margin-bottom: -32px; }
+  .migas a { color: var(--texto-suave); text-decoration: none; }
+  .retrato { position: relative; width: 340px; height: 340px; }
+  .retrato::before { content: ""; position: absolute; inset: -40px; border-radius: 50%; background: radial-gradient(circle, rgb(46 120 255 / .32), rgb(46 120 255 / .08) 50%, transparent 70%); }
+  .retrato img { position: relative; width: 100%; height: 100%; border-radius: 50%; display: block;
+    box-shadow: 0 0 0 2px var(--neon), 0 0 0 12px rgb(4 6 13 / .9), 0 0 0 13.5px rgb(127 182 255 / .35), 0 0 60px rgb(46 120 255 / .45); }
+  .perfil .rotulo { margin-bottom: 14px; }
+  .perfil .display { font-size: 96px; line-height: .9; text-shadow: 0 0 40px rgb(46 120 255 / .25); }
+  .perfil .materias { margin-top: 18px; }
+  .perfil .bio { margin-top: 22px; max-width: 620px; font-size: 20px; line-height: 1.55; color: var(--texto-medio); }
+  .acciones { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+
+  /* ================================================ videos: verticales, como en las historias */
+  .galeria { max-width: var(--ancho-max); margin: 0 auto; padding: 24px var(--gutter) 0; box-sizing: content-box; }
+  .galeria + .galeria { padding-top: var(--e-9); }
+  .galeria .cab { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 26px; }
+  .videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
+  .video { position: relative; aspect-ratio: 9 / 16; border-radius: var(--r-grande); overflow: hidden; background: var(--superficie);
+    box-shadow: inset 0 0 0 1px var(--linea); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+  .video:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px var(--neon), 0 0 32px rgb(46 120 255 / .25); }
+  .video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .video .play { all: unset; cursor: pointer; position: absolute; inset: 0; display: grid; place-items: end center; padding-bottom: 22px; box-sizing: border-box;
+    background: linear-gradient(180deg, transparent 60%, rgb(4 6 13 / .75)); }
+  .video .play span { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgb(4 6 13 / .55);
+    backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 24px rgb(46 120 255 / .55); color: var(--neon-core); }
+  .video .play:focus-visible span { outline: 2px solid var(--neon-core); outline-offset: 4px; }
+  .video .dur { position: absolute; right: 16px; bottom: 16px; font: 600 12px/1 var(--f-mono); color: var(--texto); pointer-events: none; }
+  .video.reproduciendo .play, .video.reproduciendo .dur { display: none; }
+
+  /* ================================================ ¿cómo es una clase con…? */
+  .como-dentro { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 64px; align-items: start; padding: 48px 56px; border-radius: var(--r-hero);
+    background: radial-gradient(ellipse 70% 120% at 0% 0%, rgb(46 120 255 / .14), transparent 65%), var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
+  .como .h2 { font-size: 46px; line-height: 1; text-wrap: balance; }
+  .como-texto { display: grid; gap: 16px; font-size: 18px; line-height: 1.65; color: var(--texto-medio); }
+  .como-texto .pendiente { min-height: 150px; font-size: 13px; }
+  @media (max-width: 640px) { .como-dentro { grid-template-columns: 1fr; gap: 20px; padding: 28px 22px; } .como .h2 { font-size: 32px; } }
+
+  /* ================================================ fotos (sin uso por ahora) */
+  .fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .fotos img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--r-grande); display: block; box-shadow: inset 0 0 0 1px var(--linea); }
+  .fotos .pendiente { grid-column: 1 / -1; height: 140px; border-radius: var(--r-grande); font-size: 13px; }
+
+  /* ================================================ cierre */
+  .cierre { max-width: var(--ancho-max); margin: var(--e-9) auto 0; padding: 0 var(--gutter) var(--e-10); box-sizing: content-box; }
+  .cierre .panel { padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+    background: radial-gradient(ellipse 60% 120% at 100% 0%, rgb(46 120 255 / .18), transparent 70%), var(--superficie); box-shadow: inset 0 0 0 1px rgb(46 120 255 / .35); }
+  .cierre .h2 { font-size: 40px; }
+
+  @media (max-width: 640px) {
+    .perfil { padding: 92px var(--gutter) 48px; }
+    .perfil-dentro { grid-template-columns: 1fr; gap: 36px; justify-items: center; text-align: center; }
+    .migas { margin-bottom: 0; justify-content: center; }
+    .retrato { width: 220px; height: 220px; }
+    .perfil .display { font-size: 60px; }
+    .perfil .bio { font-size: 17px; }
+    .acciones { justify-content: center; }
+    .videos { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fotos { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cierre .panel { flex-direction: column; align-items: flex-start; padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+<div data-nav="clases"></div>
+
+<section class="perfil" id="perfil">
+  <div class="cuadricula"></div>
+  <div class="perfil-dentro">
+    <nav class="migas"><a href="clases.html">Clases</a><span>/</span><a href="clases.html#profesores">Los profesores</a><span>/</span><span id="miga"></span></nav>
+    <div class="retrato"><img id="foto" alt=""></div>
+    <div>
+      <div class="rotulo">Profesor</div>
+      <h1 class="display" id="nombre"></h1>
+      <p class="meta materias" id="materias"></p>
+      <p class="bio" id="bio"></p>
+      <div class="acciones">
+        <a class="btn btn-primario" id="agendar" href="https://wa.me/5491172796576" target="_blank" rel="noopener">Agendar por WhatsApp</a>
+        <a class="btn btn-secundario" id="opciones">Ver las opciones →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="galeria" id="videos">
+  <div class="cab"><h2 class="h2">Videos</h2></div>
+  <div class="videos" id="lista-videos"></div>
+</section>
+
+<section class="galeria como" id="como">
+  <div class="como-dentro">
+    <h2 class="h2" id="como-titulo"></h2>
+    <div class="como-texto" id="como-texto"></div>
+  </div>
+</section>
+
+<section class="cierre">
+  <div class="panel">
+    <h2 class="h2" id="cierre-titulo"></h2>
+    <a class="btn btn-primario" id="agendar-2" href="https://wa.me/5491172796576" target="_blank" rel="noopener">Agendar por WhatsApp</a>
+  </div>
+</section>
+
+<div data-pie></div>
+
+<script src="js/comun.js"></script>
+<script src="js/profesores.js"></script>
+<script>
+// página genérica: todo sale de PROFES (profesores.js). ?p=simon · ?p=tonio
+const id = new URLSearchParams(location.search).get("p");
+const p = PROFES[id] || PROFES.tonio;
+document.title = p.nombre + " · Profee Tonio";
+document.getElementById("miga").textContent = p.nombre;
+document.getElementById("foto").src = p.foto;
+document.getElementById("foto").alt = p.nombre;
+document.getElementById("nombre").textContent = p.nombre;
+document.getElementById("materias").textContent = p.materias;
+document.getElementById("bio").textContent = p.bio;
+document.getElementById("opciones").href = p.opciones;
+// "Profee Tonio" va completo (con sólo la primera palabra quedaba "¿Agendamos con Profee?")
+document.getElementById("cierre-titulo").textContent = "¿Agendamos con " + (p.nombre === "Profee Tonio" ? p.nombre : p.nombre.split(" ")[0]) + "?";
+const msjProfe = id === "simon"
+  ? "Hola Tonio! Vi la página de Simón y quiero agendar una clase con él. Tema: ___"
+  : "Hola Tonio! Vi tu página de profesor y quiero agendar una clase con vos. Tema: ___";
+["agendar", "agendar-2"].forEach(i => { const b = document.getElementById(i); b.insertAdjacentHTML("afterbegin", ICONO.wa + " "); b.href = wa(msjProfe); });
+
+// videos: portada + botón de play; al tocar, se reproduce ahí mismo con sus controles
+const play = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const lv = document.getElementById("lista-videos");
+lv.innerHTML = p.videos.map(v => `<div class="video">
+    <video src="${v.src}" poster="${v.poster}" preload="metadata" playsinline></video>
+    <button class="play" aria-label="Reproducir"><span>${play}</span></button>
+    <span class="dur"></span>
+  </div>`).join("");
+if (!p.videos.length) document.getElementById("videos").remove();
+lv.querySelectorAll(".video").forEach(c => {
+  const v = c.querySelector("video");
+  v.addEventListener("loadedmetadata", () => { const s = Math.round(v.duration); c.querySelector(".dur").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; });
+  c.querySelector(".play").addEventListener("click", () => {
+    lv.querySelectorAll("video").forEach(o => { if (o !== v) o.pause(); });
+    c.classList.add("reproduciendo"); v.controls = true; v.play();
+  });
+});
+
+// ¿cómo es una clase con…? — el texto de cada profesor vive en PROFES (profesores.js)
+const corto = p.nombre === "Profee Tonio" ? "Tonio" : p.nombre.split(" ")[0];
+document.getElementById("como-titulo").textContent = `¿Cómo es una clase con ${corto}?`;
+document.getElementById("como-texto").innerHTML = p.clase && p.clase.length
+  ? p.clase.map(t => `<p>${t}</p>`).join("")
+  : `<span class="pendiente">[TEXTO: CÓMO ES UNA CLASE CON ${corto.toUpperCase()}]</span>`;
+</script>
+</body>
+</html>

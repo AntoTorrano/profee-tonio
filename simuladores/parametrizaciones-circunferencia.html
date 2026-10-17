@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica 1 · Ej. 1 — Parametrizaciones de la circunferencia</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#15181d; --muted:#61697a;
+  --line:#dfe3ea; --grid:#e9edf3; --axis:#9aa3b2;
+  --accent:#2f6df0; --accent2:#e0562f; --ok:#1a8a5a; --bad:#d13b3b;
+  --code:#f0f2f7; --trace:rgba(47,109,240,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1116; --panel:#161b22; --ink:#e6e9ef; --muted:#9aa3b2;
+    --line:#262d38; --grid:#1c222c; --axis:#5b6575;
+    --accent:#6a9bff; --accent2:#ff8f66; --ok:#4bd39a; --bad:#ff6b6b;
+    --code:#1b212b; --trace:rgba(106,155,255,.4);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:22px 24px 6px;max-width:1240px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);font-size:14px;max-width:78ch}
+.wrap{max-width:1240px;margin:0 auto;padding:14px 24px 44px;
+  display:grid;grid-template-columns:minmax(340px,1fr) 400px;gap:18px;align-items:start}
+@media (max-width:960px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+canvas{width:100%;height:auto;display:block;border-radius:10px;touch-action:none}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{flex:1;min-width:120px;padding:9px 10px;border:1px solid var(--line);background:transparent;
+  color:var(--muted);border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s}
+.tab:hover{border-color:var(--accent)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row label{font-size:13px;color:var(--muted);min-width:74px}
+input[type=range]{flex:1;accent-color:var(--accent)}
+.val{font-variant-numeric:tabular-nums;font-size:13px;min-width:74px;text-align:right;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+button.act{padding:8px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);
+  border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600}
+button.act:hover{border-color:var(--accent);color:var(--accent)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.chk:first-of-type{border-top:none}
+.badge{flex:none;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;
+  font-size:13px;font-weight:700;color:#fff;margin-top:1px}
+.badge.ok{background:var(--ok)} .badge.bad{background:var(--bad)}
+.chk b{display:block;font-size:13.5px}
+.chk span{font-size:12.5px;color:var(--muted)}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.8px;
+  background:var(--code);padding:1px 5px;border-radius:5px}
+.hint{font-size:12.8px;color:var(--muted);margin-top:10px}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.readout div{background:var(--code);border-radius:9px;padding:8px 10px}
+.readout small{display:block;color:var(--muted);font-size:11.5px;letter-spacing:.03em}
+.readout b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;font-weight:600}
+.note{border-left:3px solid var(--accent2);padding:8px 0 8px 12px;margin:12px 0;
+  font-size:13.5px;color:var(--ink)}
+.note b{color:var(--accent2)}
+ul{margin:8px 0;padding-left:20px;font-size:13.8px} li{margin:5px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Práctica 1 · Ejercicio 1 — Dos parametrizaciones de la circunferencia</h1>
+  <p>La misma curva <b>C</b> (la circunferencia de radio r), dos recorridos distintos. Mové el
+  parámetro t y mirá qué condición de la Definición 1.5 se rompe. La curva nunca cambia: cambia
+  la forma de recorrerla.</p>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab on" data-p="1">σ₁(t) = (r cos 2πt, r sen 2πt)</button>
+        <button class="tab" data-p="2">σ₂(t) = (r cos 4πt, r sen 4πt)</button>
+        <button class="tab" data-p="3">Las dos a la vez</button>
+      </div>
+      <canvas id="cv" width="820" height="560"></canvas>
+      <div class="row">
+        <label for="t">t</label>
+        <input type="range" id="t" min="0" max="1" step="0.001" value="0.17">
+        <span class="val" id="tv">0.170</span>
+      </div>
+      <div class="row">
+        <label for="r">radio r</label>
+        <input type="range" id="r" min="0.5" max="2.5" step="0.01" value="1.5">
+        <span class="val" id="rv">1.50</span>
+      </div>
+      <div class="row">
+        <button class="act" id="play">▶ animar</button>
+        <button class="act" id="reset">↺ reiniciar traza</button>
+        <label style="min-width:auto"><input type="checkbox" id="vel" checked> vector velocidad</label>
+      </div>
+      <p class="hint">La flecha es σ′(t): su <b>dirección</b> es la del movimiento y su <b>módulo</b> es
+      la rapidez. Fijate que en σ₂ la flecha mide el doble — misma curva, el doble de rápido.</p>
+    </div>
+
+    <div class="card">
+      <h2>Ángulo recorrido θ(t) — acá se ve por qué σ₂ no es inyectiva</h2>
+      <canvas id="cv2" width="820" height="300"></canvas>
+      <p class="hint">Cada valor de θ módulo 2π es un punto de la circunferencia. σ₁ sube de
+      0 a 2π: cada punto una sola vez. σ₂ sube de 0 a 4π: la banda horizontal se cruza <b>dos
+      veces</b>, y esos dos t distintos dan el <b>mismo</b> punto de C.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Estado en el instante t</h2>
+      <div class="readout">
+        <div><small>σ(t)</small><b id="pt">—</b></div>
+        <div><small>σ′(t)</small><b id="dv">—</b></div>
+        <div><small>‖σ′(t)‖ (rapidez)</small><b id="sp">—</b></div>
+        <div><small>vueltas dadas</small><b id="lap">—</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Checklist de parametrización regular (Def. 1.5)</h2>
+      <div id="checks"></div>
+      <div class="note" id="verdict"></div>
+    </div>
+
+    <div class="card">
+      <h2>La trampa del ejercicio</h2>
+      <p style="font-size:13.8px;margin:6px 0">Casi todo el mundo intenta que σ₂ falle por la
+      derivada. <b>No falla ahí.</b></p>
+      <ul>
+        <li>σ₂ es C¹: seno y coseno son C<sup>∞</sup>.</li>
+        <li>σ₂′(t) ≠ (0,0) para todo t: su módulo es constante e igual a 4πr &gt; 0.</li>
+        <li>Lo que falla es que σ₂ <b>no es biyección</b> entre el intervalo y C: recorre
+        la circunferencia dos veces. Con t = 0.1 y t = 0.6 llegás al mismo punto.</li>
+      </ul>
+      <p style="font-size:13.8px;margin:6px 0"><b>Moraleja:</b> «regular» no es una propiedad de la
+      curva sino <b>de la parametrización</b>. C es igual de suave en los dos casos; lo que es
+      malo es el recorrido.</p>
+    </div>
+
+    <div class="card">
+      <h2>Probalo vos</h2>
+      <p style="font-size:13.8px;margin:6px 0">Poné σ₂ y llevá t a <code>0.1</code>. Anotá el punto.
+      Ahora llevá t a <code>0.6</code>. ¿Qué pasó? Ese par de valores es el contraejemplo que tenés
+      que escribir en el ítem (c): dos parámetros distintos, una sola imagen.</p>
+      <p style="font-size:13.8px;margin:6px 0">Después probá el mismo truco con σ₁ y convencete de
+      que no lo podés hacer (salvo en los extremos t = 0 y t = 1, que en una curva cerrada están
+      permitidos por definición).</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const cv2=document.getElementById('cv2'), ctx2=cv2.getContext('2d');
+const tS=document.getElementById('t'), rS=document.getElementById('r');
+const tv=document.getElementById('tv'), rv=document.getElementById('rv');
+const velCB=document.getElementById('vel');
+let mode=1, t=0.17, r=1.5, playing=false, traceMax=0.17, raf=null;
+
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+
+/* ---------- geometría ---------- */
+function sigma(k,t,r){const w=(k===1?2:4)*Math.PI*t;return [r*Math.cos(w),r*Math.sin(w)]}
+function dsigma(k,t,r){const c=(k===1?2:4)*Math.PI,w=c*t;return [-r*c*Math.sin(w),r*c*Math.cos(w)]}
+
+/* ---------- canvas 1 ---------- */
+function draw(){
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2;
+  const scale=Math.min(W,H)/ (2*2.9);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=css('--panel'); ctx.fillRect(0,0,W,H);
+  const X=x=>cx+x*scale, Y=y=>cy-y*scale;
+
+  // grilla
+  ctx.strokeStyle=css('--grid'); ctx.lineWidth=1;
+  for(let g=-3;g<=3;g+=0.5){
+    ctx.beginPath();ctx.moveTo(X(g),0);ctx.lineTo(X(g),H);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,Y(g));ctx.lineTo(W,Y(g));ctx.stroke();
+  }
+  // ejes
+  ctx.strokeStyle=css('--axis'); ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,Y(0));ctx.lineTo(W,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(0),0);ctx.lineTo(X(0),H);ctx.stroke();
+
+  // la curva C (fantasma)
+  ctx.strokeStyle=css('--line'); ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(X(0),Y(0),r*scale,0,2*Math.PI);ctx.stroke();
+  ctx.fillStyle=css('--muted');ctx.font='13px ui-sans-serif';
+  ctx.fillText('C  (la curva: x²+y² = r²)', X(0)+r*scale*0.72, Y(0)-r*scale*0.78);
+
+  const modes = mode===3?[1,2]:[mode];
+  modes.forEach((k,i)=>{
+    const col = k===1?css('--accent'):css('--accent2');
+    // traza recorrida hasta t
+    ctx.strokeStyle=col; ctx.globalAlpha=.32;
+    ctx.lineWidth = k===1?9:5;
+    ctx.beginPath();
+    const N=400;
+    for(let j=0;j<=N;j++){const tt=traceMax*j/N;const p=sigma(k,tt,r);
+      j?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1]));}
+    ctx.stroke(); ctx.globalAlpha=1;
+
+    const p=sigma(k,t,r), d=dsigma(k,t,r);
+    // vector velocidad
+    if(velCB.checked){
+      const f=0.055;
+      arrow(X(p[0]),Y(p[1]),X(p[0]+d[0]*f),Y(p[1]+d[1]*f),col,3);
+      ctx.fillStyle=col;ctx.font='600 13px ui-sans-serif';
+      ctx.fillText('σ'+(k===1?'₁':'₂')+'′(t)', X(p[0]+d[0]*f)+8, Y(p[1]+d[1]*f)-6);
+    }
+    // punto
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),7,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle=css('--panel');ctx.lineWidth=2;ctx.stroke();
+  });
+
+  // en σ₂: marcar el "gemelo" t±1/2
+  if(mode===2||mode===3){
+    const tw=(t+0.5)%1, q=sigma(2,tw,r);
+    ctx.fillStyle=css('--bad');
+    ctx.beginPath();ctx.arc(X(q[0]),Y(q[1]),5,0,2*Math.PI);ctx.fill();
+    ctx.font='12px ui-sans-serif';
+    ctx.fillText('σ₂(t+½) = σ₂(t)  ⇒ no inyectiva', X(q[0])+10, Y(q[1])+4);
+  }
+}
+function arrow(x1,y1,x2,y2,col,w){
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=w;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),s=11;
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-s*Math.cos(a-0.42),y2-s*Math.sin(a-0.42));
+  ctx.lineTo(x2-s*Math.cos(a+0.42),y2-s*Math.sin(a+0.42));
+  ctx.closePath();ctx.fill();
+}
+
+/* ---------- canvas 2: theta(t) ---------- */
+function draw2(){
+  const W=cv2.width,H=cv2.height,m={l:56,r:18,t:18,b:34};
+  ctx2.clearRect(0,0,W,H);
+  ctx2.fillStyle=css('--panel');ctx2.fillRect(0,0,W,H);
+  const X=u=>m.l+u*(W-m.l-m.r), Y=v=>H-m.b-(v/(4*Math.PI))*(H-m.t-m.b);
+  ctx2.strokeStyle=css('--grid');ctx2.lineWidth=1;
+  for(let k=0;k<=4;k++){ctx2.beginPath();ctx2.moveTo(m.l,Y(k*Math.PI));ctx2.lineTo(W-m.r,Y(k*Math.PI));ctx2.stroke();}
+  ctx2.strokeStyle=css('--axis');ctx2.lineWidth=1.4;
+  ctx2.beginPath();ctx2.moveTo(m.l,H-m.b);ctx2.lineTo(W-m.r,H-m.b);ctx2.stroke();
+  ctx2.beginPath();ctx2.moveTo(m.l,m.t);ctx2.lineTo(m.l,H-m.b);ctx2.stroke();
+  ctx2.fillStyle=css('--muted');ctx2.font='12px ui-sans-serif';
+  for(let k=0;k<=4;k++)ctx2.fillText((k?k+'π':'0'),m.l-30,Y(k*Math.PI)+4);
+  ctx2.fillText('t = 0',m.l-6,H-m.b+18); ctx2.fillText('t = 1',W-m.r-20,H-m.b+18);
+  ctx2.fillText('θ',m.l-38,m.t+4);
+
+  const modes = mode===3?[1,2]:[mode];
+  modes.forEach(k=>{
+    const col=k===1?css('--accent'):css('--accent2');
+    ctx2.strokeStyle=col;ctx2.lineWidth=2.6;
+    ctx2.beginPath();ctx2.moveTo(X(0),Y(0));ctx2.lineTo(X(1),Y((k===1?2:4)*Math.PI));ctx2.stroke();
+  });
+  // banda horizontal al ángulo actual (mod 2pi)
+  const kk = mode===2?2:1;
+  const th=(kk===1?2:4)*Math.PI*t, base=th%(2*Math.PI);
+  ctx2.strokeStyle=css('--bad');ctx2.setLineDash([5,4]);ctx2.lineWidth=1.6;
+  [base,base+2*Math.PI].forEach(v=>{ if(v<=4*Math.PI){
+    ctx2.beginPath();ctx2.moveTo(m.l,Y(v));ctx2.lineTo(W-m.r,Y(v));ctx2.stroke();}});
+  ctx2.setLineDash([]);
+  // marcador de t
+  ctx2.strokeStyle=css('--muted');ctx2.setLineDash([3,3]);
+  ctx2.beginPath();ctx2.moveTo(X(t),m.t);ctx2.lineTo(X(t),H-m.b);ctx2.stroke();ctx2.setLineDash([]);
+  ctx2.fillStyle=css('--muted');
+  ctx2.fillText('mismo punto de C',W-m.r-140,Y(base)-8);
+}
+
+/* ---------- panel ---------- */
+function panel(){
+  const k = mode===2?2:1;
+  const p=sigma(k,t,r), d=dsigma(k,t,r), sp=Math.hypot(d[0],d[1]);
+  const f=n=>(n>=0?' ':'')+n.toFixed(2);
+  document.getElementById('pt').textContent='('+f(p[0])+','+f(p[1])+')';
+  document.getElementById('dv').textContent='('+f(d[0])+','+f(d[1])+')';
+  document.getElementById('sp').textContent=sp.toFixed(2)+'  = '+(k===1?'2πr':'4πr');
+  document.getElementById('lap').textContent=((k===1?1:2)*t).toFixed(2)+'  de '+(k===1?1:2);
+
+  const conds = k===1 ? [
+    [true,'σ es biyección sobre C','Inyectiva en [0,1) y σ(0)=σ(1): cada punto de la circunferencia se alcanza exactamente una vez.'],
+    [true,'σ ∈ C¹([0,1])','Componentes cos y sen: derivadas continuas en todo el intervalo.'],
+    [true,'σ′(t) ≠ (0,0) ∀t','‖σ₁′‖ = 2πr > 0 constante. Nunca frena.']
+  ] : [
+    [false,'σ es biyección sobre C','FALLA. σ₂(t) = σ₂(t+½) para todo t ∈ [0,½): cada punto se alcanza DOS veces. No es inyectiva en [0,1).'],
+    [true,'σ ∈ C¹([0,1])','Se cumple: cos y sen son C^∞.'],
+    [true,'σ′(t) ≠ (0,0) ∀t','Se cumple: ‖σ₂′‖ = 4πr > 0. Ojo: la derivada NO es el problema.']
+  ];
+  document.getElementById('checks').innerHTML = conds.map(c=>
+    '<div class="chk"><div class="badge '+(c[0]?'ok':'bad')+'">'+(c[0]?'✓':'✕')+
+    '</div><div><b>'+c[1]+'</b><span>'+c[2]+'</span></div></div>').join('');
+  document.getElementById('verdict').innerHTML = k===1
+    ? '<b>σ₁ es regular.</b> Cumple las tres condiciones, así que sirve para definir longitud de arco e integrales sobre C sin contar nada dos veces.'
+    : '<b>σ₂ NO es regular.</b> Es C¹ y con derivada no nula, pero no es biyectiva: recorre C dos veces. Si integrás longitud de arco con σ₂ te da 4πr, el doble del perímetro.';
+}
+
+function all(){draw();draw2();panel();}
+
+/* ---------- eventos ---------- */
+tS.oninput=()=>{t=+tS.value;tv.textContent=t.toFixed(3);traceMax=Math.max(traceMax,t);all()};
+rS.oninput=()=>{r=+rS.value;rv.textContent=r.toFixed(2);all()};
+velCB.onchange=all;
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=+b.dataset.p; all();});
+document.getElementById('reset').onclick=()=>{traceMax=t;all()};
+document.getElementById('play').onclick=function(){
+  playing=!playing; this.textContent=playing?'❚❚ pausar':'▶ animar';
+  if(playing){ if(t>=0.999){t=0;traceMax=0;} step(); } else cancelAnimationFrame(raf);
+};
+function step(){
+  t+=0.0035; if(t>1){t=0;traceMax=0;}
+  traceMax=Math.max(traceMax,t);
+  tS.value=t; tv.textContent=t.toFixed(3); all();
+  if(playing) raf=requestAnimationFrame(step);
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
+all();
+})();
+</script>
+</body>
+</html>

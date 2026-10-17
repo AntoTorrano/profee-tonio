@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Base de los simuladores de Profee Tonio ("modo embebido").
+   Autónomo a propósito: cada simulador funciona solo, dentro del sitio o suelto.
+   Paleta = la del sitio (02-sistema-visual.md). Convención fija:
+   azul = la función · amarillo = lo que se calcula · verde = el resultado.
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+
+:root {
+  --fondo: #04060D; --fondo-alt: #0A0E14; --superficie: #080D1A;
+  --grilla: #16233A; --linea: #1E3157; --riel: #22304A;
+  --neon: #2E78FF; --neon-alt: #33A1FF; --neon-suave: #4C7DFF; --neon-core: #7FB6FF;
+  --amarillo: #FFE14D; --verde: #34D399; --cian: #4FC3E8;
+  --texto: #F8FAFC; --texto-medio: #EDEDED; --texto-suave: #AAB6CE; --texto-tenue: #7C93C7;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--superficie); color: var(--texto); font: 15px/1.5 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* suelto (abierto en pantalla completa): lleva su propio encabezado */
+.cab { display: none; }
+.suelto .cab { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 20px; border-bottom: 1.5px solid var(--linea); background: var(--fondo); }
+.suelto .cab .t { font-weight: 700; font-size: 15px; letter-spacing: .02em; }
+.suelto .cab .marca { margin-left: auto; font: 600 12px/1 Inter, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--texto-tenue); text-decoration: none; }
+.suelto .cab .marca b { color: #60A5FA; }
+
+.sim { display: grid; grid-template-columns: 1fr 300px; height: 100%; min-height: 0; }
+.suelto .sim { height: calc(100% - 56px); }
+.lienzo { position: relative; min-height: 0; min-width: 0; }
+.lienzo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.panel { border-left: 1.5px solid var(--linea); padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+
+.rot { font: 600 11px/1 Inter, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--texto-tenue); }
+.ctrl { display: grid; gap: 9px; }
+.ctrl .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--texto-suave); }
+.ctrl .fila b { font: 600 14px/1 "JetBrains Mono", monospace; color: var(--texto); white-space: nowrap; }
+
+/* slider con la forma del simulador de marca: riel apagado, tramo recorrido en neón, perilla con halo */
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--neon) var(--p, 50%), var(--riel) var(--p, 50%)); }
+input[type=range]::-moz-range-track { height: 6px; border-radius: 6px; background: var(--riel); }
+input[type=range]::-moz-range-progress { height: 6px; border-radius: 6px; background: var(--neon); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: var(--neon-core); box-shadow: 0 0 0 7px rgb(46 120 255 / .22), 0 0 14px var(--neon); border: 0; }
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--neon-core); box-shadow: 0 0 0 7px rgb(46 120 255 / .22), 0 0 14px var(--neon); border: 0; }
+input[type=range]:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; border-radius: 8px; }
+
+.botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.botones button, .accion { all: unset; cursor: pointer; padding: 7px 11px; border-radius: 999px; font: 600 12.5px/1 Inter, sans-serif; color: var(--texto-suave); background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+.botones button:hover, .accion:hover { color: var(--texto); box-shadow: inset 0 0 0 1px var(--neon-suave); }
+.botones button.on { color: var(--fondo); background: var(--neon-core); box-shadow: 0 0 14px rgb(127 182 255 / .4); }
+.botones button:focus-visible, .accion:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+.accion { text-align: center; }
+
+.lect { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; padding-top: 14px; border-top: 1.5px solid var(--linea); }
+.lect div { display: grid; gap: 3px; }
+.lect .et { font-size: 12px; color: var(--texto-suave); }
+.lect .v { font: 600 17px/1.2 "JetBrains Mono", monospace; color: var(--texto); }
+.lect .v.calc { color: var(--amarillo); text-shadow: 0 0 12px rgb(255 225 77 / .35); }
+.lect .v.res { color: var(--verde); text-shadow: 0 0 12px rgb(52 211 153 / .35); }
+.lect .ancho { grid-column: 1 / -1; }
+.nota { font-size: 13px; line-height: 1.55; color: var(--texto-suave); }
+.nota b { color: var(--texto); font-weight: 600; }
+
+/* angosto (celular, o el hero de la home): lienzo arriba, controles abajo */
+@media (max-width: 720px) {
+  .sim { grid-template-columns: 1fr; grid-template-rows: minmax(240px, 1fr) auto; }
+  .panel { border-left: 0; border-top: 1.5px solid var(--linea); padding: 14px 16px; gap: 12px; max-height: 52%; }
+  .lect { grid-template-columns: repeat(3, 1fr); }
+}
+/* vitrina (carrusel de la home): sin textos de apoyo, controles compactos */
+.vitrina .nota, .vitrina .rot { display: none; }
+.vitrina .panel { gap: 10px; max-height: none; }
+.vitrina .lect { padding-top: 10px; }
+
+/* portada: sólo el gráfico (para la imagen de la tarjeta) */
+.portada .panel { display: none; }
+.portada .sim { grid-template-columns: 1fr; grid-template-rows: 1fr; }

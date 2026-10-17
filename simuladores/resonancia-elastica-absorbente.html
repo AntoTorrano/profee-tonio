@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía 1 – Ej. 5c · Amplitudes elástica y absorbente</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-0:#f6f6f4;
+  --surface-1:#fcfcfb;
+  --surface-2:#efefec;
+  --border:#dcdcd6;
+  --text-primary:#0b0b0b;
+  --text-secondary:#52514e;
+  --text-muted:#84837c;
+  --series-1:#2a78d6;   /* B — elástica */
+  --series-2:#eb6834;   /* A — absorbente */
+  --accent:#4a3aa7;
+  --grid:#e6e6e1;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --surface-0:#111110;
+    --surface-1:#1a1a19;
+    --surface-2:#232322;
+    --border:#33332f;
+    --text-primary:#ffffff;
+    --text-secondary:#c3c2b7;
+    --text-muted:#8b8a80;
+    --series-1:#3987e5;
+    --series-2:#d95926;
+    --accent:#9085e9;
+    --grid:#2a2a28;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --surface-0:#111110; --surface-1:#1a1a19; --surface-2:#232322; --border:#33332f;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8b8a80;
+  --series-1:#3987e5; --series-2:#d95926; --accent:#9085e9; --grid:#2a2a28;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  line-height:1.5;padding:24px 18px 64px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:1.28rem;margin:0 0 3px;letter-spacing:-.012em;font-weight:650}
+.sub{color:var(--text-secondary);font-size:.87rem;margin-bottom:20px;max-width:70ch}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;margin-bottom:14px}
+.card h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--text-muted);margin:0 0 3px;font-weight:700}
+.card .cap{font-size:.8rem;color:var(--text-secondary);margin:0 0 12px}
+canvas{width:100%;display:block;touch-action:none}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* filtros en una fila arriba */
+.filters{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--surface-1);border:1px solid var(--border);border-radius:14px;
+  padding:14px 18px;margin-bottom:14px}
+.f{flex:1 1 180px;min-width:160px}
+.f label{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:.78rem;color:var(--text-secondary);margin-bottom:6px}
+.f label b{font-weight:600;font-family:ui-monospace,monospace;color:var(--text-primary);
+  font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:3px;border-radius:3px;
+  background:var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--surface-1);border:2px solid var(--accent);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;
+  background:var(--surface-1);border:2px solid var(--accent);cursor:pointer}
+.presets{display:flex;gap:6px}
+.presets button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-secondary);
+  padding:6px 11px;border-radius:8px;font-size:.76rem;cursor:pointer;font-weight:600}
+.presets button:hover{border-color:var(--accent);color:var(--text-primary)}
+
+/* leyenda */
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.79rem;color:var(--text-secondary);
+  margin-top:10px;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:14px;height:2px;border-radius:1px;display:inline-block}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.stat{background:var(--surface-1);padding:11px 13px}
+.stat .k{font-size:.7rem;letter-spacing:.02em;color:var(--text-muted);
+  font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v{font-size:1.02rem;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.stat .u{font-size:.72rem;color:var(--text-muted);margin-left:3px}
+
+/* tooltip */
+.tipwrap{position:relative}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface-1);border:1px solid var(--border);border-radius:9px;
+  padding:8px 10px;font-size:.76rem;box-shadow:0 6px 20px rgba(0,0,0,.14);min-width:150px;z-index:5}
+.tip .r{display:flex;justify-content:space-between;gap:14px;padding:1px 0;color:var(--text-secondary)}
+.tip .r b{font-family:ui-monospace,monospace;color:var(--text-primary);font-weight:600;
+  font-variant-numeric:tabular-nums}
+.tip .h{font-weight:700;color:var(--text-primary);margin-bottom:4px;font-family:ui-monospace,monospace}
+
+details{margin-top:12px;font-size:.82rem;color:var(--text-secondary)}
+summary{cursor:pointer;color:var(--text-muted);font-size:.76rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.07em}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.79rem}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);
+  font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+th{color:var(--text-muted);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+  font-family:inherit}
+th:first-child,td:first-child{text-align:left}
+.note{font-size:.82rem;color:var(--text-secondary);background:var(--surface-2);
+  border-radius:10px;padding:11px 13px;margin-top:12px}
+.note b{color:var(--text-primary)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Oscilador forzado: amplitud elástica y absorbente</h1>
+  <p class="sub">Guía 1, ejercicio 5c. Respuesta estacionaria de
+  x(t) = A·sen(ωt) + B·cos(ωt) frente a una fuerza F₀·cos(ωt).
+  Pasá el cursor por el gráfico principal para leer valores y ver el régimen estacionario en el tiempo.</p>
+
+  <div class="filters">
+    <div class="f">
+      <label>Frecuencia propia ω₀ <b id="v0">10.0</b></label>
+      <input type="range" id="s0" min="4" max="16" step="0.1" value="10">
+    </div>
+    <div class="f">
+      <label>Amortiguamiento Γ <b id="vG">1.50</b></label>
+      <input type="range" id="sG" min="0.1" max="12" step="0.05" value="1.5">
+    </div>
+    <div class="f">
+      <label>Fuerza F₀/m <b id="vF">10.0</b></label>
+      <input type="range" id="sF" min="1" max="30" step="0.5" value="10">
+    </div>
+    <div class="presets">
+      <button data-g="0.4">Q alto</button>
+      <button data-g="3">medio</button>
+      <button data-g="11">sobreamortiguado</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="card" style="margin-top:14px">
+    <h2>Ejercicio 5c</h2>
+    <p class="cap">Amplitudes A y B en función de la frecuencia de forzado ω</p>
+    <div class="tipwrap">
+      <canvas id="cAB" height="330"></canvas>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--series-1)"></i> B — elástica (en fase con la fuerza)</span>
+      <span><i style="background:var(--series-2)"></i> A — absorbente (en cuadratura)</span>
+      <span><i style="background:var(--text-muted);height:0;border-top:2px dashed var(--text-muted)"></i> ω = ω₀</span>
+    </div>
+    <div class="note" id="noteAB"></div>
+  </div>
+
+  <div class="card">
+    <h2>Complementos</h2>
+    <p class="cap">Amplitud total R(ω) y desfasaje φ(ω) entre la fuerza y la respuesta</p>
+    <canvas id="cR" height="150"></canvas>
+    <canvas id="cPhi" height="150" style="margin-top:14px"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>Dominio temporal</h2>
+    <p class="cap" id="capT">Fuerza y respuesta estacionaria, ambas normalizadas a su propio máximo</p>
+    <canvas id="cT" height="180"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--text-secondary)"></i> F(t)/m = F₀/m · cos(ωt)</span>
+      <span><i style="background:var(--accent)"></i> x<sub>p</sub>(t) = R·cos(ωt − φ)</span>
+    </div>
+  </div>
+
+  <details>
+    <summary>Ver tabla de valores característicos</summary>
+    <table id="tbl"></table>
+  </details>
+</div>
+
+<script>
+(() => {
+"use strict";
+const S = {w0:10, G:1.5, f0:10, wsel:null};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------- física ----------
+const den = w => Math.pow(S.w0*S.w0 - w*w, 2) + S.G*S.G*w*w;
+const Bel = w => S.f0*(S.w0*S.w0 - w*w)/den(w);       // elástica  (cos)
+const Aab = w => S.f0*(S.G*w)/den(w);                  // absorbente (sen)
+const Rmp = w => S.f0/Math.sqrt(den(w));
+const Phi = w => Math.atan2(S.G*w, S.w0*S.w0 - w*w);   // 0 … π
+
+const wmax = () => S.w0*2.2;
+const w1   = () => { const s = S.w0*S.w0 - S.G*S.G/4; return s>0 ? Math.sqrt(s) : NaN; };
+const wR   = () => { const s = S.w0*S.w0 - S.G*S.G/2; return s>0 ? Math.sqrt(s) : NaN; };
+
+// ---------- canvas helpers ----------
+function ctx(c){
+  const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = +c.getAttribute('height');
+  if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){
+    c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); c.style.height = h+'px';
+  }
+  const g = c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  return {g,w,h};
+}
+const PAD = {l:56, r:18, t:14, b:30};
+
+function axes(g,w,h,xr,yr,xlabel,ylabel,yticks){
+  const X = v => PAD.l + (v-xr[0])/(xr[1]-xr[0])*(w-PAD.l-PAD.r);
+  const Y = v => h-PAD.b - (v-yr[0])/(yr[1]-yr[0])*(h-PAD.t-PAD.b);
+  g.strokeStyle = css('--grid'); g.lineWidth = 1;
+  g.fillStyle = css('--text-muted');
+  g.font = '11px ui-monospace, Menlo, monospace';
+  // y grid
+  (yticks||[]).forEach(v=>{
+    const y = Y(v);
+    g.beginPath(); g.moveTo(PAD.l,y); g.lineTo(w-PAD.r,y); g.stroke();
+    g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(fmt(v), PAD.l-8, y);
+  });
+  // x ticks cada w0/2
+  g.textAlign='center'; g.textBaseline='top';
+  const step = S.w0/2;
+  for(let v=0; v<=xr[1]+1e-9; v+=step){
+    if(v<xr[0]) continue;
+    const x = X(v);
+    g.strokeStyle = css('--grid');
+    g.beginPath(); g.moveTo(x,PAD.t); g.lineTo(x,h-PAD.b); g.stroke();
+    g.fillStyle = css('--text-muted');
+    g.fillText(fmt(v), x, h-PAD.b+7);
+  }
+  // ejes
+  g.strokeStyle = css('--border'); g.lineWidth=1;
+  g.beginPath(); g.moveTo(PAD.l,h-PAD.b); g.lineTo(w-PAD.r,h-PAD.b); g.stroke();
+  // etiquetas
+  g.fillStyle = css('--text-secondary'); g.font='11px system-ui,sans-serif';
+  g.textAlign='right'; g.textBaseline='bottom';
+  g.fillText(xlabel, w-PAD.r, h-4);
+  g.save(); g.translate(13,PAD.t+4); g.textAlign='left'; g.textBaseline='top';
+  g.fillText(ylabel, 0, 0); g.restore();
+  return {X,Y};
+}
+const fmt = v => Math.abs(v)>=100 ? v.toFixed(0)
+              : Math.abs(v)>=10 ? v.toFixed(1)
+              : Math.abs(v)>=1 ? v.toFixed(2)
+              : Math.abs(v)<1e-9 ? '0' : v.toFixed(3);
+
+function curve(g,X,Y,f,x0,x1,color,dash){
+  g.beginPath();
+  const N=520;
+  for(let i=0;i<=N;i++){
+    const x = x0 + (x1-x0)*i/N, y = f(x);
+    if(!isFinite(y)) continue;
+    i? g.lineTo(X(x),Y(y)) : g.moveTo(X(x),Y(y));
+  }
+  g.strokeStyle=color; g.lineWidth=2; g.lineJoin='round'; g.setLineDash(dash||[]);
+  g.stroke(); g.setLineDash([]);
+}
+
+// ---------- gráfico principal ----------
+let mainMap = null;
+function drawAB(){
+  const c = document.getElementById('cAB'); const {g,w,h} = ctx(c);
+  const xr = [0, wmax()];
+  const peak = S.f0/(S.G*S.w0);                       // escala natural
+  const stat = S.f0/(S.w0*S.w0);
+  let M = Math.max(peak, stat, Math.abs(Bel(w1()||S.w0)))*1.15;
+  if(!isFinite(M)||M<=0) M = 1;
+  const yr = [-M, M];
+  const yt = [-M/2, 0, M/2].map(v=>+v.toFixed(3));
+  const {X,Y} = axes(g,w,h,xr,yr,'ω  [s⁻¹]','A , B  [m]', yt);
+  mainMap = {X,Y,xr,yr,w,h};
+
+  // línea cero
+  g.strokeStyle = css('--border'); g.lineWidth=1;
+  g.beginPath(); g.moveTo(PAD.l,Y(0)); g.lineTo(w-PAD.r,Y(0)); g.stroke();
+  // marca ω0
+  g.strokeStyle = css('--text-muted'); g.setLineDash([4,4]); g.lineWidth=1;
+  g.beginPath(); g.moveTo(X(S.w0),PAD.t); g.lineTo(X(S.w0),h-PAD.b); g.stroke(); g.setLineDash([]);
+  g.fillStyle = css('--text-muted'); g.font='10px ui-monospace,monospace';
+  g.textAlign='left'; g.textBaseline='top';
+  g.fillText('ω₀', X(S.w0)+5, PAD.t+2);
+
+  curve(g,X,Y,Bel,0.001,xr[1],css('--series-1'));
+  curve(g,X,Y,Aab,0.001,xr[1],css('--series-2'));
+
+  // etiquetas directas
+  g.font='600 12px system-ui,sans-serif'; g.textBaseline='middle'; g.textAlign='left';
+  const wA = w1()||S.w0;
+  g.fillStyle = css('--series-2'); g.fillText('A', X(wA)+8, Y(Aab(wA))-2);
+  const wB = Math.max(0.05, S.w0 - S.G/2);
+  g.fillStyle = css('--series-1'); g.fillText('B', X(wB)-16, Y(Bel(wB))-8);
+
+  // cursor
+  if(S.wsel!=null){
+    const x = X(S.wsel);
+    g.strokeStyle = css('--accent'); g.lineWidth=1; g.setLineDash([3,3]);
+    g.beginPath(); g.moveTo(x,PAD.t); g.lineTo(x,h-PAD.b); g.stroke(); g.setLineDash([]);
+    [[Aab,'--series-2'],[Bel,'--series-1']].forEach(([f,col])=>{
+      const y = Y(f(S.wsel));
+      g.beginPath(); g.arc(x,y,4.5,0,7);
+      g.fillStyle = css(col); g.fill();
+      g.strokeStyle = css('--surface-1'); g.lineWidth=2; g.stroke();
+    });
+  }
+}
+
+// ---------- R y fase ----------
+function drawR(){
+  const {g,w,h} = ctx(document.getElementById('cR'));
+  const xr=[0,wmax()];
+  let M = Rmp(w1()||S.w0)*1.12; if(!isFinite(M)||M<=0) M=1;
+  const {X,Y} = axes(g,w,h,xr,[0,M],'ω  [s⁻¹]','R  [m]',[M/2,M].map(v=>+v.toFixed(3)));
+  curve(g,X,Y,Rmp,0.001,xr[1],css('--accent'));
+  if(S.wsel!=null){
+    const x=X(S.wsel); g.strokeStyle=css('--accent'); g.setLineDash([3,3]); g.lineWidth=1;
+    g.beginPath(); g.moveTo(x,PAD.t); g.lineTo(x,h-PAD.b); g.stroke(); g.setLineDash([]);
+  }
+  g.fillStyle=css('--text-secondary'); g.font='600 11px system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='top';
+  g.fillText('R = √(A² + B²)  ·  amplitud total', PAD.l+6, PAD.t+2);
+}
+function drawPhi(){
+  const {g,w,h} = ctx(document.getElementById('cPhi'));
+  const xr=[0,wmax()];
+  const {X,Y} = axes(g,w,h,xr,[0,Math.PI],'ω  [s⁻¹]','φ  [rad]',[Math.PI/2,Math.PI]);
+  curve(g,X,Y,Phi,0.001,xr[1],css('--accent'));
+  g.strokeStyle=css('--grid'); g.setLineDash([4,4]);
+  g.beginPath(); g.moveTo(PAD.l,Y(Math.PI/2)); g.lineTo(w-PAD.r,Y(Math.PI/2)); g.stroke(); g.setLineDash([]);
+  if(S.wsel!=null){
+    const x=X(S.wsel); g.strokeStyle=css('--accent'); g.setLineDash([3,3]); g.lineWidth=1;
+    g.beginPath(); g.moveTo(x,PAD.t); g.lineTo(x,h-PAD.b); g.stroke(); g.setLineDash([]);
+  }
+  g.fillStyle=css('--text-secondary'); g.font='600 11px system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='top';
+  g.fillText('φ = arctan[ Γω / (ω₀² − ω²) ]  ·  atraso de la respuesta', PAD.l+6, PAD.t+2);
+}
+
+// ---------- tiempo ----------
+function drawT(){
+  const {g,w,h} = ctx(document.getElementById('cT'));
+  const wsel = S.wsel ?? S.w0;
+  const T = 2*Math.PI/wsel, tmax = 3*T;
+  const R = Rmp(wsel), ph = Phi(wsel);
+  const X = t => PAD.l + t/tmax*(w-PAD.l-PAD.r);
+  const Y = v => h-PAD.b - (v+1.15)/2.3*(h-PAD.t-PAD.b);
+  g.strokeStyle=css('--grid'); g.lineWidth=1;
+  [-1,0,1].forEach(v=>{ g.beginPath(); g.moveTo(PAD.l,Y(v)); g.lineTo(w-PAD.r,Y(v)); g.stroke(); });
+  g.fillStyle=css('--text-muted'); g.font='11px ui-monospace,monospace';
+  g.textAlign='right'; g.textBaseline='middle';
+  [[-1,'−1'],[0,'0'],[1,'+1']].forEach(([v,s])=>g.fillText(s,PAD.l-8,Y(v)));
+  for(const [f,col,dash] of [[t=>Math.cos(wsel*t),'--text-secondary',[6,4]],
+                             [t=>Math.cos(wsel*t-ph),'--accent',[]]]){
+    g.beginPath();
+    for(let i=0;i<=400;i++){ const t=tmax*i/400; i?g.lineTo(X(t),Y(f(t))):g.moveTo(X(t),Y(f(t))); }
+    g.strokeStyle=css(col); g.lineWidth=2; g.setLineDash(dash); g.stroke(); g.setLineDash([]);
+  }
+  g.fillStyle=css('--text-secondary'); g.font='11px system-ui,sans-serif';
+  g.textAlign='right'; g.textBaseline='bottom'; g.fillText('t', w-PAD.r, h-4);
+  document.getElementById('capT').textContent =
+    `Fuerza y respuesta estacionaria en ω = ${wsel.toFixed(2)} s⁻¹ — normalizadas a su propio máximo. `+
+    `Atraso φ = ${ph.toFixed(2)} rad = ${(ph*180/Math.PI).toFixed(0)}°, R = ${R.toFixed(3)} m.`;
+}
+
+// ---------- stats + tabla + nota ----------
+function stats(){
+  const Q = S.w0/S.G, _w1 = w1(), _wR = wR();
+  const rows = [
+    ['ω₀', S.w0.toFixed(2), 's⁻¹'],
+    ['Γ', S.G.toFixed(2), 's⁻¹'],
+    ['Q = ω₀/Γ', Q.toFixed(2), ''],
+    ['ω₁ amortiguada', isFinite(_w1)? _w1.toFixed(2):'—', 's⁻¹'],
+    ['ω de R máxima', isFinite(_wR)? _wR.toFixed(2):'—', 's⁻¹'],
+    ['A máx', Aab(isFinite(_w1)?_w1:S.w0).toFixed(3), 'm'],
+    ['B(0) = F₀/k', (S.f0/(S.w0*S.w0)).toFixed(3), 'm'],
+    ['ancho de A (FWHM)', S.G.toFixed(2), 's⁻¹'],
+  ];
+  document.getElementById('stats').innerHTML = rows.map(([k,v,u])=>
+    `<div class="stat"><div class="k">${k}</div><div class="v">${v}<span class="u">${u}</span></div></div>`).join('');
+
+  const pts = [['ω → 0',1e-6],['ω₀ − Γ/2',Math.max(1e-6,S.w0-S.G/2)],['ω₀',S.w0],
+               ['ω₀ + Γ/2',S.w0+S.G/2],['2 ω₀',2*S.w0]];
+  document.getElementById('tbl').innerHTML =
+    '<tr><th>ω</th><th>valor</th><th>B (elástica)</th><th>A (absorbente)</th><th>R</th><th>φ [°]</th></tr>' +
+    pts.map(([n,w])=>`<tr><td>${n}</td><td>${w.toFixed(2)}</td><td>${Bel(w).toFixed(4)}</td>`+
+      `<td>${Aab(w).toFixed(4)}</td><td>${Rmp(w).toFixed(4)}</td>`+
+      `<td>${(Phi(w)*180/Math.PI).toFixed(1)}</td></tr>`).join('');
+
+  const over = S.G/2 >= S.w0;
+  document.getElementById('noteAB').innerHTML = over
+    ? '<b>Régimen sobreamortiguado.</b> Ya no hay pico: A y B decaen monótonamente. '+
+      'El sistema no tiene una frecuencia preferida y responde como un filtro pasabajos.'
+    : `<b>B se anula exactamente en ω = ω₀</b> y cambia de signo: por debajo la masa sigue a la fuerza, `+
+      `por encima va en contrafase. <b>A es máxima cerca de ω₀</b> con valor F₀/(mΓω₀) y ancho a media altura Γ. `+
+      `Con Q = ${(S.w0/S.G).toFixed(1)}, el pico es ${S.w0/S.G>5?'angosto y alto':'ancho y bajo'}.`;
+}
+
+// ---------- interacción ----------
+const tip = document.getElementById('tip');
+function move(ev){
+  const c = document.getElementById('cAB'), r = c.getBoundingClientRect();
+  const px = (ev.touches? ev.touches[0].clientX : ev.clientX) - r.left;
+  const py = (ev.touches? ev.touches[0].clientY : ev.clientY) - r.top;
+  if(!mainMap) return;
+  const {xr,w} = mainMap;
+  const frac = (px - PAD.l)/(w - PAD.l - PAD.r);
+  if(frac<0 || frac>1){ leave(); return; }
+  S.wsel = xr[0] + frac*(xr[1]-xr[0]);
+  const wsel = S.wsel;
+  tip.innerHTML =
+    `<div class="h">ω = ${wsel.toFixed(2)} s⁻¹</div>`+
+    `<div class="r"><span>B elástica</span><b>${Bel(wsel).toFixed(4)}</b></div>`+
+    `<div class="r"><span>A absorbente</span><b>${Aab(wsel).toFixed(4)}</b></div>`+
+    `<div class="r"><span>R total</span><b>${Rmp(wsel).toFixed(4)}</b></div>`+
+    `<div class="r"><span>φ</span><b>${(Phi(wsel)*180/Math.PI).toFixed(0)}°</b></div>`;
+  tip.style.opacity = 1;
+  const tw = tip.offsetWidth||160;
+  tip.style.left = Math.min(Math.max(px+14, 4), r.width - tw - 4) + 'px';
+  tip.style.top  = Math.max(py-10, 4) + 'px';
+  render(false);
+}
+function leave(){ S.wsel=null; tip.style.opacity=0; render(false); }
+
+function render(recalcStats=true){
+  drawAB(); drawR(); drawPhi(); drawT();
+  if(recalcStats) stats();
+}
+
+// sliders
+const bind=(id,key,out,f)=>{
+  const s=document.getElementById(id), o=document.getElementById(out);
+  const upd=()=>{ S[key]=parseFloat(s.value); o.textContent=f(S[key]); render(); };
+  s.addEventListener('input',upd); upd();
+};
+bind('s0','w0','v0',v=>v.toFixed(1));
+bind('sG','G','vG',v=>v.toFixed(2));
+bind('sF','f0','vF',v=>v.toFixed(1));
+document.querySelector('.presets').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const s=document.getElementById('sG'); s.value=b.dataset.g; s.dispatchEvent(new Event('input'));
+});
+const cab = document.getElementById('cAB');
+cab.addEventListener('mousemove',move);
+cab.addEventListener('mouseleave',leave);
+cab.addEventListener('touchmove',e=>{e.preventDefault();move(e);},{passive:false});
+cab.addEventListener('touchend',leave);
+window.addEventListener('resize',()=>render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+render();
+})();
+</script>
+</body>
+</html>

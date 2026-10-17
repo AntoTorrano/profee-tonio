@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía 1 – Ej. 1b/1c · Masa entre dos resortes</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#131a26; --panel2:#0f1622; --line:#243044;
+    --tx:#e6edf7; --tx2:#94a3b8; --tx3:#64748b;
+    --acc:#5eead4; --acc2:#818cf8; --warn:#fbbf24; --bad:#fb7185;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+       line-height:1.5;padding:22px 18px 60px}
+  .wrap{max-width:1240px;margin:0 auto}
+  h1{font-size:1.32rem;margin:0 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--tx2);font-size:.86rem;margin-bottom:18px}
+  .sub b{color:var(--acc);font-weight:600}
+  .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .card h2{font-size:.76rem;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);
+           margin:0 0 10px;font-weight:700}
+  canvas{width:100%;display:block;border-radius:9px;background:var(--panel2)}
+  .stack{display:flex;flex-direction:column;gap:16px}
+
+  /* controles */
+  .ctl{margin-bottom:13px}
+  .ctl:last-child{margin-bottom:0}
+  .ctl label{display:flex;justify-content:space-between;align-items:baseline;
+             font-size:.8rem;color:var(--tx2);margin-bottom:5px}
+  .ctl label .v{font-family:var(--mono);color:var(--acc);font-size:.82rem}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;
+                    background:linear-gradient(90deg,var(--acc2),var(--acc));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+        background:#fff;border:3px solid var(--acc);cursor:pointer;box-shadow:0 1px 6px #000a}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;
+        border:3px solid var(--acc);cursor:pointer}
+  .modes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .modes button,.btn{background:var(--panel2);border:1px solid var(--line);color:var(--tx2);
+        padding:7px 12px;border-radius:8px;font-size:.79rem;cursor:pointer;transition:.15s;font-weight:600}
+  .modes button:hover,.btn:hover{border-color:var(--acc);color:var(--tx)}
+  .modes button.on{background:var(--acc);border-color:var(--acc);color:#062a25}
+  .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 14px}
+  .presets button{background:transparent;border:1px dashed var(--line);color:var(--tx3);
+        padding:5px 9px;border-radius:7px;font-size:.72rem;cursor:pointer}
+  .presets button:hover{border-color:var(--acc2);color:var(--acc2)}
+
+  /* lecturas */
+  table.read{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.read td{padding:5px 0;border-bottom:1px solid #1c2534}
+  table.read td:last-child{text-align:right;font-family:var(--mono);color:var(--acc)}
+  table.read tr:last-child td{border-bottom:none}
+  .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:700}
+  .b-ok{background:#0d3b34;color:var(--acc)}
+  .b-warn{background:#3b2f0d;color:var(--warn)}
+  .b-bad{background:#3b1620;color:var(--bad)}
+  .note{font-size:.78rem;color:var(--tx2);margin-top:10px;padding:9px 11px;background:var(--panel2);
+        border-left:2px solid var(--acc2);border-radius:0 7px 7px 0}
+  .note b{color:var(--tx)}
+  .mono{font-family:var(--mono)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--tx2);margin-top:8px}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Masa entre dos resortes — longitudinal vs. transversal</h1>
+  <div class="sub">Física 2 · Guía 1, ejercicio 1b y 1c. Jugá con <b>l₀/l</b> y mirá cómo la pretensión,
+  invisible en el modo longitudinal, controla todo el modo transversal.</div>
+
+  <div class="grid">
+    <!-- ============ IZQUIERDA ============ -->
+    <div class="stack">
+      <div class="card">
+        <h2>Sistema</h2>
+        <canvas id="cSys" height="330"></canvas>
+        <div class="legend">
+          <span><i style="background:#5eead4"></i>resorte estirado (tira)</span>
+          <span><i style="background:#fb7185"></i>resorte comprimido (empuja)</span>
+          <span><i style="background:#818cf8"></i>trayectoria</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>ψ(t) — exacto vs. armónico</h2>
+        <canvas id="cTime" height="190"></canvas>
+        <div class="legend">
+          <span><i style="background:#5eead4"></i>ψ(t) integrando la ecuación exacta</span>
+          <span><i style="background:#818cf8;opacity:.8"></i>ψ(t) = A·cos(ω t) de la aproximación lineal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DERECHA ============ -->
+    <div class="stack">
+      <div class="card">
+        <h2>Controles</h2>
+        <div class="modes" id="modes">
+          <button data-mode="long" class="on">Longitudinal (1b)</button>
+          <button data-mode="trans">Transversal (1c)</button>
+          <button data-mode="2d">2D libre</button>
+        </div>
+        <div class="presets" id="presets">
+          <button data-p="tensado">caso i) tensado · l₀ = 0.5 l</button>
+          <button data-p="relajado">caso i) relajado · l₀ = l</button>
+          <button data-p="slinky">caso ii) slinky · l₀ = 0</button>
+        </div>
+
+        <div class="ctl">
+          <label>longitud natural &nbsp;l₀/l <span class="v" id="vL0">0.50</span></label>
+          <input type="range" id="sL0" min="0" max="1" step="0.005" value="0.5">
+        </div>
+        <div class="ctl">
+          <label>amplitud inicial &nbsp;A/l <span class="v" id="vA">0.30</span></label>
+          <input type="range" id="sA" min="0.02" max="0.8" step="0.005" value="0.3">
+        </div>
+        <div class="ctl">
+          <label>constante &nbsp;k [N/m] <span class="v" id="vK">20.0</span></label>
+          <input type="range" id="sK" min="2" max="60" step="0.5" value="20">
+        </div>
+        <div class="ctl">
+          <label>masa &nbsp;m [kg] <span class="v" id="vM">1.00</span></label>
+          <input type="range" id="sM" min="0.2" max="5" step="0.05" value="1">
+        </div>
+        <div class="ctl">
+          <label>velocidad de la animación <span class="v" id="vS">1.0×</span></label>
+          <input type="range" id="sS" min="0.1" max="2" step="0.05" value="1">
+        </div>
+        <div class="row">
+          <button class="btn" id="bPause">⏸ Pausar</button>
+          <button class="btn" id="bReset">↺ Reiniciar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Lecturas</h2>
+        <table class="read">
+          <tr><td>tensión en equilibrio &nbsp;T₀ = k(l − l₀)</td><td id="rT0">—</td></tr>
+          <tr><td>ω longitudinal = √(2k/m) &nbsp;<span style="color:#475569">(exacta)</span></td><td id="rWL">—</td></tr>
+          <tr><td>ω transversal = √(2T₀/ml) &nbsp;<span style="color:#475569">(a 1er orden)</span></td><td id="rWT">—</td></tr>
+          <tr><td>ω medida en la simulación</td><td id="rWM">—</td></tr>
+          <tr><td>error del modelo armónico</td><td id="rErr">—</td></tr>
+          <tr><td>régimen</td><td id="rReg">—</td></tr>
+        </table>
+        <div class="note" id="note"></div>
+      </div>
+
+      <div class="card">
+        <h2>Fuerza restitutiva y energía potencial</h2>
+        <canvas id="cF" height="150"></canvas>
+        <canvas id="cU" height="150" style="margin-top:10px"></canvas>
+        <div class="legend">
+          <span><i style="background:#5eead4"></i>exacto</span>
+          <span><i style="background:#818cf8"></i>aprox. lineal / parabólica</span>
+          <span><i style="background:#fbbf24"></i>ψ actual</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+// ---------------------------------------------------------------- estado
+const S = { l:1, l0:0.5, A:0.3, k:20, m:1, speed:1, mode:'long', running:true };
+let r={x:0,y:0}, v={x:0,y:0}, t=0, trace=[], series=[], crossings=[], wMeas=NaN;
+
+// -------------------------------------------------- física (2 resortes)
+// Paredes en (-l,0) y (+l,0). Cada resorte: F = -k (L - l0) * versor(pared->masa)
+function acc(p){
+  let ax=0, ay=0;
+  for (const w of [{x:-S.l,y:0},{x:S.l,y:0}]){
+    const dx=p.x-w.x, dy=p.y-w.y;
+    const L=Math.hypot(dx,dy) || 1e-12;
+    const T=S.k*(L-S.l0);              // tensión (negativa = comprimido)
+    ax -= T*dx/L/S.m;
+    ay -= T*dy/L/S.m;
+  }
+  return {x:ax,y:ay};
+}
+function rk4(dt){
+  const a1=acc(r);
+  const r2={x:r.x+v.x*dt/2, y:r.y+v.y*dt/2}, v2={x:v.x+a1.x*dt/2, y:v.y+a1.y*dt/2};
+  const a2=acc(r2);
+  const r3={x:r.x+v2.x*dt/2, y:r.y+v2.y*dt/2}, v3={x:v.x+a2.x*dt/2, y:v.y+a2.y*dt/2};
+  const a3=acc(r3);
+  const r4={x:r.x+v3.x*dt, y:r.y+v3.y*dt}, v4={x:v.x+a3.x*dt, y:v.y+a3.y*dt};
+  const a4=acc(r4);
+  r={x:r.x+dt/6*(v.x+2*v2.x+2*v3.x+v4.x), y:r.y+dt/6*(v.y+2*v2.y+2*v3.y+v4.y)};
+  v={x:v.x+dt/6*(a1.x+2*a2.x+2*a3.x+a4.x), y:v.y+dt/6*(a1.y+2*a2.y+2*a3.y+a4.y)};
+}
+// coordenada relevante según el modo
+const psi = () => S.mode==='long' ? r.x : r.y;
+
+// fuerza restitutiva transversal exacta (por unidad de masa -> fuerza)
+const Fexact = ps => S.mode==='long'
+      ? -2*S.k*ps
+      : -2*S.k*ps*(1 - S.l0/Math.hypot(S.l,ps));
+const Flin   = ps => -omega2()*S.m*ps;
+const Uexact = ps => S.mode==='long'
+      ? S.k*ps*ps
+      : S.k*(Math.pow(Math.hypot(S.l,ps)-S.l0,2) - Math.pow(S.l-S.l0,2));
+const Ulin   = ps => 0.5*omega2()*S.m*ps*ps;
+
+function omega2(){                      // ω² del modelo armónico
+  return S.mode==='long' ? 2*S.k/S.m : 2*S.k*(1-S.l0/S.l)/S.m;
+}
+
+function reset(){
+  t=0; trace=[]; series=[]; crossings=[]; wMeas=NaN;
+  if (S.mode==='long')      r={x:S.A*S.l, y:0};
+  else if (S.mode==='trans')r={x:0, y:S.A*S.l};
+  else                      r={x:S.A*S.l, y:0.62*S.A*S.l};
+  v={x:0,y:0};
+}
+
+// ---------------------------------------------------------------- canvas
+function setup(c){
+  const dpr=window.devicePixelRatio||1, w=c.clientWidth, h=c.height;
+  if(c.width!==w*dpr||c.dataset.h!=h){ c.width=w*dpr; c.height=h*dpr; c.dataset.h=h;
+    c.style.height=h+'px'; }
+  const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  return {g,w,h};
+}
+function grid(g,w,h,n=6){
+  g.strokeStyle='#1a2231'; g.lineWidth=1;
+  for(let i=0;i<=n;i++){ const y=h*i/n; g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); }
+}
+// resorte en zigzag
+function spring(g,x1,y1,x2,y2,coils,amp,color,lw){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1e-9, ux=dx/L, uy=dy/L, px=-uy, py=ux;
+  const pad=Math.min(14,L*0.16);
+  g.beginPath(); g.moveTo(x1,y1);
+  const sx=x1+ux*pad, sy=y1+uy*pad, ex=x2-ux*pad, ey=y2-uy*pad;
+  g.lineTo(sx,sy);
+  const seg=coils*2;
+  for(let i=1;i<seg;i++){
+    const f=i/seg, s=(i%2?1:-1);
+    g.lineTo(sx+(ex-sx)*f+px*amp*s, sy+(ey-sy)*f+py*amp*s);
+  }
+  g.lineTo(ex,ey); g.lineTo(x2,y2);
+  g.strokeStyle=color; g.lineWidth=lw; g.lineJoin='round'; g.stroke();
+}
+
+function drawSystem(){
+  const {g,w,h}=setup(document.getElementById('cSys'));
+  const cx=w/2, cy=h/2, sc=(w*0.34)/S.l;           // px por unidad de l
+  // paredes
+  const wx1=cx-S.l*sc, wx2=cx+S.l*sc, wh=h*0.40;
+  g.fillStyle='#1e293b';
+  g.fillRect(wx1-16,cy-wh,16,2*wh); g.fillRect(wx2,cy-wh,16,2*wh);
+  g.strokeStyle='#334155'; g.lineWidth=2;
+  g.strokeRect(wx1-16,cy-wh,16,2*wh); g.strokeRect(wx2,cy-wh,16,2*wh);
+  // eje de equilibrio
+  g.setLineDash([4,5]); g.strokeStyle='#243044'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(wx1,cy); g.lineTo(wx2,cy); g.stroke(); g.setLineDash([]);
+  // punto de equilibrio
+  g.fillStyle='#334155'; g.beginPath(); g.arc(cx,cy,3,0,7); g.fill();
+
+  // trayectoria
+  if(trace.length>1){
+    g.beginPath();
+    trace.forEach((p,i)=>{ const X=cx+p.x*sc, Y=cy-p.y*sc; i?g.lineTo(X,Y):g.moveTo(X,Y); });
+    g.strokeStyle='rgba(129,140,248,.55)'; g.lineWidth=1.5; g.stroke();
+  }
+  const mx=cx+r.x*sc, my=cy-r.y*sc;
+  // resortes
+  for(const w0 of [{x:-S.l,y:0},{x:S.l,y:0}]){
+    const L=Math.hypot(r.x-w0.x, r.y-w0.y);
+    const stretch=L-S.l0;
+    const col = stretch>=0 ? '#5eead4' : '#fb7185';
+    const amp = 9*Math.min(1.6, S.l0>1e-6 ? S.l0/Math.max(L,1e-6) : 1);
+    spring(g, cx+w0.x*sc, cy, mx, my, 9, Math.max(4,amp), col, 2);
+  }
+  // masa
+  g.beginPath(); g.arc(mx,my,13,0,7);
+  const grd=g.createRadialGradient(mx-4,my-5,2,mx,my,14);
+  grd.addColorStop(0,'#fff'); grd.addColorStop(1,'#94a3b8');
+  g.fillStyle=grd; g.fill(); g.strokeStyle='#0b0f17'; g.lineWidth=2; g.stroke();
+  // flecha de ψ
+  const ps=psi();
+  if(Math.abs(ps)>1e-4){
+    g.strokeStyle='#fbbf24'; g.lineWidth=2; g.beginPath();
+    if(S.mode==='long'){ g.moveTo(cx,cy+24); g.lineTo(mx,cy+24); }
+    else { g.moveTo(mx-0,cy); g.lineTo(mx,my); }
+    g.stroke();
+    g.fillStyle='#fbbf24'; g.font='600 12px ui-monospace,monospace';
+    g.fillText('ψ = '+ps.toFixed(3)+' l', S.mode==='long'? (cx+mx)/2-22 : mx+8, S.mode==='long'? cy+40 : (cy+my)/2);
+  }
+  // etiquetas
+  g.fillStyle='#64748b'; g.font='11px ui-monospace,monospace';
+  g.fillText('l', (wx1+cx)/2, cy-8); g.fillText('l', (cx+wx2)/2, cy-8);
+}
+
+function drawTime(){
+  const c=document.getElementById('cTime'); const {g,w,h}=setup(c); grid(g,w,h,4);
+  if(series.length<2) return;
+  const span=series[series.length-1].t - series[0].t || 1;
+  const amp=Math.max(S.A*1.15, 1e-3);
+  const X=tt=>(tt-series[0].t)/span*w, Y=p=>h/2 - p/amp*(h/2-8);
+  // armónico de referencia
+  const w0=Math.sqrt(Math.max(omega2(),0));
+  if(w0>0){
+    g.beginPath();
+    for(let i=0;i<=240;i++){
+      const tt=series[0].t+span*i/240, p=S.A*Math.cos(w0*tt);
+      i?g.lineTo(X(tt),Y(p)):g.moveTo(X(tt),Y(p));
+    }
+    g.strokeStyle='rgba(129,140,248,.75)'; g.lineWidth=1.5; g.setLineDash([5,4]); g.stroke(); g.setLineDash([]);
+  }
+  // exacto
+  g.beginPath(); series.forEach((s,i)=> i?g.lineTo(X(s.t),Y(s.p)):g.moveTo(X(s.t),Y(s.p)));
+  g.strokeStyle='#5eead4'; g.lineWidth=2; g.stroke();
+  g.strokeStyle='#243044'; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+}
+
+function drawCurve(id,fEx,fLin,label,unit){
+  const {g,w,h}=setup(document.getElementById(id)); grid(g,w,h,4);
+  const R=Math.max(S.A*1.35,0.05);
+  let M=1e-9;
+  for(let i=0;i<=120;i++){ const p=-R+2*R*i/120; M=Math.max(M,Math.abs(fEx(p)),Math.abs(fLin(p))); }
+  const X=p=>(p+R)/(2*R)*w, Y=F=>h/2 - F/M*(h/2-10);
+  const zeroY = (label==='U') ? h-10 : h/2;
+  g.strokeStyle='#243044'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(0,label==='U'?h-10:h/2); g.lineTo(w,label==='U'?h-10:h/2); g.stroke();
+  g.beginPath(); g.moveTo(w/2,0); g.lineTo(w/2,h); g.stroke();
+  const YY = label==='U' ? (F=>h-10 - F/M*(h-24)) : Y;
+  for(const [fn,col,lw,dash] of [[fLin,'rgba(129,140,248,.9)',1.6,[5,4]],[fEx,'#5eead4',2,[]]]){
+    g.beginPath();
+    for(let i=0;i<=200;i++){ const p=-R+2*R*i/200; const val=fn(p);
+      i?g.lineTo(X(p),YY(val)):g.moveTo(X(p),YY(val)); }
+    g.strokeStyle=col; g.lineWidth=lw; g.setLineDash(dash); g.stroke(); g.setLineDash([]);
+  }
+  // marcador ψ actual
+  const ps=psi();
+  if(Math.abs(ps)<=R){
+    g.strokeStyle='rgba(251,191,36,.55)'; g.lineWidth=1; g.beginPath();
+    g.moveTo(X(ps),0); g.lineTo(X(ps),h); g.stroke();
+    g.fillStyle='#fbbf24'; g.beginPath(); g.arc(X(ps),YY(fEx(ps)),3.5,0,7); g.fill();
+  }
+  g.fillStyle='#64748b'; g.font='11px ui-monospace,monospace';
+  g.fillText(label==='U'?'U(ψ) − U(0)':'F(ψ)', 8, 14);
+  g.fillText('ψ', w-14, label==='U'? h-14 : h/2-6);
+}
+
+// ---------------------------------------------------------------- lecturas
+function readouts(){
+  const T0=S.k*(S.l-S.l0);
+  const wL=Math.sqrt(2*S.k/S.m), w2=omega2(), wT=Math.sqrt(Math.max(w2,0));
+  document.getElementById('rT0').textContent=T0.toFixed(2)+' N';
+  document.getElementById('rWL').textContent=wL.toFixed(3)+' s⁻¹';
+  document.getElementById('rWT').textContent=(S.mode==='long'? wL : wT).toFixed(3)+' s⁻¹';
+  document.getElementById('rWM').textContent=isFinite(wMeas)? wMeas.toFixed(3)+' s⁻¹' : '…';
+  const err = (isFinite(wMeas)&&wT>0)? Math.abs(wMeas-wT)/wT*100 : NaN;
+  const eEl=document.getElementById('rErr');
+  eEl.textContent = isFinite(err)? err.toFixed(1)+' %' : '…';
+  eEl.style.color = !isFinite(err)?'#5eead4': err<2?'#5eead4': err<15?'#fbbf24':'#fb7185';
+
+  const ratio=S.l0/S.l, reg=document.getElementById('rReg'), note=document.getElementById('note');
+  let cls,txt,msg;
+  if(S.mode==='long'){
+    cls='b-ok'; txt='armónico exacto';
+    msg='<b>Longitudinal (1b).</b> F = −2k·ψ <i>exactamente</i>, sin aproximar: l₀ se cancela. '+
+        'Movés el slider de l₀ y no pasa nada. Los resortes actúan en paralelo → k_ef = 2k, ω₀ = √(2k/m). '+
+        'La única aproximación es que los resortes sigan valiendo Hooke.';
+  } else if(ratio<0.02){
+    cls='b-ok'; txt='armónico exacto (slinky)';
+    msg='<b>Slinky, l₀ = 0 (caso ii).</b> El paréntesis (1 − l₀/√(l²+ψ²)) vale 1 para <i>cualquier</i> ψ: '+
+        'F = −2k·ψ exacta también en transversal. El sistema es un oscilador 2D <b>isótropo</b>: '+
+        'ω_T = ω_L, y en modo 2D las órbitas son elipses cerradas.';
+  } else if(ratio>0.985){
+    cls='b-bad'; txt='NO armónico (cúbico)';
+    msg='<b>Relajados en equilibrio, l₀ = l.</b> T₀ = 0, el término lineal se muere y queda '+
+        'F ≈ −(k/l²)·ψ³ → potencial cuártico, fondo chato. No hay ω fija: el período <i>depende de la amplitud</i> '+
+        '(T ∝ 1/A). Movés el slider de amplitud y mirá cómo cambia el ω medido.';
+  } else {
+    const ok=S.A<0.25;
+    cls= ok?'b-ok':'b-warn'; txt= ok?'armónico (1er orden)':'no lineal apreciable';
+    msg='<b>Tensados, l₀ &lt; l (caso i).</b> Manda la tensión de equilibrio: ω_T = √(2T₀/ml) = √((2k/m)(1−l₀/l)). '+
+        'Siempre ω_T &lt; ω_L → el sistema es <b>anisótropo</b> (probá el modo 2D: Lissajous). '+
+        'Vale sólo si ψ ≪ l; subí la amplitud y mirá crecer el error.';
+  }
+  reg.innerHTML='<span class="badge '+cls+'">'+txt+'</span>';
+  note.innerHTML=msg;
+}
+
+// ---------------------------------------------------------------- loop
+let last=performance.now();
+function frame(now){
+  const real=Math.min(0.05,(now-last)/1000); last=now;
+  if(S.running){
+    const dt=0.0015, steps=Math.round(real*S.speed/dt);
+    for(let i=0;i<Math.min(steps,900);i++){
+      const prev=psi(); rk4(dt); t+=dt;
+      const cur=psi();
+      if(prev<0&&cur>=0){ crossings.push(t); if(crossings.length>7)crossings.shift();
+        if(crossings.length>=3){
+          const P=(crossings[crossings.length-1]-crossings[0])/(crossings.length-1);
+          wMeas=2*Math.PI/P;
+        } }
+    }
+    series.push({t,p:psi()});
+    const keep=Math.max(3, 7*2*Math.PI/Math.max(Math.sqrt(omega2()||1),0.3));
+    while(series.length && t-series[0].t>keep) series.shift();
+    if(S.mode==='2d'){ trace.push({x:r.x,y:r.y}); if(trace.length>900)trace.shift(); }
+  }
+  drawSystem(); drawTime();
+  drawCurve('cF',Fexact,Flin,'F'); drawCurve('cU',Uexact,Ulin,'U');
+  readouts();
+  requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------- UI
+const bind=(id,key,fmt,el)=>{
+  const s=document.getElementById(id), o=document.getElementById(el);
+  const upd=()=>{ S[key]=parseFloat(s.value); o.textContent=fmt(S[key]);
+                  if(key!=='speed') reset(); };
+  s.addEventListener('input',upd); upd();
+};
+bind('sL0','l0',x=>x.toFixed(2),'vL0');
+bind('sA','A',x=>x.toFixed(2),'vA');
+bind('sK','k',x=>x.toFixed(1),'vK');
+bind('sM','m',x=>x.toFixed(2),'vM');
+bind('sS','speed',x=>x.toFixed(1)+'×','vS');
+
+document.getElementById('modes').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); S.mode=b.dataset.mode; reset();
+});
+document.getElementById('presets').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const map={tensado:0.5, relajado:1, slinky:0};
+  const s=document.getElementById('sL0'); s.value=map[b.dataset.p];
+  s.dispatchEvent(new Event('input'));
+});
+document.getElementById('bPause').addEventListener('click',e=>{
+  S.running=!S.running; e.target.textContent=S.running?'⏸ Pausar':'▶ Seguir'; last=performance.now();
+});
+document.getElementById('bReset').addEventListener('click',reset);
+window.addEventListener('resize',()=>{});
+
+reset(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

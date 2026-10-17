@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Clases de Análisis, Álgebra y Física preparadas sobre tus ejercicios, con un simulador del tema que te queda para siempre.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Clases · Profee Tonio">
+<meta property="og:description" content="Clases de Análisis, Álgebra y Física preparadas sobre tus ejercicios, con un simulador del tema que te queda para siempre.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Clases · Profee Tonio</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .nav { position: fixed; }
+  .encabezado { position: relative; padding: 160px var(--gutter) 64px; text-align: center; overflow: hidden; }
+  .encabezado .cuadricula { -webkit-mask-image: radial-gradient(ellipse 55% 75% at 50% 30%, #000 10%, transparent 75%); mask-image: radial-gradient(ellipse 55% 75% at 50% 30%, #000 10%, transparent 75%); }
+  .encabezado .display { position: relative; font-size: 148px; text-shadow: 0 0 40px rgb(46 120 255 / .3); }
+  .encabezado .bajada { position: relative; margin-top: 18px; font: 700 26px/1.3 var(--f-texto); letter-spacing: -.01em; }
+  .encabezado .contexto { position: relative; max-width: 620px; margin: 18px auto 0; color: var(--texto-suave); font-size: 18px; text-wrap: balance; }
+
+  /* ================================================ las tres opciones */
+  .opciones { max-width: 1200px; margin: 0 auto; padding: 24px var(--gutter) 0; box-sizing: content-box;
+    display: grid; grid-template-columns: 1fr 1.12fr 1fr; gap: 24px; align-items: center; }
+  .opcion { position: relative; border-radius: var(--r-grande); background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea);
+    padding: 36px 32px 32px; display: flex; flex-direction: column; min-height: 600px; }
+  .opcion .cual { font: 600 12px/1 var(--f-mono); color: var(--texto-tenue); letter-spacing: .08em; }
+  .opcion .h3 { margin: 14px 0 14px; font-size: 34px; }
+  .opcion .para { font-size: 16px; line-height: 1.55; color: var(--texto-medio); }
+  .incluye { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
+  .incluye li { display: grid; grid-template-columns: 20px 1fr; gap: 12px; font-size: 15px; line-height: 1.45; color: var(--texto-suave); }
+  .incluye svg { margin-top: 2px; color: var(--neon-core); }
+  .precio { margin-top: auto; padding-top: 28px; }
+  .precio .pendiente { width: 100%; padding: 16px; font-size: 14px; }
+  .opcion .btn { margin-top: 18px; width: 100%; justify-content: center; }
+
+  /* la destacada: más alta, borde de neón encendido, luz propia. Nada más. */
+  .opcion.destacada {
+    min-height: 680px; padding: 48px 36px 36px;
+    background: radial-gradient(ellipse 90% 45% at 50% 0%, rgb(46 120 255 / .20), transparent 70%), var(--superficie);
+    box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 40px rgb(46 120 255 / .25), 0 0 110px rgb(46 120 255 / .12);
+  }
+  .opcion.destacada .pildora-elegida { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); }
+  .opcion.destacada .h3 { font-size: 40px; }
+  .grupo { display: flex; align-items: center; gap: 14px; margin-top: 26px; padding: 16px 18px; border-radius: var(--r-medio); background: var(--fondo); box-shadow: inset 0 0 0 1px var(--linea); }
+  .grupo .t { font-size: 14px; line-height: 1.4; color: var(--texto-suave); }
+  .grupo .t b { color: var(--texto); font-weight: 600; }
+  .reparto { margin-top: 22px; display: grid; gap: 10px; }
+  .reparto .fila { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--grilla); }
+  .reparto .fila:last-child { border: 0; padding: 0; }
+  .reparto .q { font: 600 15px/1 var(--f-texto); color: var(--texto); }
+  .reparto .q span { color: var(--texto-tenue); font-weight: 400; margin: 0 6px; }
+  .reparto .pendiente { padding: 7px 10px; font-size: 12px; }
+  .reparto .c { font-size: 13px; color: var(--texto-tenue); margin-left: 8px; }
+  .porque { margin-top: 18px; font-size: 13px; line-height: 1.5; color: var(--texto-suave); }
+  .nota-btn { margin-top: 12px; text-align: center; font-size: 13px; color: var(--texto-suave); }
+
+  /* ================================================ profesores */
+  .profes { max-width: 1200px; margin: 0 auto; padding: var(--e-10) var(--gutter) 0; box-sizing: content-box; }
+  .profes .cab { text-align: center; margin-bottom: 44px; }
+  .profes .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .profe { display: grid; grid-template-columns: 148px 1fr; gap: 30px; align-items: start; padding: 34px; }
+  .profe .foto { width: 148px; height: 148px; border-radius: 50%; position: relative; }
+  .profe .foto img { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 2px var(--neon), 0 0 28px rgb(46 120 255 / .45); }
+  .profe .foto .pendiente { width: 100%; height: 100%; border-radius: 50%; padding: 0; font-size: 11px; text-align: center; }
+  .profe .nombre { font: 800 34px/1 var(--f-titulo); font-stretch: var(--ancho-condensado); text-transform: uppercase; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .profe .nombre .pendiente { font-size: 12px; padding: 6px 10px; }
+  .profe .materias { margin-top: 10px; }
+  .profe .mas-info { margin-top: 22px; height: 42px; font-size: 15px; }
+  .profe .bio { margin-top: 16px; font-size: 16px; color: var(--texto-suave); }
+  .profe .bio.pendiente { display: flex; margin-top: 16px; height: 72px; }
+
+  /* ================================================ cierre */
+  .cierre { max-width: 1200px; margin: var(--e-9) auto 0; padding: 0 var(--gutter) var(--e-10); box-sizing: content-box; }
+  .cierre .barra { display: flex; align-items: center; justify-content: center; gap: 36px; padding: 26px 32px; border-radius: var(--r-grande); box-shadow: inset 0 0 0 1px var(--linea); }
+  .cierre .item { display: flex; align-items: center; gap: 12px; font-size: 16px; color: var(--texto-medio); }
+  .cierre .item svg { color: var(--neon-core); }
+  .cierre .sep { width: 1px; height: 28px; background: var(--linea); }
+
+  @media (max-width: 640px) {
+    .encabezado { padding: 104px var(--gutter) 32px; }
+    .encabezado .display { font-size: 84px; }
+    .encabezado .bajada { font-size: 20px; }
+    .encabezado .contexto { font-size: 16px; }
+    .opciones { grid-template-columns: 1fr; gap: 20px; padding-top: 24px; }
+    /* en el celular la recomendada va primero: es la que se lee */
+    .opcion.destacada { order: -1; min-height: 0; padding: 40px 22px 26px; margin-top: 14px; }
+    .opcion { min-height: 0; padding: 28px 22px 24px; }
+    .opcion .h3, .opcion.destacada .h3 { font-size: 32px; }
+    .profes .grid { grid-template-columns: 1fr; }
+    .profe { grid-template-columns: 1fr; padding: 24px; gap: 18px; }
+    .profe .foto { width: 112px; height: 112px; }
+    .profes { padding-top: 80px; }
+    .cierre .barra { flex-direction: column; gap: 14px; align-items: flex-start; }
+    .cierre .sep { display: none; }
+  }
+
+  /* ================================================ selector de profesor */
+  .selector-wrap { display: flex; justify-content: center; padding: 8px var(--gutter) 40px; }
+  .selector { display: inline-flex; gap: 4px; padding: 5px; border-radius: var(--r-pildora); background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+  .sel { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 24px; border-radius: var(--r-pildora);
+    font: 600 16px/1 var(--f-texto); color: var(--texto-suave); transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+  .sel:hover { color: var(--texto); }
+  .sel:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  .sel.is-activo { color: var(--texto); background: var(--superficie); box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 22px rgb(46 120 255 / .25); }
+  .etiqueta-eco { font: 600 11px/1 var(--f-texto); letter-spacing: .06em; padding: 5px 8px; border-radius: 6px; color: var(--neon-core);
+    background: rgb(46 120 255 / .12); box-shadow: inset 0 0 0 1px rgb(127 182 255 / .45); }
+  #opciones:not(.ver-otros) .opciones[data-prof="otros"], #opciones.ver-otros .opciones[data-prof="tonio"] { display: none; }
+  /* un precio resuelto deja de ser "pendiente" y toma su forma final */
+  .precio-valor:not(.pendiente) { font: 800 46px/1 var(--f-titulo); font-stretch: var(--ancho-condensado); color: var(--texto); letter-spacing: -.01em; }
+  .precio .precio-valor:not(.pendiente) { display: block; }
+  .reparto .precio-valor:not(.pendiente) { font: 600 18px/1 var(--f-mono); }
+  .monto { display: inline-flex; align-items: baseline; }
+  @media (max-width: 640px) {
+    .selector-wrap { padding: 0 var(--gutter) 24px; }
+    .selector { width: 100%; }
+    .sel { flex: 1; justify-content: center; padding: 0 10px; font-size: 14px; gap: 6px; flex-wrap: wrap; height: auto; min-height: 50px; }
+  }
+
+  .precio-valor small { font: 500 15px/1 var(--f-texto); color: var(--texto-suave); letter-spacing: 0; margin-left: 4px; }
+  .reparto .precio-valor small { font-size: 12px; }
+
+  /* asientos: el 1 sos vos; tocás 2, 3 o 4 y se enciende la fila de precio que te toca */
+  .asientos { display: flex; gap: 6px; }
+  .asiento { all: unset; width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box;
+    box-shadow: inset 0 0 0 1.5px var(--neon-core); background: transparent; transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+  button.asiento { cursor: pointer; }
+  button.asiento:hover { box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 12px rgb(46 120 255 / .55); }
+  button.asiento:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  .asiento.on { background: var(--neon-core); box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 12px rgb(46 120 255 / .45); }
+  .reparto .fila { cursor: pointer; border-radius: 10px; padding: 8px 10px; margin: 0 -10px; transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease); border-bottom: 0; }
+  .reparto .fila:last-child { padding: 8px 10px; }
+  .reparto .fila + .fila { margin-top: -6px; }
+  .reparto .fila.is-activa { background: rgb(46 120 255 / .10); box-shadow: inset 2px 0 0 var(--neon-core); }
+  .reparto .fila.is-activa .q, .reparto .fila.is-activa .precio-valor { color: var(--neon-core); text-shadow: 0 0 14px rgb(46 120 255 / .45); }
+  .reparto .fila:not(.is-activa) .precio-valor { color: var(--texto-medio); }
+</style>
+</head>
+<body>
+<div data-nav="clases"></div>
+
+<header class="encabezado">
+  <div class="cuadricula"></div>
+  <h1 class="display">Clases</h1>
+  <p class="bajada">Preparadas sobre tus ejercicios, no sobre un temario genérico</p>
+  <p class="contexto">Me mandás tu guía o tu parcial antes de la clase. Llego con el tema preparado y con una pieza interactiva armada para vos, que te queda cuando terminamos.</p>
+</header>
+
+<div class="selector-wrap" id="selector">
+  <div class="selector" role="tablist" aria-label="Con quién">
+    <button role="tab" class="sel is-activo" data-prof="tonio" aria-selected="true"><span>Profee Tonio</span></button>
+    <button role="tab" class="sel" data-prof="otros" aria-selected="false"><span>Otros profesores</span> <span class="etiqueta-eco">+ económico</span></button>
+  </div>
+</div>
+<!-- las tres opciones, una vez por profesor: cada juego tiene sus propios textos y precios (se arman abajo, desde OPCIONES) -->
+<div id="opciones"></div>
+
+<section class="profes" id="profesores">
+  <div class="cab">
+    <h2 class="h1">Los profesores</h2>
+  </div>
+  <div class="grid" id="profes-grid"></div>
+</section>
+
+<section class="cierre" id="cierre">
+  <div class="barra">
+    <span class="item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>Pago por transferencia.</span>
+    <span class="sep"></span>
+    <span class="item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>Emito factura.</span>
+  </div>
+</section>
+
+<div data-pie></div>
+
+<script src="js/comun.js"></script>
+<script src="js/profesores.js"></script>
+<script>
+document.getElementById("profes-grid").innerHTML = tarjetaProfe("tonio") + tarjetaProfe("simon");
+
+const tilde = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+// mensajes de WhatsApp de cada opción; en el grupal, {n} sale de los asientos marcados
+const CON = { tonio: "con vos", otros: "con Simón" };
+const MENSAJES = prof => ({
+  a: `Hola Tonio! Quiero el Intensivo 1 a 1 ${CON[prof]}. Tengo que preparar: ___ (final / recuperatorio / materia)`,
+  b: `Hola Tonio! Quiero una clase grupal ${CON[prof]}. Seríamos {n} en total. Materia y tema: ___`,
+  c: `Hola Tonio! Quiero una clase individual ${CON[prof]}. Tema: ___`,
+});
+const WA = texto => `href="${wa(texto)}" target="_blank" rel="noopener"`;
+const precio = v => `<span class="precio-valor">${v} <small>por hora</small></span>`;
+
+// los textos de cada juego (vienen de los textos-editados.json que exportó Tonio)
+const OPCIONES = {
+  tonio: {
+    a: { para: "Para cuando no podés fallar: un final, un recuperatorio, una materia entera.",
+         incluye: ["3 horas de clase por semana distribuidas como quieras", "Simuladores de cada tema", "Guías hechas a medida", "Consultas por WhatsApp entre clase y clase"],
+         precio: "$29.000" },
+    b: { para: "Traés a 1, 2 o 3 compañeros de tu cursada. La clase cuesta lo mismo y se divide entre los que vengan.",
+         precios: ["$25.000", "$16.500", "$12.500"] },
+    c: { para: "Vos y yo, 60/90/120 minutos, sobre el tema que elijas.",
+         incluye: ["Incluye el simulador del tema"], precio: "$40.000" },
+  },
+  otros: {
+    a: { para: "Para cuando no podés fallar: un final, un recuperatorio, una materia entera.",
+         incluye: ["3 horas de clase por semana distribuidas como quieras", "1 simulador por semana del tema que elijas", "Consultas por WhatsApp entre clase y clase con el profesor que elijas"],
+         precio: "$24.000" },
+    b: { para: "Traés a 1, 2 o 3 compañeros de tu cursada. La clase cuesta lo mismo y se divide entre los que vengan.",
+         precios: ["$20.000", "$13.000", "$10.000"] },
+    c: { para: "60/90/120 minutos de clase sobre el tema que elijas.",
+         incluye: ["Clase totalmente personalizada en base a tus ejercicios"], precio: "$28.000" },
+  },
+};
+const lista = items => `<ul class="incluye">${items.map(t => `<li>${tilde}<span>${t}</span></li>`).join("")}</ul>`;
+
+const juego = (prof, o, m = MENSAJES(prof)) => `<section class="opciones" data-prof="${prof}">
+  <article class="opcion">
+    <span class="cual">A</span>
+    <h2 class="h3">Intensivo 1 a 1</h2>
+    <p class="para">${o.a.para}</p>
+    ${lista(o.a.incluye)}
+    <div class="precio">${precio(o.a.precio)}</div>
+    <a class="btn btn-secundario" ${WA(m.a)}>Agendar por WhatsApp</a>
+  </article>
+  <article class="opcion destacada">
+    <span class="pildora pildora-elegida">La más elegida</span>
+    <span class="cual">B</span>
+    <h2 class="h3">Clase con tu grupo</h2>
+    <p class="para">${o.b.para}</p>
+    <div class="grupo">
+      <span class="asientos"><span class="asiento on" title="Vos"></span>${[2, 3, 4].map(n => `<button class="asiento" data-n="${n}" aria-label="Somos ${n}"></button>`).join("")}</span>
+      <span class="t"><b>60/90/120 minutos</b><br>El día lo eligen ustedes</span>
+    </div>
+    <div class="reparto">
+      ${o.b.precios.map((v, i) => `<div class="fila" data-n="${i + 2}"><span class="q">Entre ${i + 2}</span><span class="monto">${precio(v)}<span class="c">cada uno</span></span></div>`).join("")}
+    </div>
+    <div style="margin-top:auto"></div>
+    <a class="btn btn-primario wa-grupo" style="margin-top:26px" data-msj="${m.b}" ${WA(m.b.replace("{n}", 2))}>${ICONO.wa} Agendar por WhatsApp</a>
+    <p class="nota-btn">Te abre el chat conmigo. Arreglamos día y horario ahí mismo.</p>
+  </article>
+  <article class="opcion">
+    <span class="cual">C</span>
+    <h2 class="h3">Clase individual</h2>
+    <p class="para">${o.c.para}</p>
+    ${lista(o.c.incluye)}
+    <div class="precio">${precio(o.c.precio)}</div>
+    <a class="btn btn-secundario" ${WA(m.c)}>Agendar por WhatsApp</a>
+  </article>
+</section>`;
+const opciones = document.getElementById("opciones");
+opciones.innerHTML = juego("tonio", OPCIONES.tonio) + juego("otros", OPCIONES.otros);
+
+// asientos: tocás cuántos son y se enciende la fila que les toca (arranca en 2)
+function somos(seccion, n) {
+  seccion.querySelectorAll("button.asiento").forEach(b => b.classList.toggle("on", +b.dataset.n <= n));
+  seccion.querySelectorAll(".fila").forEach(f => f.classList.toggle("is-activa", +f.dataset.n === n));
+  const boton = seccion.querySelector(".wa-grupo");
+  boton.href = wa(boton.dataset.msj.replace("{n}", n));
+}
+opciones.querySelectorAll(".opciones").forEach(sec => {
+  somos(sec, 2);
+  // pointerdown además de click: en el modo edición Chrome no siempre dispara el click sobre texto editable
+  sec.querySelectorAll("[data-n]").forEach(el => ["click", "pointerdown"].forEach(ev => el.addEventListener(ev, () => somos(sec, +el.dataset.n))));
+});
+
+// selector de profesor: cambia el juego entero de opciones. ?prof=otros abre con los otros profes.
+function elegir(prof) {
+  opciones.classList.toggle("ver-otros", prof === "otros");
+  document.querySelectorAll(".sel").forEach(b => { const on = b.dataset.prof === prof; b.classList.toggle("is-activo", on); b.setAttribute("aria-selected", on); });
+}
+document.querySelectorAll(".sel").forEach(b => ["click", "pointerdown"].forEach(ev => b.addEventListener(ev, () => elegir(b.dataset.prof))));
+elegir(new URLSearchParams(location.search).get("prof") === "otros" ? "otros" : "tonio");
+</script>
+</body>
+</html>

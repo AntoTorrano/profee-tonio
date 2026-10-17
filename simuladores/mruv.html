@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MRUV</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// MRUV: x(t) = x₀ + v₀·t + ½·a·t²  ·  v(t) = v₀ + a·t
+// Arriba x(t), abajo v(t). El área bajo v(t) (amarillo) ES el desplazamiento: se ve que coinciden.
+const TMAX = 10;
+Sim({
+  titulo: "MRUV: posición, velocidad y área",
+  vista: v => ({ x: [-1.1, TMAX + .4], y: [-34, 34] }),
+  controles: [
+    { id: "x0", et: "x₀ (posición inicial)", min: -10, max: 10, paso: .5, valor: -6, fmt: v => v + " m" },
+    { id: "v0", et: "v₀ (velocidad inicial)", min: -6, max: 6, paso: .25, valor: 4, fmt: v => v + " m/s" },
+    { id: "a", et: "a (aceleración)", min: -2, max: 2, paso: .05, valor: -.8, fmt: v => v + " m/s²" },
+  ],
+  lecturas: [
+    { id: "t", et: "t" },
+    { id: "x", et: "x(t)" },
+    { id: "v", et: "v(t)" },
+    { id: "d", et: "desplazamiento = área", tipo: "calc" },
+  ],
+  nota: "Arriba la <b>posición</b>, abajo la <b>velocidad</b>. El área amarilla bajo v(t) mide cuánto se movió: compará con cuánto cambió x(t). Cuando v(t) cruza el cero, el móvil da la vuelta.",
+  animar: true,
+  dibujar(g, v) {
+    const x = t => v.x0 + v.v0 * t + v.a * t * t / 2, vel = t => v.v0 + v.a * t;
+    const t = (v.t * 1.2) % (TMAX + 1.5), tt = Math.min(t, TMAX);
+    // dos gráficos en el mismo lienzo: x(t) arriba (y ∈ [2, 34]) y v(t) abajo (y ∈ [-34, -2])
+    // escalas automáticas: el gráfico usa todo su alto para los valores que de verdad toma
+    let mx = 1, mv = 1; for (let i = 0; i <= 100; i++) { const s = TMAX * i / 100; mx = Math.max(mx, Math.abs(x(s))); mv = Math.max(mv, Math.abs(vel(s))); }
+    const extX = Math.ceil(mx / 4) * 4, extV = Math.ceil(mv / 2) * 2;
+    const escX = 15 / extX, ofX = 18, escV = 11 / extV, ofV = -18;
+    const Yx = val => ofX + val * escX, Yv = val => ofV + val * escV;
+    const C = g.C;
+    for (const [of, et, ext] of [[ofX, "x(t) [m]", extX], [ofV, "v(t) [m/s]", extV]]) {
+      g.franjaH(of - (of > 0 ? 16 : 12), of + (of > 0 ? 16 : 12), { relleno: C.fondo, alfa: .5 });
+      for (let k = -ext; k <= ext; k += ext / 2) g.linea(0, of + k * (of > 0 ? escX : escV), TMAX, of + k * (of > 0 ? escX : escV), { color: C.grilla, ancho: 1, alfa: 1 });
+      g.linea(0, of, TMAX, of, { alfa: .6 }); g.linea(0, of - (of > 0 ? 15 : 12), 0, of + (of > 0 ? 15 : 12), { alfa: .6 });
+      g.texto(et, 0, of + (of > 0 ? 15 : 12), { dx: 8, tam: 12, color: C.suave });
+      g.texto("+" + ext, 0, of + ext * (of > 0 ? escX : escV), { dx: -6, alin: "right", tam: 10, mono: true, color: C.tenue });
+      g.texto("−" + ext, 0, of - ext * (of > 0 ? escX : escV), { dx: -6, alin: "right", tam: 10, mono: true, color: C.tenue });
+    }
+    for (let s = 2; s <= TMAX; s += 2) g.texto(s + " s", s, ofV - 12, { alin: "center", mono: true, tam: 11, color: C.tenue, dy: 4 });
+    // área bajo v(t) entre 0 y t: el desplazamiento
+    const pts = [[0, ofV]]; for (let i = 0; i <= 60; i++) { const s = tt * i / 60; pts.push([s, Yv(vel(s))]); } pts.push([tt, ofV]);
+    g.poligono(pts, { relleno: C.amarillo, alfa: .22, borde: C.amarillo, alfaBorde: .5 });
+    g.curva(s => Yv(vel(s)), { desde: 0, hasta: TMAX, color: C.cian, colorGlow: C.cian });
+    g.curva(s => Yx(x(s)), { desde: 0, hasta: TMAX });
+    // el instante t en los dos gráficos
+    g.linea(tt, ofV - 12, tt, ofX + 16, { dash: [4, 5], alfa: .45 });
+    g.punto(tt, Yx(x(tt)), { r: 6 });
+    g.punto(tt, Yv(vel(tt)), { color: C.cian, r: 5 });
+    // el móvil sobre una recta, abajo de todo
+    return { t: tt.toFixed(1) + " s", x: x(tt).toFixed(1) + " m", v: vel(tt).toFixed(2) + " m/s", d: (x(tt) - v.x0).toFixed(1) + " m" };
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+/* ==========================================================================
+   Profee Tonio · tokens de diseño
+   La paleta sale del logo y de las animaciones de Manim (02-sistema-visual.md).
+   No se agregan colores: todo lo demás se deriva con opacidad de estos.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=block");
+
+:root {
+  /* ---------------------------------------------------------------- color */
+  /* Fondos — casi negro azulado, estilo Manim */
+  --fondo:        #04060D;
+  --fondo-alt:    #0A0E14;
+  --superficie:   #080D1A;
+
+  /* Estructura */
+  --grilla:       #16233A;
+  --linea:        #1E3157;
+  --riel:         #22304A;
+
+  /* Azul neón — el acento principal */
+  --neon:         #2E78FF;
+  --neon-alt:     #33A1FF;
+  --neon-suave:   #4C7DFF;
+  --neon-core:    #7FB6FF;
+
+  /* Marca — donde aparece el logo */
+  --navy:         #0F2A43;
+  --azul:         #2563EB;
+  --azul-claro:   #60A5FA;
+
+  /* Acentos — uno por pantalla, nunca dos juntos.
+     azul = la función · amarillo = lo que se calcula · verde = el resultado */
+  --amarillo:     #FFE14D;
+  --verde:        #34D399;
+  --cian:         #4FC3E8;
+
+  /* Texto */
+  --texto:        #F8FAFC;
+  --texto-medio:  #EDEDED;
+  --texto-suave:  #AAB6CE;
+  --texto-tenue:  #7C93C7;
+
+  /* ---------------------------------------------------------------- luz
+     La luz viene de los objetos: el único "relieve" del sistema es glow azul.
+     Nunca sombra gris. */
+  --glow-1: 0 0 0 1px rgb(46 120 255 / .35), 0 0 18px rgb(46 120 255 / .18);
+  --glow-2: 0 0 0 1px rgb(46 120 255 / .60), 0 0 28px rgb(46 120 255 / .30), 0 0 64px rgb(46 120 255 / .14);
+  --glow-texto: 0 0 18px rgb(46 120 255 / .55), 0 0 42px rgb(46 120 255 / .25);
+
+  /* Degradados oficiales */
+  --grad-boton:  linear-gradient(135deg, var(--azul) 0%, var(--neon-alt) 100%);
+  --grad-titulo: linear-gradient(180deg, var(--neon-core) 0%, var(--neon) 100%);
+
+  /* ---------------------------------------------------------------- tipografía
+     Dos familias visibles: Archivo (títulos, condensada) e Inter (texto).
+     JetBrains Mono SOLO para números y expresiones. */
+  --f-titulo: "Archivo", "Arial Narrow", sans-serif;
+  --f-texto:  "Inter", system-ui, sans-serif;
+  --f-mono:   "JetBrains Mono", ui-monospace, monospace;
+  --ancho-condensado: 72%;          /* font-stretch de Archivo para títulos */
+
+  /* Escala (escritorio) — razón ~1.333 desde 17 px */
+  --t-display: 120px;   /* PROFEE TONIO, SIMULADORES */
+  --t-h1:       72px;
+  --t-h2:       48px;
+  --t-h3:       30px;
+  --t-h4:       22px;
+  --t-cuerpo-l: 20px;   /* bajadas */
+  --t-cuerpo:   17px;
+  --t-chico:    15px;
+  --t-meta:     13px;   /* metadatos, píldoras: siempre mayúsculas espaciadas */
+  --t-mono:     15px;
+
+  --lh-titulo: 0.95;
+  --lh-texto:  1.6;
+  --track-meta: 0.14em;
+
+  /* ---------------------------------------------------------------- espacio
+     Escala de 4 px; el aire grande es parte del estilo. */
+  --e-1:   4px;
+  --e-2:   8px;
+  --e-3:  12px;
+  --e-4:  16px;
+  --e-5:  24px;
+  --e-6:  32px;
+  --e-7:  48px;
+  --e-8:  64px;
+  --e-9:  96px;
+  --e-10: 144px;
+
+  --ancho-max: 1200px;
+  --gutter: 48px;
+
+  /* ---------------------------------------------------------------- radios
+     El marco del simulador usa 0.34 de 7.2 de ancho ≈ 20 px a 420 px.
+     Las tarjetas lo heredan. */
+  --r-chico:   8px;
+  --r-medio:  14px;
+  --r-grande: 20px;    /* tarjetas y marco del simulador */
+  --r-hero:   28px;
+  --r-pildora: 999px;
+
+  /* ---------------------------------------------------------------- movimiento */
+  --dur: 180ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --t-display: 64px;
+    --t-h1: 44px;
+    --t-h2: 34px;
+    --t-h3: 24px;
+    --t-h4: 19px;
+    --t-cuerpo-l: 18px;
+    --t-cuerpo: 16px;
+    --gutter: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur: 0ms; }
+}
+
+/* ---------------------------------------------------------------- base */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--f-texto);
+  font-size: var(--t-cuerpo);
+  line-height: var(--lh-texto);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 2px solid var(--neon-core);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgb(46 120 255 / .25);
+}

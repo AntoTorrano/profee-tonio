@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Producto escalar y proyección</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// u·v = |u|·|v|·cos θ. La proyección de v sobre u es la "sombra" de v sobre la recta de u:
+// proy_u(v) = (u·v / |u|²)·u. Arrastrá las puntas de las flechas.
+Sim({
+  titulo: "Producto escalar y proyección",
+  vista: { x: [-5.5, 5.5], y: [-4.2, 4.2], igual: true },
+  arrastrables: [{ id: "u", x: 3.5, y: 1, color: "#7FB6FF", paso: .1 }, { id: "w", x: 1.4, y: 3, color: "#4FC3E8", paso: .1 }],
+  lecturas: [
+    { id: "pe", et: "u · v", tipo: "calc" },
+    { id: "ang", et: "ángulo entre u y v" },
+    { id: "nu", et: "|u|" }, { id: "nv", et: "|v|" },
+    { id: "pr", et: "proyección de v sobre u", tipo: "res", ancho: true },
+  ],
+  nota: "Arrastrá las puntas. Cuando los vectores son <b>perpendiculares</b>, u·v = 0 y la proyección desaparece. Si el ángulo pasa de 90°, el producto se vuelve <b>negativo</b>: la sombra cae del otro lado.",
+  dibujar(g, v) {
+    const C = g.C, u = v.u, w = v.w;
+    g.cuadricula(1); g.ejes({ marcas: 1, x: "x", y: "y" });
+    const uu = u.x * u.x + u.y * u.y, pe = u.x * w.x + u.y * w.y, nu = Math.sqrt(uu), nv = Math.hypot(w.x, w.y);
+    const k = uu > 1e-6 ? pe / uu : 0, p = { x: k * u.x, y: k * u.y };
+    // la recta de u y la "sombra" de v sobre ella
+    if (nu > 1e-3) g.linea(-u.x * 10, -u.y * 10, u.x * 10, u.y * 10, { color: C.linea, ancho: 1.4, alfa: 1 });
+    g.linea(w.x, w.y, p.x, p.y, { color: C.amarillo, dash: [4, 5], alfa: .8 });
+    g.flecha(0, 0, p.x, p.y, { color: C.verde, ancho: 4 });
+    // ángulo recto en el pie de la perpendicular
+    if (nu > 1e-3 && Math.hypot(w.x - p.x, w.y - p.y) > .3) { const s = .25, ux = u.x / nu, uy = u.y / nu, dx = (w.x - p.x), dy = (w.y - p.y), nd = Math.hypot(dx, dy);
+      g.camino([[p.x + ux * s * Math.sign(k || 1), p.y + uy * s * Math.sign(k || 1)], [p.x + ux * s * Math.sign(k || 1) + dx / nd * s, p.y + uy * s * Math.sign(k || 1) + dy / nd * s], [p.x + dx / nd * s, p.y + dy / nd * s]], { color: C.amarillo, ancho: 1.4, glow: false, alfa: .8 }); }
+    // arco del ángulo
+    const a1 = Math.atan2(u.y, u.x), a2 = Math.atan2(w.y, w.x); let da = a2 - a1; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+    const arco = []; for (let i = 0; i <= 30; i++) { const t = a1 + da * i / 30; arco.push([.8 * Math.cos(t), .8 * Math.sin(t)]); }
+    g.camino(arco, { color: C.suave, ancho: 1.6, glow: false });
+    g.flecha(0, 0, u.x, u.y, { color: C.core, ancho: 3.4 }); g.flecha(0, 0, w.x, w.y, { color: C.cian, ancho: 3.4 });
+    g.texto("u", u.x, u.y, { dx: 12, dy: -12, color: C.core, peso: 700, tam: 15 }); g.texto("v", w.x, w.y, { dx: 12, dy: -12, color: C.cian, peso: 700, tam: 15 });
+    const ang = nu > 1e-6 && nv > 1e-6 ? Math.acos(Math.max(-1, Math.min(1, pe / (nu * nv)))) * 180 / Math.PI : 0;
+    return { pe: pe.toFixed(2), ang: ang.toFixed(1) + "°", nu: nu.toFixed(2), nv: nv.toFixed(2), pr: `(${p.x.toFixed(2)}; ${p.y.toFixed(2)})  ·  largo ${(pe / (nu || 1)).toFixed(2)}` };
+  },
+});
+</script>
+</body>
+</html>

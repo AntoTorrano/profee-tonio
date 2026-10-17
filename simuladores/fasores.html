@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía 0 · Ej. 12 — Fasores: parte real e imaginaria en el tiempo</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b24; --panel2:#1d2431; --line:#2a3342;
+    --txt:#e6edf3; --dim:#94a3b8;
+    --blue:#6ea8fe; --orange:#f0a35e; --green:#5ed9a0; --violet:#b18cf0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{padding:18px 24px 10px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:18px;font-weight:650}
+  header p{margin:6px 0 0;color:var(--dim);font-size:13px;line-height:1.5;max-width:78ch}
+  .cases{display:flex;flex-wrap:wrap;gap:6px;padding:14px 24px 0}
+  .cases button{padding:7px 11px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--dim);cursor:pointer;font-size:12.5px;
+    font-family:ui-monospace,Menlo,monospace;transition:.13s;white-space:nowrap}
+  .cases button:hover{border-color:var(--blue);color:var(--txt)}
+  .cases button.on{background:var(--blue);border-color:var(--blue);color:#0b1220;font-weight:650}
+  .wrap{display:flex;gap:16px;padding:16px 24px 26px;flex-wrap:wrap;align-items:flex-start}
+  .col-a{flex:0 1 400px;min-width:320px;display:flex;flex-direction:column;gap:14px}
+  .col-b{flex:1 1 460px;min-width:340px;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card h2{margin:0 0 10px;font-size:11.5px;font-weight:650;color:var(--dim);
+    text-transform:uppercase;letter-spacing:.9px}
+  canvas{display:block;width:100%;height:auto;border-radius:9px;background:#121826}
+  .row{display:flex;align-items:center;gap:10px;margin:10px 0}
+  .row label{width:52px;font-size:13px;color:var(--dim);flex:none;
+    font-family:ui-monospace,Menlo,monospace}
+  input[type=range]{flex:1;accent-color:var(--blue);height:4px}
+  .val{width:62px;text-align:right;font-size:12.5px;color:var(--blue);
+    font-family:ui-monospace,Menlo,monospace}
+  .btns{display:flex;gap:8px;margin-top:6px}
+  .btns button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--txt);cursor:pointer;font-size:12.5px}
+  .btns button:hover{border-color:var(--blue)}
+  .eq{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;line-height:2.05;
+    background:var(--panel2);border-radius:8px;padding:11px 13px;overflow-x:auto;white-space:nowrap}
+  .re{color:var(--orange)} .im{color:var(--green)}
+  .note{font-size:12.5px;color:var(--dim);line-height:1.65;margin:11px 0 0}
+  .note b{color:var(--txt);font-weight:600}
+  .lg{display:flex;gap:16px;font-size:12px;color:var(--dim);margin-bottom:8px;flex-wrap:wrap}
+  .lg i{display:inline-block;width:13px;height:3px;border-radius:2px;margin-right:5px;
+    vertical-align:middle}
+  footer{padding:0 24px 24px;color:#64748b;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Guía 0 · Ejercicio 12 — parte real e imaginaria de fasores</h1>
+  <p>Cada función es un vector girando en el plano complejo. Su parte real es la <b>sombra sobre el eje Re</b>
+     y su parte imaginaria la <b>sombra sobre el eje Im</b>. Los dos gráficos de la derecha son esas sombras
+     dibujadas contra el tiempo, como en un osciloscopio.</p>
+</header>
+
+<div class="cases" id="cases"></div>
+
+<div class="wrap">
+  <div class="col-a">
+    <div class="card">
+      <h2>Plano complejo</h2>
+      <div class="lg">
+        <span><i style="background:var(--blue)"></i>fasor resultante</span>
+        <span><i style="background:var(--violet)"></i>componentes</span>
+        <span><i style="background:var(--orange)"></i>Re</span>
+        <span><i style="background:var(--green)"></i>Im</span>
+      </div>
+      <canvas id="cvz" width="760" height="760"></canvas>
+    </div>
+    <div class="card">
+      <h2>Controles</h2>
+      <div class="row"><label>ω</label><input type="range" id="sW" min="0.4" max="4" step="0.05" value="1.6"><span class="val" id="vW"></span></div>
+      <div class="row" id="rowW1"><label>ω₁</label><input type="range" id="sW1" min="0.4" max="6" step="0.05" value="3.0"><span class="val" id="vW1"></span></div>
+      <div class="row" id="rowW2"><label>ω₂</label><input type="range" id="sW2" min="0.4" max="6" step="0.05" value="3.4"><span class="val" id="vW2"></span></div>
+      <div class="row"><label>vel.</label><input type="range" id="sS" min="0" max="2" step="0.02" value="0.7"><span class="val" id="vS"></span></div>
+      <div class="btns"><button id="bPlay">⏸ Pausar</button><button id="bReset">↺ t = 0</button></div>
+    </div>
+  </div>
+
+  <div class="col-b">
+    <div class="card">
+      <h2 id="ttl">Resultado</h2>
+      <div class="eq" id="eq"></div>
+      <p class="note" id="note"></p>
+    </div>
+    <div class="card">
+      <h2>Re(z) vs t</h2>
+      <canvas id="cvre" width="900" height="300"></canvas>
+    </div>
+    <div class="card">
+      <h2>Im(z) vs t</h2>
+      <canvas id="cvim" width="900" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<footer>Física 2 — FCEyN/UBA · Cátedra Grecco. Notación del Martínez: el fasor gira, la magnitud física es su proyección.</footer>
+
+<script>
+const PI=Math.PI;
+const CASES={
+ a:{lbl:'a) exp(iωt)',
+    f:(t,w)=>({re:Math.cos(w*t), im:Math.sin(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = e<sup>iωt</sup>','<span class="re">Re = cos(ωt)</span>','<span class="im">Im = sen(ωt)</span>'],
+    note:'El fasor de referencia: módulo 1, gira <b>antihorario</b> con velocidad angular ω. Re va como coseno (arranca en 1), Im como seno (arranca en 0). Im está atrasada 90° respecto de Re.'},
+ b:{lbl:'b) exp(−iωt)',
+    f:(t,w)=>({re:Math.cos(w*t), im:-Math.sin(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = e<sup>−iωt</sup>','<span class="re">Re = cos(ωt)</span>','<span class="im">Im = −sen(ωt)</span>'],
+    note:'Mismo módulo, pero gira <b>en sentido horario</b>. La parte real es idéntica a la de a): mirando solo Re no podés distinguir un giro del otro. Esa ambigüedad es la razón por la que después, en el oscilador, se toma el convenio de quedarse con una sola de las dos.'},
+ c:{lbl:'c) exp(i(ωt+π/2))',
+    f:(t,w)=>({re:-Math.sin(w*t), im:Math.cos(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = e<sup>i(ωt+π/2)</sup> = i·e<sup>iωt</sup>','<span class="re">Re = cos(ωt+π/2) = −sen(ωt)</span>','<span class="im">Im = sen(ωt+π/2) = cos(ωt)</span>'],
+    note:'Es a) <b>adelantado 90°</b>: arranca parado sobre el eje Im en vez del Re. Sumar una fase constante = rotar el dibujo entero, no cambiar la forma de onda.'},
+ d:{lbl:'d) exp(i(ωt−π/2))',
+    f:(t,w)=>({re:Math.sin(w*t), im:-Math.cos(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = e<sup>i(ωt−π/2)</sup> = −i·e<sup>iωt</sup>','<span class="re">Re = cos(ωt−π/2) = sen(ωt)</span>','<span class="im">Im = sen(ωt−π/2) = −cos(ωt)</span>'],
+    note:'Es a) <b>atrasado 90°</b>. Comparalo con c): son el mismo movimiento con medio giro de diferencia entre ellos.'},
+ e:{lbl:'e) exp(iω₁t)+exp(iω₂t)',
+    f:(t,w,w1,w2)=>({re:Math.cos(w1*t)+Math.cos(w2*t), im:Math.sin(w1*t)+Math.sin(w2*t)}),
+    comp:(t,w,w1,w2)=>[{m:1,ph:w1*t},{m:1,ph:w2*t}], rmax:2,
+    eq:['z = e<sup>iω₁t</sup> + e<sup>iω₂t</sup> = 2cos(Δω·t/2)·e<sup>i ω̄ t</sup>',
+        '<span class="re">Re = cos(ω₁t) + cos(ω₂t) = 2cos(Δω·t/2)·cos(ω̄t)</span>',
+        '<span class="im">Im = sen(ω₁t) + sen(ω₂t) = 2cos(Δω·t/2)·sen(ω̄t)</span>',
+        'con ω̄ = (ω₁+ω₂)/2 y Δω = ω₁−ω₂'],
+    note:'<b>Batidos.</b> Dos fasores girando a distinta velocidad: el módulo de la suma late entre 0 y 2 con frecuencia |Δω|/2, mientras la fase avanza al promedio ω̄. Poné ω₁ y ω₂ casi iguales y vas a ver la envolvente lenta. Este es el mecanismo de los batidos y de los paquetes de onda (guía 5).'},
+ f:{lbl:'f) i·exp(iωt)',
+    f:(t,w)=>({re:-Math.sin(w*t), im:Math.cos(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = i·e<sup>iωt</sup> = e<sup>i(ωt+π/2)</sup>','<span class="re">Re = −sen(ωt)</span>','<span class="im">Im = cos(ωt)</span>'],
+    note:'Idéntico a c). Multiplicar por i <b>es</b> rotar 90°, porque i = e<sup>iπ/2</sup>. Este es el truco que después usás para derivar: d/dt de e<sup>iωt</sup> da iω·e<sup>iωt</sup>, o sea escalar por ω y girar 90°.'},
+ g:{lbl:'g) −exp(iωt)',
+    f:(t,w)=>({re:-Math.cos(w*t), im:-Math.sin(w*t)}),
+    comp:null, rmax:1,
+    eq:['z = −e<sup>iωt</sup> = e<sup>i(ωt+π)</sup>','<span class="re">Re = −cos(ωt)</span>','<span class="im">Im = −sen(ωt)</span>'],
+    note:'Multiplicar por −1 = rotar 180°, porque −1 = e<sup>iπ</sup>. Es a) en <b>contrafase</b>.'},
+ h:{lbl:'h) ½(e^{iωt}+e^{−iωt})',
+    f:(t,w)=>({re:Math.cos(w*t), im:0}),
+    comp:(t,w)=>[{m:.5,ph:w*t},{m:.5,ph:-w*t}], rmax:1,
+    eq:['z = ½(e<sup>iωt</sup> + e<sup>−iωt</sup>) = cos(ωt)','<span class="re">Re = cos(ωt)</span>','<span class="im">Im = 0</span>'],
+    note:'Dos fasores <b>contrarrotantes</b> de módulo ½. Sus partes imaginarias se cancelan siempre, así que la suma vive sobre el eje real y oscila como un coseno puro. Es la identidad del ejercicio 13a vista como dibujo, y la razón física de que una oscilación real se pueda escribir con exponenciales complejas sin trampa.'},
+ i:{lbl:'i) (1/2i)(e^{iωt}−e^{−iωt})',
+    f:(t,w)=>({re:Math.sin(w*t), im:0}),
+    comp:(t,w)=>[{m:.5,ph:w*t-PI/2},{m:.5,ph:PI/2-w*t}], rmax:1,
+    eq:['z = (1/2i)(e<sup>iωt</sup> − e<sup>−iωt</sup>) = sen(ωt)','<span class="re">Re = sen(ωt)</span>','<span class="im">Im = 0</span>'],
+    note:'Lo mismo que h) pero con las componentes giradas −90° cada una: la suma vuelve a caer sobre el eje real, ahora como seno. Es el ejercicio 13b.'}
+};
+
+let key='a', t=0, playing=true;
+const cvz=document.getElementById('cvz'), zx=cvz.getContext('2d');
+const cvre=document.getElementById('cvre'), rx=cvre.getContext('2d');
+const cvim=document.getElementById('cvim'), ix=cvim.getContext('2d');
+const sW=document.getElementById('sW'),sW1=document.getElementById('sW1'),sW2=document.getElementById('sW2'),sS=document.getElementById('sS');
+
+const cbox=document.getElementById('cases');
+Object.keys(CASES).forEach(k=>{
+  const b=document.createElement('button'); b.textContent=CASES[k].lbl; b.dataset.k=k;
+  if(k===key)b.classList.add('on');
+  b.onclick=()=>{key=k;[...cbox.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');refresh();};
+  cbox.appendChild(b);
+});
+document.getElementById('bPlay').onclick=e=>{playing=!playing;e.target.textContent=playing?'⏸ Pausar':'▶ Reproducir';};
+document.getElementById('bReset').onclick=()=>{t=0;};
+[sW,sW1,sW2,sS].forEach(s=>s.addEventListener('input',refresh));
+
+function refresh(){
+  const C=CASES[key], isE=(key==='e');
+  document.getElementById('rowW1').style.display=isE?'flex':'none';
+  document.getElementById('rowW2').style.display=isE?'flex':'none';
+  document.querySelector('.row').style.display=isE?'none':'flex';
+  document.getElementById('ttl').textContent=C.lbl;
+  document.getElementById('eq').innerHTML=C.eq.join('<br>');
+  document.getElementById('note').innerHTML=C.note;
+}
+
+function val(tt){
+  const C=CASES[key];
+  return C.f(tt,+sW.value,+sW1.value,+sW2.value);
+}
+
+function drawPlane(){
+  const C=CASES[key], W=cvz.width, S=W/2, R=C.rmax*1.35, sc=S/R;
+  const X=x=>S+x*sc, Y=y=>S-y*sc;
+  zx.fillStyle='#121826'; zx.fillRect(0,0,W,W);
+  // grilla
+  zx.strokeStyle='#1e2634'; zx.lineWidth=1.5;
+  for(let g=-Math.ceil(R);g<=R;g++){
+    zx.beginPath();zx.moveTo(X(g),0);zx.lineTo(X(g),W);zx.stroke();
+    zx.beginPath();zx.moveTo(0,Y(g));zx.lineTo(W,Y(g));zx.stroke();
+  }
+  zx.strokeStyle='#2f3a4d'; zx.lineWidth=2; zx.setLineDash([6,6]);
+  zx.beginPath();zx.arc(S,S,sc,0,2*PI);zx.stroke(); zx.setLineDash([]);
+  zx.strokeStyle='#55637a'; zx.lineWidth=2.5;
+  zx.beginPath();zx.moveTo(0,S);zx.lineTo(W,S);zx.stroke();
+  zx.beginPath();zx.moveTo(S,0);zx.lineTo(S,W);zx.stroke();
+  zx.fillStyle='#7d8ba1'; zx.font='600 20px ui-monospace,Menlo,monospace';
+  zx.fillText('Re',W-52,S-13); zx.fillText('Im',S+12,26);
+
+  const v=val(t);
+  // componentes
+  if(C.comp){
+    const cs=C.comp(t,+sW.value,+sW1.value,+sW2.value);
+    let ax=0,ay=0;
+    zx.strokeStyle='rgba(177,140,240,.85)'; zx.lineWidth=3;
+    cs.forEach(c=>{
+      const nx=ax+c.m*Math.cos(c.ph), ny=ay+c.m*Math.sin(c.ph);
+      zx.beginPath();zx.moveTo(X(ax),Y(ay));zx.lineTo(X(nx),Y(ny));zx.stroke();
+      zx.fillStyle='rgba(177,140,240,.85)';
+      zx.beginPath();zx.arc(X(nx),Y(ny),5,0,2*PI);zx.fill();
+      ax=nx;ay=ny;
+    });
+  }
+  // proyecciones
+  zx.setLineDash([5,5]); zx.lineWidth=2;
+  zx.strokeStyle='rgba(240,163,94,.55)';
+  zx.beginPath();zx.moveTo(X(v.re),Y(v.im));zx.lineTo(X(v.re),Y(0));zx.stroke();
+  zx.strokeStyle='rgba(94,217,160,.55)';
+  zx.beginPath();zx.moveTo(X(v.re),Y(v.im));zx.lineTo(X(0),Y(v.im));zx.stroke();
+  zx.setLineDash([]);
+  // marcas Re / Im
+  zx.strokeStyle='#f0a35e'; zx.lineWidth=6;
+  zx.beginPath();zx.moveTo(X(0),Y(0));zx.lineTo(X(v.re),Y(0));zx.stroke();
+  zx.strokeStyle='#5ed9a0';
+  zx.beginPath();zx.moveTo(X(0),Y(0));zx.lineTo(X(0),Y(v.im));zx.stroke();
+  // fasor
+  zx.strokeStyle='#6ea8fe'; zx.lineWidth=4;
+  zx.beginPath();zx.moveTo(X(0),Y(0));zx.lineTo(X(v.re),Y(v.im));zx.stroke();
+  zx.fillStyle='#6ea8fe';
+  zx.beginPath();zx.arc(X(v.re),Y(v.im),9,0,2*PI);zx.fill();
+}
+
+function drawTrace(cx,cv,pick,color,label){
+  const W=cv.width,H=cv.height, win=14, amp=CASES[key].rmax;
+  cx.fillStyle='#121826'; cx.fillRect(0,0,W,H);
+  const t0=Math.max(0,t-win), t1=t0+win;
+  const X=tt=>((tt-t0)/win)*W, Y=y=>H/2-(y/(amp*1.18))*(H/2-10);
+  cx.strokeStyle='#1e2634'; cx.lineWidth=1.5;
+  for(let g=-Math.floor(amp);g<=amp;g++){cx.beginPath();cx.moveTo(0,Y(g));cx.lineTo(W,Y(g));cx.stroke();}
+  cx.strokeStyle='#55637a'; cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(0,Y(0));cx.lineTo(W,Y(0));cx.stroke();
+  cx.strokeStyle=color; cx.lineWidth=3.2; cx.beginPath();
+  for(let p=0;p<=W;p++){
+    const tt=t0+(p/W)*win, y=Y(pick(val(tt)));
+    p?cx.lineTo(p,y):cx.moveTo(p,y);
+  }
+  cx.stroke();
+  const yv=Y(pick(val(t)));
+  cx.strokeStyle='rgba(255,255,255,.22)'; cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(X(t),0);cx.lineTo(X(t),H);cx.stroke();
+  cx.fillStyle=color; cx.beginPath();cx.arc(X(t),yv,7,0,2*PI);cx.fill();
+  cx.fillStyle='#7d8ba1'; cx.font='600 17px ui-monospace,Menlo,monospace';
+  cx.fillText('t',W-22,Y(0)-9); cx.fillText(label,12,24);
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=(now-last)/1000; last=now;
+  if(playing) t+=dt*(+sS.value);
+  document.getElementById('vW').textContent=(+sW.value).toFixed(2);
+  document.getElementById('vW1').textContent=(+sW1.value).toFixed(2);
+  document.getElementById('vW2').textContent=(+sW2.value).toFixed(2);
+  document.getElementById('vS').textContent=(+sS.value).toFixed(2)+'×';
+  drawPlane();
+  drawTrace(rx,cvre,v=>v.re,'#f0a35e','Re');
+  drawTrace(ix,cvim,v=>v.im,'#5ed9a0','Im');
+  requestAnimationFrame(loop);
+}
+refresh(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

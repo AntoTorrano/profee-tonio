@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiro oblicuo</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Tiro oblicuo sin rozamiento. La misma física y la misma convención de color que simulador_tiro.py:
+// trayectoria en neón, v₀ (la tangente en el origen) en verde, lo que se calcula (alcance, proyectil) en amarillo.
+const G = 9.8;
+const alcance = (th, v) => v * v * Math.sin(2 * th) / G;
+const altura = (th, v) => (v * Math.sin(th)) ** 2 / (2 * G);
+const vuelo = (th, v) => 2 * v * Math.sin(th) / G;
+
+Sim({
+  titulo: "Tiro oblicuo",
+  vista: { x: [-3, 66], y: [-3, 34], igual: true },
+  controles: [
+    { id: "ang", et: "ángulo", min: 5, max: 85, paso: 1, valor: 50, fmt: v => v + "°" },
+    { id: "v0", et: "v₀", min: 5, max: 25, paso: .5, valor: 20, fmt: v => v.toFixed(1) + " m/s" },
+  ],
+  lecturas: [
+    { id: "alc", et: "alcance", tipo: "calc" },
+    { id: "alt", et: "altura máxima" },
+    { id: "tv", et: "tiempo de vuelo" },
+  ],
+  nota: "El alcance máximo está en <b>45°</b>: probá 30° y 60°, caen en el mismo lugar. La flecha verde es <b>v₀</b>, la tangente a la curva en el origen.",
+  animar: true,
+  dibujar(g, v) {
+    const th = v.ang * Math.PI / 180, R = alcance(th, v.v0), H = altura(th, v.v0), T = vuelo(th, v.v0);
+    const y = x => x * Math.tan(th) - G * x * x / (2 * v.v0 ** 2 * Math.cos(th) ** 2);
+    g.cuadricula(5); g.ejes({ marcas: 10, x: "x [m]", y: "y [m]" });
+    // altura máxima: guía tenue hasta el vértice
+    g.linea(0, H, R / 2, H, { dash: [5, 5], alfa: .5 });
+    g.texto(H.toFixed(1) + " m", 0, H, { dx: -6, alin: "right", mono: true, tam: 12 });
+    g.curva(y, { desde: 0, hasta: R });
+    g.punto(R / 2, H, { color: g.C.suave, r: 4, glow: false });
+    // v₀: la tangente en el origen, con su ángulo
+    const L = v.v0 * .55;
+    g.flecha(0, 0, L * Math.cos(th), L * Math.sin(th), { color: g.C.verde, ancho: 3.2 });
+    g.texto("v₀", L * Math.cos(th), L * Math.sin(th), { color: g.C.verde, dx: 10, dy: -10, peso: 700 });
+    // alcance
+    g.linea(R, -1.6, R, 1.6, { color: g.C.amarillo, ancho: 2.5 });
+    g.texto(R.toFixed(1) + " m", R, 0, { color: g.C.amarillo, dy: 18, alin: "center", mono: true, tam: 12, fondo: true });
+    // el proyectil recorre la trayectoria en loop (1.2 s de pausa al llegar)
+    const ciclo = T + 1.2, t = Math.min(v.t % ciclo, T), xp = v.v0 * Math.cos(th) * t;
+    g.punto(xp, Math.max(0, y(xp)), { color: g.C.amarillo, r: 6 });
+    return { alc: R.toFixed(1) + " m", alt: H.toFixed(1) + " m", tv: T.toFixed(2) + " s" };
+  },
+});
+</script>
+</body>
+</html>

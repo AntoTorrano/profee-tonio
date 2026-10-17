@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energía mecánica</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Una bolita en una pista con forma de valle, y(x) = h·(x/5)².
+// Se integra la ecuación de movimiento sobre la pista (con rozamiento opcional).
+// Barras: energía potencial (azul), cinética (amarillo) y la suma (verde): sin rozamiento, la suma no cambia.
+const g0 = 9.8, M = 1, A = 5;
+let estado = null;   // { s: posición horizontal, u: velocidad horizontal }
+function reiniciar(v) { estado = { x: -A * .98, u: 0, ultima: null, Einicial: null }; }
+function pista(v) { return x => v.h * (x / A) ** 2; }
+
+const sim = Sim({
+  titulo: "Energía mecánica en una pista",
+  vista: { x: [-6.8, 9.4], y: [-1, 8.4], igual: true },
+  controles: [
+    { id: "h", et: "altura de largada", min: 1, max: 6, paso: .1, valor: 4.5, fmt: v => v.toFixed(1) + " m" },
+    { id: "mu", et: "rozamiento", min: 0, max: .3, paso: .01, valor: 0, fmt: v => v.toFixed(2) },
+  ],
+  acciones: [{ et: "Soltar de nuevo", fn: s => { reiniciar(s.v); s.pedir(); } }],
+  lecturas: [
+    { id: "ep", et: "potencial (mgh)" },
+    { id: "ec", et: "cinética (½mv²)", tipo: "calc" },
+    { id: "em", et: "mecánica (suma)", tipo: "res" },
+    { id: "vel", et: "velocidad" },
+  ],
+  nota: "Sin rozamiento la suma <b>verde</b> no se mueve: lo que pierde la potencial lo gana la cinética. Subí el rozamiento y mirá cómo la suma baja y la bolita ya no llega a la misma altura.",
+  animar: true,
+  alCambiar(id, s) { if (id === "h") reiniciar(s.v); },
+  dibujar(g, v) {
+    const C = g.C, f = pista(v), df = x => 2 * v.h * x / (A * A);
+    if (!estado) reiniciar(v);
+    // integración sobre la pista: a lo largo de la curva, a = −g·sinθ − μ·g·cosθ·sign(v)
+    const ahora = v.t; if (estado.ultima === null) estado.ultima = ahora;
+    let dt = Math.min(.05, ahora - estado.ultima); estado.ultima = ahora;
+    for (let i = 0; i < 20; i++) {
+      const h = dt / 20, m = df(estado.x), cos = 1 / Math.sqrt(1 + m * m), sin = m * cos;
+      const vs = estado.u / cos;                        // velocidad sobre la pista
+      let as = -g0 * sin - (Math.abs(vs) > 1e-3 ? Math.sign(vs) * v.mu * g0 * cos : 0);
+      const vs2 = vs + as * h;
+      estado.u = (Math.sign(vs2) !== Math.sign(vs) && v.mu > 0 && Math.abs(vs) < .05) ? 0 : vs2 * cos;
+      estado.x += estado.u * h;
+    }
+    const x = estado.x, y = f(x), m = df(x), vel = Math.abs(estado.u) * Math.sqrt(1 + m * m);
+    const Ep = M * g0 * y, Ec = .5 * M * vel * vel, Em = Ep + Ec;
+    // pista y bolita
+    g.poligono([...Array.from({ length: 81 }, (_, i) => { const xx = -A - .3 + (2 * A + .6) * i / 80; return [xx, f(xx)]; }), [A + .3, -1], [-A - .3, -1]], { relleno: C.fondo, alfa: .8 });
+    g.curva(f, { desde: -A - .3, hasta: A + .3 });
+    g.linea(-A - .5, v.h, A + .5, v.h, { dash: [5, 6], alfa: .4 });
+    g.texto("altura inicial", -A - .5, v.h, { dy: -10, tam: 11, color: C.tenue });
+    const r = .32, nx = -m / Math.sqrt(1 + m * m), ny = 1 / Math.sqrt(1 + m * m);
+    g.punto(x + nx * r, y + ny * r, { color: C.core, r: 9 });
+    // barras de energía
+    const Emax = M * g0 * 6, alto = 7, base = 0, xb = 6.6, ancho = .62;
+    const barra = (i, val, col, et) => {
+      const h = Math.max(0, val / Emax * alto), x0 = xb + i * .9;
+      g.poligono([[x0, base], [x0 + ancho, base], [x0 + ancho, base + h], [x0, base + h]], { relleno: col, alfa: .55, borde: col });
+      g.texto(et, x0 + ancho / 2, base, { dy: 14, alin: "center", tam: 11, color: C.suave });
+    };
+    barra(0, Ep, C.neon, "Ep"); barra(1, Ec, C.amarillo, "Ec"); barra(2, Em, C.verde, "Em");
+    return { ep: Ep.toFixed(1) + " J", ec: Ec.toFixed(1) + " J", em: Em.toFixed(1) + " J", vel: vel.toFixed(2) + " m/s" };
+  },
+});
+</script>
+</body>
+</html>

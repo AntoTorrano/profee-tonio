@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Esta página no existe.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Página no encontrada · Profee Tonio">
+<meta property="og:description" content="Esta página no existe.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Página no encontrada · Profee Tonio</title>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  .error { position: relative; min-height: 100vh; display: grid; place-items: center; overflow: hidden; padding: 120px var(--gutter) 80px; }
+  .error .cuadricula { -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 45%, #000 10%, transparent 80%); mask-image: radial-gradient(ellipse 60% 60% at 50% 45%, #000 10%, transparent 80%); }
+  .error svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .centro { position: relative; text-align: center; display: grid; justify-items: center; }
+  .numero { font: 900 220px/.85 var(--f-titulo); font-stretch: var(--ancho-condensado); letter-spacing: -.01em;
+    background: var(--grad-titulo); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 30px rgb(46 120 255 / .4)); }
+  .centro .meta { margin: 26px 0 18px; }
+  .centro .pendiente { font-size: 15px; padding: 16px 22px; max-width: 520px; }
+  .acciones { display: flex; gap: 12px; margin-top: 34px; }
+  @media (max-width: 640px) { .numero { font-size: 140px; } .acciones { flex-direction: column; width: 100%; } }
+</style>
+</head>
+<body>
+<div data-nav=""></div>
+<section class="error">
+  <div class="cuadricula"></div>
+  <!-- una función con una discontinuidad evitable: la curva existe a los dos lados, en el punto no hay nada -->
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><filter id="h" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+    <g id="g"></g>
+  </svg>
+  <div class="centro">
+    <div class="numero">404</div>
+    <p class="meta">Página no encontrada</p>
+    <span class="pendiente">[TEXTO DE LA PÁGINA DE ERROR]</span>
+    <div class="acciones">
+      <a class="btn btn-primario" href="index.html">Inicio</a>
+      <a class="btn btn-secundario" href="biblioteca.html">Simuladores</a>
+    </div>
+  </div>
+</section>
+<script src="/js/comun.js"></script>
+<script>
+const NS = "http://www.w3.org/2000/svg", g = document.getElementById("g");
+const el = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); g.appendChild(e); return e; };
+const X_HUECO = 1260, y = x => 770 - 330 * Math.exp(-(((x - 1180) / 260) ** 2)) - (x - 80) * 0.02;
+const tramo = (a, b) => { let d = ""; for (let x = a; x <= b; x += 4) d += (x === a ? "M" : " L") + x + " " + y(x).toFixed(1); return d; };
+el("line", { x1: 60, y1: 790, x2: 1380, y2: 790, stroke: "#7C93C7", "stroke-opacity": .3, "stroke-width": 1.5 });
+for (const d of [tramo(80, X_HUECO - 14), tramo(X_HUECO + 14, 1380)]) {
+  el("path", { d, fill: "none", stroke: "#2E78FF", "stroke-width": 9, "stroke-opacity": .55, filter: "url(#h)" });
+  el("path", { d, fill: "none", stroke: "#7FB6FF", "stroke-width": 3 });
+}
+// el punto que falta: círculo abierto
+el("circle", { cx: X_HUECO, cy: y(X_HUECO), r: 11, fill: "#04060D", stroke: "#FFE14D", "stroke-width": 3 });
+el("line", { x1: X_HUECO, y1: y(X_HUECO) + 18, x2: X_HUECO, y2: 790, stroke: "#FFE14D", "stroke-opacity": .5, "stroke-dasharray": "5 6" });
+</script>
+</body>
+</html>

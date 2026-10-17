@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformación lineal en el plano</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Una matriz [[a, b], [c, d]] mueve TODO el plano: las columnas son a dónde van e₁ y e₂.
+// El cuadrado unidad se vuelve un paralelogramo de área |det|. Si det < 0, el plano se da vuelta.
+const PRESETS = {
+  rot: [0, -1, 1, 0], esc: [1.5, 0, 0, .6], cort: [1, 1, 0, 1], ref: [1, 0, 0, -1], proy: [1, 0, 0, 0],
+};
+const sim = Sim({
+  titulo: "Transformación lineal en el plano",
+  vista: { x: [-4.6, 4.6], y: [-3.6, 3.6], igual: true },
+  botones: [{ id: "pre", et: "probá una", opciones: [["libre", "Libre"], ["rot", "Rotación 90°"], ["esc", "Escala"], ["cort", "Corte"], ["ref", "Reflexión"], ["proy", "Proyección"]], valor: "libre" }],
+  alCambiar(id, s) { if (id === "pre" && PRESETS[s.v.pre]) { const [a, b, c, d] = PRESETS[s.v.pre]; s.fijar("a", a); s.fijar("b", b); s.fijar("c", c); s.fijar("d", d); s.fijar("t", 1); } },
+  controles: [
+    { id: "a", et: "a", min: -2, max: 2, paso: .05, valor: 1.2, fmt: v => v.toFixed(2) },
+    { id: "b", et: "b", min: -2, max: 2, paso: .05, valor: .6, fmt: v => v.toFixed(2) },
+    { id: "c", et: "c", min: -2, max: 2, paso: .05, valor: -.3, fmt: v => v.toFixed(2) },
+    { id: "d", et: "d", min: -2, max: 2, paso: .05, valor: 1.1, fmt: v => v.toFixed(2) },
+    { id: "t", et: "de la identidad a la matriz", min: 0, max: 1, paso: .01, valor: 1, fmt: v => Math.round(v * 100) + " %" },
+  ],
+  lecturas: [
+    { id: "M", et: "matriz", ancho: true },
+    { id: "det", et: "det = área del cuadrado", tipo: "calc" },
+    { id: "av", et: "autovalores", tipo: "res" },
+  ],
+  nota: "Las flechas son las <b>columnas</b> de la matriz: a dónde van e₁ y e₂. El área amarilla mide el <b>determinante</b>. Con det = 0 el plano se aplasta en una recta y la matriz no tiene inversa.",
+  dibujar(g, v) {
+    const C = g.C, t = v.t;
+    const a = 1 + (v.a - 1) * t, b = v.b * t, c = v.c * t, d = 1 + (v.d - 1) * t;   // interpolada desde la identidad
+    const T = (x, y) => [a * x + b * y, c * x + d * y];
+    g.cuadricula(1); g.ejes({});
+    // la cuadrícula transformada
+    for (let k = -6; k <= 6; k++) {
+      g.camino([T(k, -6), T(k, 6)], { color: C.neonSuave, ancho: 1, glow: false, alfa: k === 0 ? .9 : .35 });
+      g.camino([T(-6, k), T(6, k)], { color: C.neonSuave, ancho: 1, glow: false, alfa: k === 0 ? .9 : .35 });
+    }
+    const det = a * d - b * c;
+    g.poligono([T(0, 0), T(1, 0), T(1, 1), T(0, 1)], { relleno: C.amarillo, alfa: .22, borde: C.amarillo, alfaBorde: .8 });
+    g.flecha(0, 0, ...T(1, 0), { color: C.core, ancho: 3.4 }); g.flecha(0, 0, ...T(0, 1), { color: C.cian, ancho: 3.4 });
+    g.texto("T(e₁)", ...T(1, 0), { dx: 10, dy: 12, color: C.core, peso: 700 }); g.texto("T(e₂)", ...T(0, 1), { dx: 10, dy: -12, color: C.cian, peso: 700 });
+    // autovalores: λ² − tr·λ + det = 0
+    const tr = v.a + v.d, D = tr * tr - 4 * (v.a * v.d - v.b * v.c);
+    const av = D >= 0 ? `${((tr + Math.sqrt(D)) / 2).toFixed(2)} y ${((tr - Math.sqrt(D)) / 2).toFixed(2)}` : "complejos";
+    return { M: `[ ${v.a.toFixed(2)}  ${v.b.toFixed(2)} ]   [ ${v.c.toFixed(2)}  ${v.d.toFixed(2)} ]`, det: det.toFixed(2), av };
+  },
+});
+</script>
+</body>
+</html>

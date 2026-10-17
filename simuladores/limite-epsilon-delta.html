@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Límite: épsilon y delta</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Definición de límite: para todo ε > 0 existe δ > 0 tal que 0 < |x − a| < δ ⇒ |f(x) − L| < ε.
+// Elegís ε (la franja horizontal) y probás δ (la franja vertical). Si la curva se escapa de la
+// franja de ε dentro de la de δ, ese tramo se pinta en amarillo: ese δ no sirve.
+const FUNCIONES = {
+  cuad: { f: x => x * x / 2 + .5, a: 2, txt: "f(x) = x²/2 + ½" },
+  raiz: { f: x => Math.sqrt(Math.max(0, x)) * 1.6, a: 2.25, txt: "f(x) = 1,6·√x" },
+  sen: { f: x => 1.6 * Math.sin(x) + 1.2, a: 1, txt: "f(x) = 1,6·sen x + 1,2" },
+};
+function deltaMax(f, a, L, eps) {   // el mayor δ que funciona (buscado numéricamente)
+  let ok = 0;
+  for (let d = .002; d <= 3; d += .002) {
+    let bien = true;
+    for (let k = -40; k <= 40; k++) { const x = a + d * k / 40; if (k !== 0 && Math.abs(f(x) - L) >= eps) { bien = false; break; } }
+    if (!bien) break; ok = d;
+  }
+  return ok;
+}
+Sim({
+  titulo: "Límite por definición: ε y δ",
+  vista: { x: [-.6, 4.6], y: [-.4, 4.4], igual: true },
+  botones: [{ id: "fn", opciones: [["cuad", "x²/2 + ½"], ["raiz", "1,6·√x"], ["sen", "sen x"]], valor: "cuad" }],
+  controles: [
+    { id: "eps", et: "ε (cuánto te podés alejar de L)", min: .05, max: 1.2, paso: .01, valor: .6, fmt: v => v.toFixed(2) },
+    { id: "del", et: "δ (cuánto te acercás a a)", min: .02, max: 1.2, paso: .01, valor: .5, fmt: v => v.toFixed(2) },
+  ],
+  lecturas: [
+    { id: "L", et: "L = f(a)" },
+    { id: "dm", et: "mayor δ que sirve", tipo: "calc" },
+    { id: "ok", et: "¿este δ sirve?", ancho: true },
+  ],
+  nota: "Achicá <b>ε</b> y fijate que siempre existe un <b>δ</b> que sirve, aunque cada vez más chico. Eso es exactamente lo que dice la definición.",
+  dibujar(g, v) {
+    const C = g.C, F = FUNCIONES[v.fn], f = F.f, a = F.a, L = f(a);
+    g.cuadricula(.5); g.ejes({ marcas: 1, x: "x", y: "y" });
+    g.franjaH(L - v.eps, L + v.eps, { relleno: C.neon, alfa: .12, borde: C.neonSuave, alfaBorde: .6 });
+    g.franjaV(a - v.del, a + v.del, { relleno: C.cian, alfa: .08, borde: C.cian, alfaBorde: .5 });
+    g.curva(f, { desde: v.fn === "raiz" ? 0 : undefined });
+    // el tramo dentro de (a−δ, a+δ) que se escapa de (L−ε, L+ε)
+    let escapa = false;
+    const n = 200;
+    for (let i = 0; i < n; i++) {
+      const x1 = a - v.del + 2 * v.del * i / n, x2 = a - v.del + 2 * v.del * (i + 1) / n;
+      if (Math.abs(f(x1) - L) >= v.eps || Math.abs(f(x2) - L) >= v.eps) { escapa = true; g.linea(x1, f(x1), x2, f(x2), { color: C.amarillo, ancho: 4.5, glow: true }); }
+    }
+    g.linea(a, -.4, a, L, { dash: [4, 5], alfa: .5 }); g.linea(-.6, L, a, L, { dash: [4, 5], alfa: .5 });
+    g.texto("a", a, 0, { dy: 16, alin: "center", color: C.texto, peso: 700 }); g.texto("L", 0, L, { dx: -12, alin: "right", color: C.texto, peso: 700 });
+    g.texto("L + ε", 4.6, L + v.eps, { dx: -6, dy: -9, alin: "right", tam: 11, color: C.core, mono: true });
+    g.texto("L − ε", 4.6, L - v.eps, { dx: -6, dy: 10, alin: "right", tam: 11, color: C.core, mono: true });
+    g.punto(a, L, { hueco: true, r: 5 });
+    g.texto(F.txt, -.5, 4.3, { tam: 13, color: C.medio, mono: true });
+    const dm = deltaMax(f, a, L, v.eps);
+    return { L: L.toFixed(3), dm: dm.toFixed(3), ok: escapa ? "No: la curva se escapa (tramo amarillo)" : "Sí: toda la curva queda en la franja" };
+  },
+});
+</script>
+</body>
+</html>

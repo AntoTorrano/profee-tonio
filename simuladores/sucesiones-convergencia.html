@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convergencia de sucesiones</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// aₙ → L si para todo ε existe n₀ a partir del cual todos los términos quedan en (L − ε, L + ε).
+const SUC = {
+  e: { a: n => (1 + 1 / n) ** n, L: Math.E, txt: "aₙ = (1 + 1/n)ⁿ", Lt: "e ≈ 2,718", y: [.8, 3.2] },
+  alt: { a: n => 1 + (-1) ** n * 2 / n, L: 1, txt: "aₙ = 1 + 2·(−1)ⁿ/n", Lt: "1", y: [-.4, 2.6] },
+  frac: { a: n => (2 * n + 1) / (n + 3), L: 2, txt: "aₙ = (2n + 1)/(n + 3)", Lt: "2", y: [0, 2.6] },
+  osc: { a: n => Math.sin(n), L: null, txt: "aₙ = sen n", Lt: "no existe", y: [-1.4, 1.4] },
+};
+Sim({
+  titulo: "Convergencia de sucesiones",
+  vista: v => ({ x: [-1, v.N + 2], y: SUC[v.suc].y }),
+  botones: [{ id: "suc", opciones: [["e", "(1 + 1/n)ⁿ"], ["alt", "alternada"], ["frac", "cociente"], ["osc", "sen n"]], valor: "e" }],
+  controles: [
+    { id: "N", et: "cuántos términos mirar", min: 10, max: 120, paso: 1, valor: 40, fmt: v => v },
+    { id: "eps", et: "ε (ancho de la franja)", min: .01, max: .6, paso: .01, valor: .15, fmt: v => v.toFixed(2) },
+  ],
+  lecturas: [
+    { id: "L", et: "límite", tipo: "res" },
+    { id: "n0", et: "n₀ (desde dónde quedan adentro)", tipo: "calc" },
+    { id: "aN", et: "último término", ancho: true },
+  ],
+  nota: "Achicá <b>ε</b>: el <b>n₀</b> se corre a la derecha, pero siempre existe. Con <b>sen n</b> no hay franja que atrape a los términos: la sucesión no converge.",
+  dibujar(g, v) {
+    const C = g.C, S = SUC[v.suc], N = v.N;
+    g.cuadricula(10, .5); g.ejes({ marcas: 10, marcasY: .5, x: "n", y: "aₙ" });
+    // n₀: el primer índice desde el cual TODOS los términos (hasta N) quedan en la franja
+    let n0 = null;
+    if (S.L !== null) {
+      g.franjaH(S.L - v.eps, S.L + v.eps, { relleno: C.neon, alfa: .12, borde: C.neonSuave, alfaBorde: .6 });
+      g.linea(0, S.L, N + 2, S.L, { color: C.verde, dash: [6, 6], alfa: .8 });
+      for (let n = N; n >= 1; n--) { if (Math.abs(S.a(n) - S.L) >= v.eps) break; n0 = n; }
+      if (n0) { g.franjaV(n0 - .5, N + .5, { relleno: C.amarillo, alfa: .06 }); g.linea(n0, g.vista.y0, n0, g.vista.y1, { color: C.amarillo, dash: [4, 4], alfa: .7 }); }
+    }
+    for (let n = 1; n <= N; n++) {
+      const an = S.a(n), dentro = S.L !== null && Math.abs(an - S.L) < v.eps && n0 && n >= n0;
+      g.linea(n, 0 > g.vista.y0 ? 0 : g.vista.y0, n, an, { color: C.grilla, ancho: 1, alfa: 1 });
+      g.punto(n, an, { color: dentro ? C.core : C.suave, r: N > 70 ? 2.6 : 3.6, glow: dentro });
+    }
+    g.texto(S.txt, 0, g.vista.y1, { dy: 16, dx: 6, mono: true, tam: 13, color: C.medio });
+    return { L: S.Lt, n0: S.L === null ? "—" : n0 ? String(n0) : "más allá de N", aN: S.a(N).toFixed(5) };
+  },
+});
+</script>
+</body>
+</html>

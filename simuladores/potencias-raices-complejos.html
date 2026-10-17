@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Potencias y raíces de números complejos — De Moivre</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b24; --panel2:#1d2431; --line:#2a3342;
+    --txt:#e6edf3; --dim:#94a3b8; --accent:#6ea8fe; --accent2:#f0a35e;
+    --green:#5ed9a0; --red:#f2777a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  header{padding:20px 24px 8px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:19px;font-weight:650;letter-spacing:.2px}
+  header p{margin:6px 0 0;color:var(--dim);font-size:13px;max-width:70ch;line-height:1.5}
+  .wrap{display:flex;gap:18px;padding:18px 24px 28px;align-items:flex-start;flex-wrap:wrap}
+  .left{flex:1 1 460px;min-width:340px}
+  .right{flex:0 1 360px;min-width:300px;display:flex;flex-direction:column;gap:14px}
+  canvas{width:100%;height:auto;display:block;background:var(--panel);
+         border:1px solid var(--line);border-radius:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card h2{margin:0 0 10px;font-size:13px;font-weight:650;color:var(--dim);
+           text-transform:uppercase;letter-spacing:.9px}
+  .row{display:flex;align-items:center;gap:10px;margin:11px 0}
+  .row label{width:74px;font-size:13px;color:var(--dim);flex:none}
+  input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+  .val{width:78px;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+       font-size:13px;color:var(--accent)}
+  .modes{display:flex;gap:6px;margin-bottom:4px}
+  .modes button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);
+                background:var(--panel2);color:var(--dim);font-size:13px;cursor:pointer;
+                transition:.15s}
+  .modes button.on{background:var(--accent);color:#0b1220;border-color:var(--accent);font-weight:640}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .presets button{padding:6px 10px;border-radius:7px;border:1px solid var(--line);
+                  background:var(--panel2);color:var(--txt);font-size:12px;cursor:pointer;
+                  font-family:ui-monospace,Menlo,monospace}
+  .presets button:hover{border-color:var(--accent);color:var(--accent)}
+  .eq{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;line-height:2;
+      background:var(--panel2);border-radius:8px;padding:11px 13px;overflow-x:auto;white-space:nowrap}
+  .eq .k{color:var(--accent2)}
+  .eq .m{color:var(--green)}
+  table{width:100%;border-collapse:collapse;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+  th,td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  td:first-child,th:first-child{text-align:left;color:var(--accent2)}
+  .note{font-size:12.5px;color:var(--dim);line-height:1.6;margin:10px 0 0}
+  .note b{color:var(--txt);font-weight:600}
+  .tablewrap{max-height:210px;overflow-y:auto}
+  .chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--dim);margin-top:6px}
+  .chk input{accent-color:var(--accent)}
+  footer{padding:0 24px 26px;color:#64748b;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Potencias y raíces de números complejos · fórmula de De Moivre</h1>
+  <p>La forma polar convierte multiplicar en <b>escalar + rotar</b>. Elevar a la <i>n</i> eleva el módulo y
+     multiplica el argumento. Movés los sliders y mirás la espiral que arman las potencias sucesivas.</p>
+</header>
+
+<div class="wrap">
+  <div class="left">
+    <canvas id="cv" width="1000" height="1000"></canvas>
+  </div>
+
+  <div class="right">
+    <div class="card">
+      <div class="modes">
+        <button id="mPow" class="on">Potencias zⁿ</button>
+        <button id="mRoot">Raíces ⁿ√z</button>
+      </div>
+      <div class="row"><label>|z|</label><input type="range" id="sR" min="0.30" max="1.80" step="0.005" value="1.41421356"><span class="val" id="vR"></span></div>
+      <div class="row"><label>arg(z)</label><input type="range" id="sT" min="0" max="360" step="0.5" value="45"><span class="val" id="vT"></span></div>
+      <div class="row"><label>n</label><input type="range" id="sN" min="1" max="12" step="1" value="4"><span class="val" id="vN"></span></div>
+      <div class="chk"><input type="checkbox" id="cAll" checked><label for="cAll" style="width:auto">mostrar potencias intermedias / todas las raíces</label></div>
+      <div class="presets">
+        <button data-r="1.41421356" data-t="45">z = 1+i</button>
+        <button data-r="1" data-t="90">z = i</button>
+        <button data-r="1" data-t="180">z = −1</button>
+        <button data-r="1.1" data-t="30">espiral</button>
+        <button data-r="1" data-t="60">raíz 6ª de 1</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Lo que estás viendo</h2>
+      <div class="eq" id="eqBox"></div>
+      <p class="note" id="noteBox"></p>
+    </div>
+
+    <div class="card">
+      <h2 id="tblTitle">Valores</h2>
+      <div class="tablewrap">
+        <table id="tbl"><thead><tr><th>k</th><th>módulo</th><th>arg (°)</th><th>Re</th><th>Im</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>Física 2 — FCEyN/UBA · Guía 0 (números complejos). Notación del Martínez: z = |z| e<sup>i·arg(z)</sup>.</footer>
+
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const sR=document.getElementById('sR'), sT=document.getElementById('sT'), sN=document.getElementById('sN');
+const vR=document.getElementById('vR'), vT=document.getElementById('vT'), vN=document.getElementById('vN');
+const cAll=document.getElementById('cAll');
+const mPow=document.getElementById('mPow'), mRoot=document.getElementById('mRoot');
+let mode='pow';
+
+mPow.onclick=()=>{mode='pow';mPow.classList.add('on');mRoot.classList.remove('on');draw();};
+mRoot.onclick=()=>{mode='root';mRoot.classList.add('on');mPow.classList.remove('on');draw();};
+[sR,sT,sN,cAll].forEach(e=>e.addEventListener('input',draw));
+document.querySelectorAll('.presets button').forEach(b=>b.onclick=()=>{
+  sR.value=b.dataset.r; sT.value=b.dataset.t;
+  if(b.textContent.includes('raíz 6')){mode='root';mRoot.classList.add('on');mPow.classList.remove('on');sN.value=6;}
+  draw();
+});
+
+const fmt=(x,d=3)=>{let s=x.toFixed(d); if(Math.abs(x)<5e-4) s=(0).toFixed(d); return s;};
+
+function draw(){
+  const r=+sR.value, thDeg=+sT.value, th=thDeg*Math.PI/180, n=+sN.value, showAll=cAll.checked;
+
+  // --- calcular puntos ---
+  let pts=[], title, eq, note;
+  if(mode==='pow'){
+    const kmax = showAll ? n : n;
+    for(let k=1;k<=kmax;k++){
+      if(!showAll && k!==1 && k!==n) continue;
+      pts.push({k:k, m:Math.pow(r,k), a:th*k});
+    }
+    title='Potencias z<sup>k</sup>';
+  }else{
+    for(let k=0;k<n;k++){
+      if(!showAll && k!==0) continue;
+      pts.push({k:k, m:Math.pow(r,1/n), a:(th+2*Math.PI*k)/n});
+    }
+    title='Raíces z<sup>1/n</sup>';
+  }
+  pts.forEach(p=>{p.x=p.m*Math.cos(p.a); p.y=p.m*Math.sin(p.a);});
+
+  // --- escala ---
+  let maxm=Math.max(r, ...pts.map(p=>p.m), 1);
+  const R=maxm*1.28, S=cv.width/2, sc=S/R;
+  const X=x=>S+x*sc, Y=y=>S-y*sc;
+
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#161b24'; ctx.fillRect(0,0,cv.width,cv.height);
+
+  // grilla
+  const step = R>6?2:(R>2.5?1:0.5);
+  ctx.strokeStyle='#222b38'; ctx.lineWidth=1.5;
+  for(let g=-Math.ceil(R/step)*step; g<=R; g+=step){
+    ctx.beginPath();ctx.moveTo(X(g),0);ctx.lineTo(X(g),cv.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,Y(g));ctx.lineTo(cv.width,Y(g));ctx.stroke();
+  }
+  // circulo unidad
+  ctx.strokeStyle='#33415a'; ctx.lineWidth=2; ctx.setLineDash([7,7]);
+  ctx.beginPath();ctx.arc(S,S,sc,0,2*Math.PI);ctx.stroke(); ctx.setLineDash([]);
+  // circulo |z|
+  ctx.strokeStyle='rgba(110,168,254,.30)'; ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(S,S,r*sc,0,2*Math.PI);ctx.stroke();
+  // ejes
+  ctx.strokeStyle='#5b6a80'; ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(0,S);ctx.lineTo(cv.width,S);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(S,0);ctx.lineTo(S,cv.height);ctx.stroke();
+  ctx.fillStyle='#7d8ba1'; ctx.font='600 26px ui-monospace,Menlo,monospace';
+  ctx.fillText('Re', cv.width-62, S-16); ctx.fillText('Im', S+14, 34);
+
+  // camino (espiral) en modo potencias
+  if(mode==='pow' && showAll && pts.length>1){
+    ctx.strokeStyle='rgba(240,163,94,.45)'; ctx.lineWidth=2.5; ctx.beginPath();
+    ctx.moveTo(X(0),Y(0));
+    pts.forEach(p=>ctx.lineTo(X(p.x),Y(p.y)));
+    ctx.stroke();
+  }
+  // poligono de raices
+  if(mode==='root' && showAll && pts.length>2){
+    ctx.strokeStyle='rgba(94,217,160,.45)'; ctx.lineWidth=2.5; ctx.beginPath();
+    pts.forEach((p,i)=> i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y)));
+    ctx.closePath(); ctx.stroke();
+  }
+
+  // z original
+  const zx=r*Math.cos(th), zy=r*Math.sin(th);
+  ctx.strokeStyle='#6ea8fe'; ctx.lineWidth=3.5;
+  ctx.beginPath();ctx.moveTo(S,S);ctx.lineTo(X(zx),Y(zy));ctx.stroke();
+  ctx.fillStyle='#6ea8fe';
+  ctx.beginPath();ctx.arc(X(zx),Y(zy),10,0,2*Math.PI);ctx.fill();
+  ctx.font='700 25px ui-monospace,Menlo,monospace';
+  ctx.fillText('z', X(zx)+15, Y(zy)-13);
+
+  // arco del argumento
+  ctx.strokeStyle='rgba(110,168,254,.7)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(S,S,42,0,-th,th>0);ctx.stroke();
+
+  // puntos resultado
+  pts.forEach(p=>{
+    const isLast = (mode==='pow' && p.k===n) || (mode==='root' && p.k===0);
+    ctx.strokeStyle=isLast?'#f0a35e':'rgba(240,163,94,.5)';
+    ctx.lineWidth=isLast?3.5:2;
+    ctx.beginPath();ctx.moveTo(S,S);ctx.lineTo(X(p.x),Y(p.y));ctx.stroke();
+    ctx.fillStyle=isLast?'#f0a35e':'#8a6b48';
+    ctx.beginPath();ctx.arc(X(p.x),Y(p.y),isLast?11:7,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle=isLast?'#ffd7ae':'#b9946f';
+    ctx.font=(isLast?'700 25px':'600 21px')+' ui-monospace,Menlo,monospace';
+    const lbl = mode==='pow' ? ('z'+sup(p.k)) : ('w'+subs(p.k));
+    ctx.fillText(lbl, X(p.x)+14, Y(p.y)+(p.y>=0?-14:30));
+  });
+
+  // --- panel ---
+  vR.textContent=fmt(r,3); vT.textContent=fmt(thDeg,1)+'°'; vN.textContent=n;
+  const eqBox=document.getElementById('eqBox');
+  if(mode==='pow'){
+    eqBox.innerHTML =
+      `z = <span class="m">${fmt(r)}</span> · e<sup>i·<span class="k">${fmt(thDeg,1)}°</span></sup> = ${fmt(zx)} ${zy<0?'−':'+'} ${fmt(Math.abs(zy))}i<br>`+
+      `z<sup>${n}</sup> = <span class="m">${fmt(r)}<sup>${n}</sup></span> · e<sup>i·<span class="k">${n}·${fmt(thDeg,1)}°</span></sup><br>`+
+      `z<sup>${n}</sup> = <span class="m">${fmt(Math.pow(r,n))}</span> · e<sup>i·<span class="k">${fmt(norm(thDeg*n),1)}°</span></sup> = ${fmt(Math.pow(r,n)*Math.cos(th*n))} ${Math.pow(r,n)*Math.sin(th*n)<0?'−':'+'} ${fmt(Math.abs(Math.pow(r,n)*Math.sin(th*n)))}i`;
+    document.getElementById('noteBox').innerHTML =
+      `De Moivre: <b>(|z| e<sup>iθ</sup>)<sup>n</sup> = |z|<sup>n</sup> e<sup>inθ</sup></b>. `+
+      (r>1.001?'Como |z| &gt; 1 la espiral se abre hacia afuera.':(r<0.999?'Como |z| &lt; 1 la espiral colapsa al origen.':'Como |z| = 1 todo queda sobre el círculo unitario: elevar a n es <b>pura rotación</b>.'));
+  }else{
+    const m0=Math.pow(r,1/n);
+    eqBox.innerHTML =
+      `z = <span class="m">${fmt(r)}</span> · e<sup>i·<span class="k">${fmt(thDeg,1)}°</span></sup><br>`+
+      `w<sub>k</sub> = <span class="m">${fmt(r)}<sup>1/${n}</sup></span> · e<sup>i(<span class="k">${fmt(thDeg,1)}° + 360°k</span>)/${n}</sup><br>`+
+      `w<sub>k</sub> = <span class="m">${fmt(m0)}</span> · e<sup>i·<span class="k">(${fmt(thDeg/n,1)}° + ${fmt(360/n,1)}°k)</span></sup>, k = 0…${n-1}`;
+    document.getElementById('noteBox').innerHTML =
+      `Hay <b>exactamente ${n}</b> raíces: todas con el mismo módulo <b>${fmt(m0)}</b>, separadas <b>${fmt(360/n,1)}°</b> entre sí. `+
+      `Forman un polígono regular de ${n} lados. El <i>+360°k</i> es la clave: sumar una vuelta no cambia z, pero sí cambia la raíz.`;
+  }
+
+  document.getElementById('tblTitle').innerHTML=title;
+  const tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
+  pts.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${mode==='pow'?'z'+sup(p.k):'w'+subs(p.k)}</td><td>${fmt(p.m)}</td><td>${fmt(norm(p.a*180/Math.PI),1)}</td><td>${fmt(p.x)}</td><td>${fmt(p.y)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function norm(d){let x=d%360; if(x>180)x-=360; if(x<=-180)x+=360; return x;}
+function sup(k){const m={0:'⁰',1:'¹',2:'²',3:'³',4:'⁴',5:'⁵',6:'⁶',7:'⁷',8:'⁸',9:'⁹'};return String(k).split('').map(c=>m[c]).join('');}
+function subs(k){const m={0:'₀',1:'₁',2:'₂',3:'₃',4:'₄',5:'₅',6:'₆',7:'₇',8:'₈',9:'₉'};return String(k).split('').map(c=>m[c]).join('');}
+draw();
+</script>
+</body>
+</html>

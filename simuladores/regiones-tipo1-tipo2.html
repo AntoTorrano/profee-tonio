@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía 0 · Ej. 6 — Regiones de tipo 1 y tipo 2</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#15181d; --muted:#61697a;
+  --line:#dfe3ea; --grid:#e9edf3; --axis:#9aa3b2;
+  --accent:#2f6df0; --accent2:#e0562f; --fill:rgba(47,109,240,.13);
+  --slice:#e0562f; --riemann:rgba(47,109,240,.22); --ok:#1a8a5a;
+  --code:#f0f2f7;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1116; --panel:#161b22; --ink:#e6e9ef; --muted:#9aa3b2;
+    --line:#262d38; --grid:#1c222c; --axis:#5b6575;
+    --accent:#6a9bff; --accent2:#ff8f66; --fill:rgba(106,155,255,.16);
+    --slice:#ff8f66; --riemann:rgba(106,155,255,.25); --ok:#4bd39a;
+    --code:#1b212b;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:22px 24px 6px;max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);font-size:14px}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 24px 40px;
+  display:grid;grid-template-columns:minmax(320px,1fr) 380px;gap:18px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+canvas{width:100%;height:auto;display:block;border-radius:10px;cursor:crosshair;touch-action:none}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{flex:1;min-width:96px;padding:8px 10px;border:1px solid var(--line);background:transparent;
+  color:var(--muted);border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s}
+.tab:hover{border-color:var(--accent)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+label.row{display:block;margin:12px 0 4px;font-size:13px;color:var(--muted);font-weight:600}
+label.row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);margin-top:10px}
+.math{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:15px}
+.math i,.v{font-style:italic}
+.blk{background:var(--code);border-radius:10px;padding:11px 12px;margin:9px 0;overflow-x:auto;white-space:nowrap}
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.45em;text-align:center;
+  margin:0 .12em;line-height:1.05;font-size:.82em}
+.fr span:first-child{border-bottom:1px solid currentColor;padding:0 .2em}
+.fr span:last-child{padding:0 .2em}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 6px}
+h3:first-child{margin-top:0}
+.res{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;border-radius:9px;
+  background:var(--code);margin-top:6px;font-size:13.5px}
+.res b{font-variant-numeric:tabular-nums}
+.ok{color:var(--ok);font-weight:700}
+.btn{margin-top:12px;width:100%;padding:9px;border-radius:9px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}
+.btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;
+  padding:2px 7px;border-radius:999px;background:var(--fill);color:var(--accent);margin-left:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Guía 0 · Ejercicio 6 — Describir un triángulo como región de tipo 1 y de tipo 2</h1>
+  <p>Arrastrá los vértices para ver cómo cambian las descripciones. Todo se recalcula solo.</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab on" data-m="1">Tipo 1 · rebanadas verticales</button>
+      <button class="tab" data-m="2">Tipo 2 · rebanadas horizontales</button>
+    </div>
+    <canvas id="cv"></canvas>
+    <label class="row">Posición de la rebanada: <b id="tval"></b></label>
+    <input type="range" id="t" min="0" max="1" step="0.002" value="0.42">
+    <label class="row">Rebanadas de Riemann: <b id="nval">0</b></label>
+    <input type="range" id="n" min="0" max="120" step="1" value="0">
+    <div class="chk"><input type="checkbox" id="ext" checked><label for="ext">Prolongar las rectas de los lados</label></div>
+    <div class="hint">La recta punteada marca dónde hay que <b>partir</b> el intervalo: es el vértice del medio. A la izquierda y a la derecha de esa recta, la rebanada choca con lados distintos — por eso la región se describe con dos pedazos.</div>
+    <button class="btn" id="reset">Volver al triángulo del enunciado (0,0), (2,3), (3,5)</button>
+  </div>
+
+  <div class="card">
+    <h3>Lados del triángulo</h3>
+    <div id="sides" class="math"></div>
+    <h3 id="ttitle">Descripción</h3>
+    <div id="desc" class="math"></div>
+    <h3>Área</h3>
+    <div id="integ" class="math"></div>
+    <div class="res"><span>Suma de Riemann (<span id="nlab">0</span> rebanadas)</span><b id="rsum">—</b></div>
+    <div class="res"><span>Área exacta &nbsp;<span class="math">½·|det|</span></span><b id="exact" class="ok"></b></div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const V0=[{x:0,y:0},{x:2,y:3},{x:3,y:5}];
+let V=V0.map(p=>({...p})), mode=1, drag=-1;
+const $=id=>document.getElementById(id);
+
+/* ---------- fracciones bonitas ---------- */
+function toFrac(x,maxD=400){
+  if(!isFinite(x)) return null;
+  const s=x<0?-1:1; x=Math.abs(x);
+  let h1=1,h0=0,k1=0,k0=1,b=x;
+  for(let i=0;i<25;i++){
+    const a=Math.floor(b);
+    let h2=a*h1+h0,k2=a*k1+k0;
+    h0=h1;h1=h2;k0=k1;k1=k2;
+    if(Math.abs(x-h1/k1)<1e-9||k1>maxD)break;
+    b=1/(b-a);
+  }
+  return {n:s*h1,d:k1};
+}
+function fH(x,{signed=false,unit=false}={}){        // fracción como HTML
+  const f=toFrac(x); if(!f) return x.toFixed(3);
+  let str;
+  if(f.d===1){
+    if(unit&&Math.abs(f.n)===1) str=(f.n<0?'&minus;':'');
+    else str=(f.n<0?'&minus;':'')+Math.abs(f.n);
+  } else {
+    str=(f.n<0?'&minus;':'')+'<span class="fr"><span>'+Math.abs(f.n)+'</span><span>'+f.d+'</span></span>';
+  }
+  if(signed&&f.n>=0) str='+'+str;
+  return str;
+}
+const V_=(s)=>'<i>'+s+'</i>';
+
+/* recta por P,Q :  ax = 'x' -> y = m x + b   |  ax='y' -> x = m y + b */
+function line(P,Q,ax){
+  if(ax==='x'){ const m=(Q.y-P.y)/(Q.x-P.x); return {m,b:P.y-m*P.x}; }
+  const m=(Q.x-P.x)/(Q.y-P.y); return {m,b:P.x-m*P.y};
+}
+function lineHTML(L,ax){
+  const dep=ax==='x'?'y':'x', ind=ax==='x'?'x':'y';
+  if(Math.abs(L.m)<1e-12) return V_(dep)+' = '+fH(L.b);
+  let s=V_(dep)+' = '+fH(L.m,{unit:true})+V_(ind);
+  if(Math.abs(L.b)>1e-12) s+=' '+fH(L.b,{signed:true});
+  return s;
+}
+function evalLine(L,t){return L.m*t+L.b;}
+
+/* ---------- geometría ---------- */
+const area=()=>Math.abs((V[1].x-V[0].x)*(V[2].y-V[0].y)-(V[2].x-V[0].x)*(V[1].y-V[0].y))/2;
+const edges=()=>[[V[0],V[1]],[V[1],V[2]],[V[2],V[0]]];
+
+/* intervalo de la rebanada en la coordenada t (ax='x': corte vertical) */
+function span(t,ax){
+  const key=ax==='x'?'x':'y', oth=ax==='x'?'y':'x';
+  let lo=Infinity,hi=-Infinity,found=false;
+  for(const [P,Q] of edges()){
+    const a=P[key],b=Q[key];
+    if(Math.abs(a-b)<1e-12){
+      if(Math.abs(t-a)<1e-9){lo=Math.min(lo,P[oth],Q[oth]);hi=Math.max(hi,P[oth],Q[oth]);found=true;}
+      continue;
+    }
+    const s=(t-a)/(b-a);
+    if(s<-1e-9||s>1+1e-9) continue;
+    const v=P[oth]+s*(Q[oth]-P[oth]);
+    lo=Math.min(lo,v);hi=Math.max(hi,v);found=true;
+  }
+  return found?{lo,hi}:null;
+}
+
+/* descomposición en dos trozos: devuelve [{a,b,low,up}] con low/up rectas */
+function pieces(ax){
+  const key=ax==='x'?'x':'y';
+  const ord=[...V].sort((p,q)=>p[key]-q[key]);
+  const cuts=[ord[0][key],ord[1][key],ord[2][key]];
+  const out=[];
+  for(let i=0;i<2;i++){
+    const a=cuts[i],b=cuts[i+1];
+    if(b-a<1e-9) continue;
+    const mid=(a+b)/2;
+    const cand=[];
+    for(const [P,Q] of edges()){
+      const p=P[key],q=Q[key];
+      if(Math.abs(p-q)<1e-12) continue;
+      if(mid<Math.min(p,q)-1e-9||mid>Math.max(p,q)+1e-9) continue;
+      const L=line(P,Q,ax);
+      cand.push({L,val:evalLine(L,mid)});
+    }
+    if(cand.length<2) continue;
+    cand.sort((u,w)=>u.val-w.val);
+    out.push({a,b,low:cand[0].L,up:cand[cand.length-1].L});
+  }
+  return out;
+}
+
+/* ---------- dibujo ---------- */
+let W,H,S,ox,oy;
+function fit(){
+  const cssW=cv.clientWidth||640, cssH=Math.round(cssW*0.72);
+  const dpr=window.devicePixelRatio||1;
+  cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0); W=cssW; H=cssH;
+  const xs=V.map(p=>p.x).concat([0]), ys=V.map(p=>p.y).concat([0]);
+  let x0=Math.min(...xs)-1.2,x1=Math.max(...xs)+1.2,y0=Math.min(...ys)-1.0,y1=Math.max(...ys)+1.0;
+  S=Math.min((W-40)/(x1-x0),(H-40)/(y1-y0));
+  ox=20-x0*S; oy=H-20+y0*S;
+}
+const px=x=>ox+x*S, py=y=>oy-y*S;
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function draw(){
+  fit();
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=cssv('--panel'); ctx.fillRect(0,0,W,H);
+  /* grilla */
+  ctx.strokeStyle=cssv('--grid'); ctx.lineWidth=1;
+  const gx0=Math.floor((0-ox)/S),gx1=Math.ceil((W-ox)/S);
+  const gy0=Math.floor((oy-H)/S),gy1=Math.ceil(oy/S);
+  ctx.beginPath();
+  for(let i=gx0;i<=gx1;i++){ctx.moveTo(px(i),0);ctx.lineTo(px(i),H);}
+  for(let j=gy0;j<=gy1;j++){ctx.moveTo(0,py(j));ctx.lineTo(W,py(j));}
+  ctx.stroke();
+  /* ejes */
+  ctx.strokeStyle=cssv('--axis'); ctx.lineWidth=1.4; ctx.beginPath();
+  ctx.moveTo(0,py(0));ctx.lineTo(W,py(0));ctx.moveTo(px(0),0);ctx.lineTo(px(0),H);ctx.stroke();
+  ctx.fillStyle=cssv('--muted'); ctx.font='11px ui-sans-serif';
+  for(let i=gx0;i<=gx1;i++) if(i!==0) ctx.fillText(i,px(i)-3,py(0)+13);
+  for(let j=gy0;j<=gy1;j++) if(j!==0) ctx.fillText(j,px(0)+5,py(j)+4);
+
+  const ax=mode===1?'x':'y';
+  const P=pieces(ax);
+  const key=ax==='x'?'x':'y';
+  const lo=Math.min(...V.map(p=>p[key])), hi=Math.max(...V.map(p=>p[key]));
+  const mid=[...V].sort((p,q)=>p[key]-q[key])[1][key];
+
+  /* prolongación de los lados */
+  if($('ext').checked){
+    ctx.strokeStyle=cssv('--line'); ctx.lineWidth=1; ctx.setLineDash([3,4]);
+    for(const [A,B] of edges()){
+      const d={x:B.x-A.x,y:B.y-A.y}, L=Math.hypot(d.x,d.y)||1, k=60/S;
+      ctx.beginPath();
+      ctx.moveTo(px(A.x-d.x/L*k),py(A.y-d.y/L*k));
+      ctx.lineTo(px(B.x+d.x/L*k),py(B.y+d.y/L*k));
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  /* Riemann */
+  const n=+$('n').value; let rsum=0;
+  if(n>0){
+    const d=(hi-lo)/n;
+    ctx.fillStyle=cssv('--riemann'); ctx.strokeStyle=cssv('--accent'); ctx.lineWidth=.5;
+    for(let i=0;i<n;i++){
+      const c=lo+(i+.5)*d, sp=span(c,ax); if(!sp)continue;
+      rsum+=(sp.hi-sp.lo)*d;
+      const a=lo+i*d,b=a+d;
+      if(ax==='x') ctx.fillRect(px(a),py(sp.hi),px(b)-px(a),py(sp.lo)-py(sp.hi));
+      else ctx.fillRect(px(sp.lo),py(b),px(sp.hi)-px(sp.lo),py(a)-py(b));
+      if(ax==='x') ctx.strokeRect(px(a),py(sp.hi),px(b)-px(a),py(sp.lo)-py(sp.hi));
+      else ctx.strokeRect(px(sp.lo),py(b),px(sp.hi)-px(sp.lo),py(a)-py(b));
+    }
+  }
+
+  /* triángulo */
+  ctx.beginPath(); ctx.moveTo(px(V[0].x),py(V[0].y));
+  ctx.lineTo(px(V[1].x),py(V[1].y)); ctx.lineTo(px(V[2].x),py(V[2].y)); ctx.closePath();
+  if(n===0){ctx.fillStyle=cssv('--fill');ctx.fill();}
+  ctx.strokeStyle=cssv('--accent'); ctx.lineWidth=2.2; ctx.stroke();
+
+  /* recta de corte (vértice del medio) */
+  ctx.strokeStyle=cssv('--accent2'); ctx.lineWidth=1.4; ctx.setLineDash([6,5]); ctx.globalAlpha=.55;
+  ctx.beginPath();
+  if(ax==='x'){ctx.moveTo(px(mid),0);ctx.lineTo(px(mid),H);}else{ctx.moveTo(0,py(mid));ctx.lineTo(W,py(mid));}
+  ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+
+  /* rebanada móvil */
+  const t=lo+(hi-lo)*(+$('t').value), sp=span(t,ax);
+  if(sp){
+    ctx.strokeStyle=cssv('--slice'); ctx.lineWidth=3.4; ctx.beginPath();
+    if(ax==='x'){ctx.moveTo(px(t),py(sp.lo));ctx.lineTo(px(t),py(sp.hi));}
+    else{ctx.moveTo(px(sp.lo),py(t));ctx.lineTo(px(sp.hi),py(t));}
+    ctx.stroke();
+    ctx.fillStyle=cssv('--slice');
+    for(const v of [sp.lo,sp.hi]){
+      ctx.beginPath();
+      ctx.arc(ax==='x'?px(t):px(v), ax==='x'?py(v):py(t),3.6,0,7); ctx.fill();
+    }
+    ctx.font='600 12px ui-sans-serif';
+    const lab=(ax==='x'?'largo = ':'largo = ')+(sp.hi-sp.lo).toFixed(3);
+    if(ax==='x') ctx.fillText(lab,px(t)+8,py((sp.lo+sp.hi)/2));
+    else ctx.fillText(lab,px((sp.lo+sp.hi)/2)-18,py(t)-9);
+  }
+
+  /* vértices */
+  const names=['A','B','C'];
+  V.forEach((p,i)=>{
+    ctx.beginPath(); ctx.arc(px(p.x),py(p.y),6,0,7);
+    ctx.fillStyle=cssv('--panel'); ctx.fill();
+    ctx.strokeStyle=cssv('--accent2'); ctx.lineWidth=2.4; ctx.stroke();
+    ctx.fillStyle=cssv('--ink'); ctx.font='600 12.5px ui-sans-serif';
+    ctx.fillText(names[i]+'('+p.x+', '+p.y+')',px(p.x)+9,py(p.y)-8);
+  });
+
+  panel(P,ax,t,sp,rsum,n);
+}
+
+/* ---------- panel ---------- */
+function panel(P,ax,t,sp,rsum,n){
+  const dep=ax==='x'?'y':'x', ind=ax==='x'?'x':'y';
+  const names=['A','B','C'];
+  let s='';
+  const lab=[[0,1],[1,2],[2,0]];
+  lab.forEach(([i,j])=>{
+    const L=line(V[i],V[j],ax);
+    const bad=Math.abs((ax==='x'?V[j].x-V[i].x:V[j].y-V[i].y))<1e-12;
+    s+='<div class="blk">'+names[i]+names[j]+':&nbsp;&nbsp;'+
+       (bad?(ind==='x'?'x':'y')+' = '+fH(ax==='x'?V[i].x:V[i].y)+' (vertical)':lineHTML(L,ax))+'</div>';
+  });
+  $('sides').innerHTML=s;
+
+  $('ttitle').innerHTML='Descripción como región de tipo '+mode+
+    '<span class="tag">'+(mode===1?'rebanada vertical':'rebanada horizontal')+'</span>';
+
+  let d='', integ='', tot=0;
+  P.forEach((p,k)=>{
+    const loE=lineHTML(p.low,ax).replace(/^<i>[xy]<\/i> = /,'');
+    const upE=lineHTML(p.up ,ax).replace(/^<i>[xy]<\/i> = /,'');
+    d+='<div class="blk">'+(k?'∪ ':'')+'{ ('+V_('x')+', '+V_('y')+') : '+fH(p.a)+' ≤ '+V_(ind)+' ≤ '+fH(p.b)+
+       ',&nbsp; '+loE+' ≤ '+V_(dep)+' ≤ '+upE+' }</div>';
+    const mid=(p.a+p.b)/2;
+    const val=(evalLine(p.up,mid)-evalLine(p.low,mid))*(p.b-p.a);
+    tot+=val;
+    integ+='<div class="blk">∫<sub>'+fH(p.a)+'</sub><sup>'+fH(p.b)+'</sup> ( '+upE+' &minus; ( '+loE+' ) ) d'+ind+
+           ' &nbsp;=&nbsp; '+fH(val)+'</div>';
+  });
+  $('desc').innerHTML=d;
+  $('integ').innerHTML=integ+'<div class="blk">Suma&nbsp;=&nbsp;<b>'+fH(tot)+'</b></div>';
+
+  $('tval').innerHTML=ind+' = '+t.toFixed(3)+(sp?' &nbsp;·&nbsp; '+dep+' ∈ ['+sp.lo.toFixed(3)+', '+sp.hi.toFixed(3)+']':'');
+  $('nval').textContent=n; $('nlab').textContent=n;
+  $('rsum').textContent=n>0?rsum.toFixed(5):'—';
+  $('exact').innerHTML=fH(area())+' &nbsp;('+area().toFixed(5)+')';
+}
+
+/* ---------- interacción ---------- */
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  const cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  return {x:(cx-ox)/S, y:(oy-cy)/S};
+}
+function down(e){
+  const p=pos(e);
+  V.forEach((q,i)=>{if(Math.hypot(q.x-p.x,q.y-p.y)<12/S) drag=i;});
+  if(drag>=0) e.preventDefault();
+}
+function move(e){
+  if(drag<0) return; e.preventDefault();
+  const p=pos(e);
+  const nx=Math.round(p.x*2)/2, ny=Math.round(p.y*2)/2;
+  const T=V.map((q,i)=>i===drag?{x:nx,y:ny}:q);
+  const A=Math.abs((T[1].x-T[0].x)*(T[2].y-T[0].y)-(T[2].x-T[0].x)*(T[1].y-T[0].y))/2;
+  if(A>1e-6){V=T; draw();}
+}
+const up=()=>drag=-1;
+cv.addEventListener('mousedown',down); window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
+cv.addEventListener('touchstart',down,{passive:false}); window.addEventListener('touchmove',move,{passive:false}); window.addEventListener('touchend',up);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=+b.dataset.m; draw();
+});
+['t','n','ext'].forEach(id=>$(id).addEventListener('input',draw));
+$('reset').onclick=()=>{V=V0.map(p=>({...p}));draw();};
+window.addEventListener('resize',draw);
+draw();
+</script>
+</body>
+</html>

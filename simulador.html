@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Un simulador interactivo de Profee Tonio: cambiás los valores y ves qué pasa.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Simulador · Profee Tonio">
+<meta property="og:description" content="Un simulador interactivo de Profee Tonio: cambiás los valores y ves qué pasa.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Simulador · Profee Tonio</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .nav { position: fixed; }
+  .ficha { max-width: 1120px; margin: 0 auto; padding: 104px var(--gutter) 0; box-sizing: content-box; }
+  .migas { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--texto-tenue); }
+  .migas a { color: var(--texto-suave); text-decoration: none; }
+  .titulo-fila { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; margin: 10px 0 22px; }
+  .titulo-fila .h1 { font-size: 60px; text-transform: none; font-stretch: 80%; letter-spacing: -.01em; }
+  .metas { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
+  .metas .pendiente { padding: 6px 10px; font-size: 12px; }
+
+  /* ---------- el simulador embebido: UN marco, el del simulador.
+     La barra de arriba (nombre + pantalla completa) es parte del mismo panel, no un marco nuevo. */
+  .embebido { border-radius: var(--r-grande); background: var(--superficie); box-shadow: inset 0 0 0 1.5px var(--linea), 0 0 120px rgb(46 120 255 / .10); overflow: hidden; }
+  .emb-barra { height: 50px; display: flex; align-items: center; gap: 14px; padding: 0 12px 0 20px; border-bottom: 1.5px solid var(--linea); }
+  .emb-barra .puntos { display: flex; gap: 7px; }
+  .emb-barra .puntos i { width: 8px; height: 8px; border-radius: 50%; background: #2B3A57; }
+  .emb-barra .t { font: 700 13px/1 var(--f-texto); letter-spacing: .1em; text-transform: uppercase; color: var(--texto-suave); }
+  .emb-barra .btn { margin-left: auto; height: 34px; font-size: 13px; padding: 0 14px; }
+  .emb-cuerpo { display: grid; grid-template-columns: 1fr 340px; aspect-ratio: 16 / 9; max-height: 520px; width: 100%; }
+  .emb-grafico { border-right: 1.5px solid var(--linea); display: grid; grid-template-rows: 1fr 130px; }
+  .emb-grafico svg { width: 100%; height: 100%; display: block; }
+  .emb-onda { border-top: 1.5px solid var(--linea); position: relative; }
+  .emb-onda .rot { position: absolute; left: 18px; top: 12px; font: 600 11px/1 var(--f-texto); letter-spacing: var(--track-meta); text-transform: uppercase; color: var(--texto-tenue); }
+  .emb-controles { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+  .emb-controles .rotulo { margin: 0 0 -4px; }
+  .ctrl { display: grid; gap: 10px; }
+  .ctrl .fila { display: flex; justify-content: space-between; font-size: 14px; color: var(--texto-suave); }
+  .ctrl .fila b { font: 600 14px/1 var(--f-mono); color: var(--texto); }
+  .riel { position: relative; height: 6px; border-radius: 6px; background: var(--riel); }
+  .riel .activo { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--neon); }
+  .riel .perilla { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; transform: translate(-50%, -50%); background: var(--neon-core); box-shadow: 0 0 0 7px rgb(46 120 255 / .2), 0 0 14px var(--neon); }
+  .lect { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-top: 1.5px solid var(--linea); padding-top: 16px; text-align: center; }
+  .lect .et { font-size: 12px; color: var(--texto-suave); }
+  .lect .v { font: 600 19px/1.3 var(--f-mono); color: var(--texto); }
+  .leyenda { display: flex; gap: 16px; font-size: 13px; color: var(--texto-suave); }
+  .leyenda i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .nota-emb { margin-top: 12px; display: flex; justify-content: space-between; }
+
+  /* ---------- descripción */
+  .descripcion { display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px; margin-top: 72px; }
+  .descripcion .cuerpo-l { color: var(--texto-medio); }
+  .cita { padding: 4px 0 4px 26px; border-left: 2px solid var(--neon); box-shadow: -10px 0 18px -12px var(--neon); }
+  .cita p { font-size: 18px; line-height: 1.6; color: var(--texto-medio); font-style: italic; }
+  .cita .meta { margin-top: 14px; font-style: normal; }
+
+  /* ---------- reciprocidad */
+  .reciprocidad { margin: 112px auto 0; max-width: 1120px; position: relative; overflow: hidden; border-radius: var(--r-hero); padding: 64px 72px; text-align: center;
+    background: radial-gradient(ellipse 60% 120% at 50% 0%, rgb(46 120 255 / .20), transparent 70%), var(--superficie);
+    box-shadow: inset 0 0 0 1px rgb(46 120 255 / .35), 0 0 60px rgb(46 120 255 / .08); }
+  .reciprocidad .cuadricula { -webkit-mask-image: radial-gradient(ellipse 50% 80% at 50% 0%, #000, transparent 80%); mask-image: radial-gradient(ellipse 50% 80% at 50% 0%, #000, transparent 80%); opacity: .7; }
+  .reciprocidad .h2 { position: relative; font-size: 46px; max-width: 760px; margin: 0 auto; text-wrap: balance; }
+  .reciprocidad .h2 .verde { color: var(--verde); text-shadow: 0 0 22px rgb(52 211 153 / .35); }
+  .reciprocidad .cuerpo-l { position: relative; max-width: 600px; margin: 22px auto 0; color: var(--texto-suave); text-wrap: balance; }
+  .reciprocidad .btn { position: relative; margin-top: 34px; }
+
+  .mas { max-width: 1120px; margin: 112px auto 0; padding-bottom: var(--e-10); }
+  .mas .cab { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; }
+
+  @media (max-width: 640px) {
+    .ficha { padding: 84px var(--gutter) 0; }
+    .titulo-fila .h1 { font-size: 38px; line-height: 1; }
+    .titulo-fila { margin: 8px 0 18px; }
+    .embebido { margin: 0 calc(-1 * var(--gutter) + 8px); }
+    .emb-barra { height: 46px; padding: 0 8px 0 14px; }
+    .emb-barra .puntos { display: none; }
+    .emb-barra .btn { height: 34px; }
+    .emb-cuerpo { grid-template-columns: 1fr; aspect-ratio: auto; max-height: none; }
+    .emb-grafico { border-right: 0; grid-template-rows: 250px 96px; }
+    .emb-controles { border-top: 1.5px solid var(--linea); padding: 16px; gap: 14px; }
+    .emb-controles .ctrl:nth-of-type(n+4) { display: none; }
+    .lect { margin-top: 4px; }
+    .nota-emb .anot { display: none; }
+    .descripcion { grid-template-columns: 1fr; gap: 28px; margin-top: 40px; }
+    .reciprocidad { margin: 64px var(--gutter) 0; padding: 40px 22px; }
+    .reciprocidad .h2 { font-size: 32px; }
+    .mas { padding: 0 var(--gutter) 80px; margin-top: 64px; }
+  }
+
+  /* ---------- cargando: el marco ya tiene su tamaño final, nada salta cuando llega el simulador */
+  .cargando { grid-column: 1 / -1; position: relative; display: grid; place-items: center; overflow: hidden; }
+  .cargando .cuadricula { -webkit-mask-image: radial-gradient(ellipse 50% 60% at 50% 50%, #000 10%, transparent 80%); mask-image: radial-gradient(ellipse 50% 60% at 50% 50%, #000 10%, transparent 80%); }
+  .cargando .centro { position: relative; display: grid; justify-items: center; gap: 22px; }
+  .cargando svg { width: 260px; height: 90px; }
+  .cargando .riel-carga { width: 220px; height: 3px; border-radius: 3px; background: var(--riel); overflow: hidden; }
+  .cargando .riel-carga i { display: block; width: 38%; height: 100%; background: var(--neon-core); box-shadow: 0 0 10px var(--neon); }
+
+  .emb-iframe { grid-column: 1 / -1; width: 100%; height: 100%; border: 0; display: block; background: var(--superficie); }
+
+  /* el iframe y el "cargando" ocupan la misma celda; el cargando se va cuando el simulador terminó de cargar */
+  .emb-cuerpo { position: relative; }
+  .emb-cuerpo > .cargando, .emb-cuerpo > .emb-iframe { grid-area: 1 / 1 / -1 / -1; }
+  .emb-cuerpo > .cargando { position: absolute; inset: 0; z-index: 1; background: var(--superficie); }
+  .onda-carga { stroke-dasharray: 180 400; animation: trazar 1.6s linear infinite; }
+  @keyframes trazar { from { stroke-dashoffset: 400; } to { stroke-dashoffset: -180; } }
+  .riel-carga i { animation: barrer 1.4s ease-in-out infinite; }
+  @keyframes barrer { 0% { transform: translateX(-100%); } 100% { transform: translateX(270%); } }
+  .emb-cuerpo { max-height: 600px; }
+  @media (max-width: 640px) { .emb-iframe { height: 680px; } .emb-cuerpo > .cargando { position: relative; height: 680px; } }
+</style>
+</head>
+<body>
+<div data-nav="simuladores"></div>
+
+<main>
+  <section class="ficha" id="ficha">
+    <nav class="migas"><a href="biblioteca.html">Simuladores</a><span>/</span><a href="biblioteca.html?tema=F%C3%ADsica" id="miga-tema">Física</a></nav>
+    <div class="titulo-fila">
+      <div>
+        <h1 class="h1" id="titulo">El péndulo de Galileo: T ∝ √L</h1>
+        <div class="metas"><span class="tema" id="tema">Física</span><span class="meta" id="fecha">19 de agosto de 2026</span></div>
+      </div>
+    </div>
+
+    <div class="embebido" id="embebido">
+      <div class="emb-barra">
+        <span class="puntos"><i></i><i></i><i></i></span>
+        <span class="t" id="barra-t">Simulador</span>
+        <a class="btn btn-secundario" id="completa" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg> Abrir en pantalla completa</a>
+      </div>
+      <div class="emb-cuerpo"></div>
+    </div>
+    
+
+    <div class="descripcion">
+      <p class="cuerpo-l" id="desc">Simulación con la ecuación exacta θ̈ = −(g/L)·sin θ, integrada con Runge–Kutta 4. Los períodos que ves medidos salen de contar cruces por cero, no de la fórmula.</p>
+      <blockquote class="cita">
+        <p>«En cuanto a los tiempos de vibración de los cuerpos suspendidos por hilos de diferentes longitudes, tienen entre sí la misma proporción que las raíces cuadradas de las longitudes del hilo.»</p>
+        <p class="meta">Galileo Galilei · Diálogos sobre dos nuevas ciencias</p>
+      </blockquote>
+    </div>
+  </section>
+
+  <section class="reciprocidad" id="reciprocidad">
+    <div class="cuadricula"></div>
+    <h2 class="h2">Este simulador es gratis y <span class="verde">lo va a seguir siendo.</span></h2>
+    <p class="cuerpo-l">Si te sirvió y querés que armemos uno sobre tu tema, trabajamos juntos en una clase.</p>
+    <a class="btn btn-primario" href="clases.html">Ver las clases →</a>
+  </section>
+
+  <section class="mas">
+    <div class="cab"><h2 class="h3" id="mas-titulo">Más de Física</h2><a class="btn btn-texto" href="biblioteca.html">Ver toda la biblioteca →</a></div>
+    <div class="grilla-3" id="mas"></div>
+  </section>
+</main>
+
+<div data-pie></div>
+
+<script src="js/comun.js"></script>
+<script src="js/simuladores.js"></script>
+<script>
+// ------------------------------------------------ qué simulador muestra la ficha: ?sim=<id>
+const q = new URLSearchParams(location.search);
+const actual = sim(q.get("sim")) || sim("tiro-oblicuo");
+document.title = actual.titulo + " · Profee Tonio";
+document.getElementById("titulo").textContent = actual.titulo;
+document.getElementById("barra-t").textContent = actual.tema;
+document.getElementById("tema").textContent = actual.tema;
+const miga = document.getElementById("miga-tema"); miga.textContent = actual.tema; miga.href = "biblioteca.html?tema=" + encodeURIComponent(actual.tema);
+document.getElementById("desc").textContent = actual.desc;
+document.getElementById("fecha").textContent = fechaLarga(actual.fecha);
+document.getElementById("completa").href = urlSim(actual);
+if (actual.id !== "pendulo-galileo") document.querySelector(".cita").remove();   // la cita de Galileo es sólo del péndulo
+
+// el simulador: mientras carga se ve el estado "cargando" (el marco ya tiene su tamaño final, nada salta)
+let d = ""; for (let x = 0; x <= 260; x += 2) d += (x ? " L" : "M") + x + " " + (45 - 30 * Math.sin(x / 260 * 2 * Math.PI)).toFixed(1);
+document.querySelector(".emb-cuerpo").innerHTML = `
+  <div class="cargando" id="cargando"><div class="cuadricula"></div><div class="centro">
+    <svg viewBox="0 0 260 90"><defs><filter id="h1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>
+      <line x1="0" y1="45" x2="260" y2="45" stroke="#AAB6CE" stroke-opacity=".3"/>
+      <path class="onda-carga" d="${d}" fill="none" stroke="#2E78FF" stroke-width="8" stroke-opacity=".5" filter="url(#h1)"/>
+      <path class="onda-carga" d="${d}" fill="none" stroke="#7FB6FF" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div class="riel-carga"><i></i></div>
+    <span class="meta">Cargando simulador</span>
+  </div></div>
+  <iframe class="emb-iframe" title="${actual.titulo}"></iframe>`;
+const marco = document.querySelector(".emb-iframe");
+if (!q.has("cargando")) {
+  marco.addEventListener("load", () => document.getElementById("cargando")?.remove());
+  marco.src = urlSim(actual);
+}
+
+// más del mismo tema; si no alcanza, se completa con otros
+const otros = SIMULADORES.filter(s => s.id !== actual.id);
+const mas = [...otros.filter(s => s.tema === actual.tema), ...otros.filter(s => s.tema !== actual.tema)].slice(0, 3);
+document.getElementById("mas-titulo").textContent = otros.some(s => s.tema === actual.tema) ? "Más de " + actual.tema : "Más simuladores";
+document.getElementById("mas").innerHTML = mas.map(s => tarjeta(s)).join("");
+</script>
+</body>
+</html>

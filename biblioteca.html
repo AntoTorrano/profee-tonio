@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Simuladores de matemática y física para mover con las manos. Gratis, sin registrarse y funcionan en el celular.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Simuladores · Profee Tonio">
+<meta property="og:description" content="Simuladores de matemática y física para mover con las manos. Gratis, sin registrarse y funcionan en el celular.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Simuladores · Profee Tonio</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .nav { position: fixed; }
+  .encabezado { position: relative; padding: 168px var(--gutter) 56px; text-align: center; overflow: hidden; }
+  .encabezado .cuadricula { -webkit-mask-image: radial-gradient(ellipse 55% 75% at 50% 30%, #000 10%, transparent 75%); mask-image: radial-gradient(ellipse 55% 75% at 50% 30%, #000 10%, transparent 75%); }
+  .encabezado .display { font-size: 148px; position: relative; }
+  .encabezado .bajada { margin-top: 18px; text-transform: uppercase; font: 700 26px/1.3 var(--f-texto); letter-spacing: -.01em; color: var(--texto); position: relative; }
+  .encabezado .contexto { position: relative; max-width: 620px; margin: 18px auto 0; display: grid; gap: 12px; color: var(--texto-suave); font-size: 18px; }
+
+  .filtros { max-width: var(--ancho-max); margin: 0 auto; padding: 28px 32px 26px; position: relative; }
+  .filtros .busqueda { height: 58px; }
+  .filtros .rotulo { margin: 28px 0 14px; }
+  .temas a.pildora, .ver-todos { text-decoration: none; }
+  .temas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .ver-todos { font: 600 14px/1 var(--f-texto); color: var(--neon-alt); margin-left: 6px; }
+  .estado {
+    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--grilla);
+    display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--texto-suave);
+  }
+  .estado::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--neon-core); box-shadow: 0 0 8px var(--neon); }
+  .estado b { color: var(--texto); font-weight: 600; }
+
+  .resultados { padding: 48px var(--gutter) var(--e-10); }
+  .resultados .seccion-dentro { max-width: var(--ancho-max); }
+  .vacio { grid-column: 1 / -1; display: grid; place-items: center; text-align: center; padding: 80px 24px; border-radius: var(--r-grande); outline: 1.5px dashed var(--linea); outline-offset: -1.5px; }
+  .vacio .icono { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 22px; box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 22px rgb(46 120 255 / .3); }
+  .vacio .h3 { margin-bottom: 10px; }
+  .vacio .btn { margin-top: 26px; }
+
+  .filtro-toggle { display: none; }
+  @media (max-width: 640px) {
+    .encabezado { padding: 104px var(--gutter) 32px; }
+    .encabezado .display { font-size: 52px; }
+    .encabezado .bajada { font-size: 20px; margin-top: 10px; }
+    .encabezado .contexto { font-size: 16px; margin-top: 12px; }
+    .encabezado .contexto p:last-child { display: none; }
+    section[style] { padding: 0 var(--gutter) !important; }
+    .filtros { padding: 14px; border-radius: var(--r-medio); }
+    .filtros .busqueda { height: 50px; padding-right: 6px; font-size: 15px; }
+    .filtros .busqueda .ph { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .filtros .busqueda .btn-secundario { display: none; }
+    .filtros .busqueda .btn { height: 38px !important; padding: 0 14px !important; }
+    .filtros .rotulo, .filtros .temas { display: none; }
+    /* el panel de temas se pliega en un botón: abierto ocupa media pantalla */
+    .filtro-toggle {
+      display: flex; align-items: center; justify-content: space-between; margin-top: 10px; height: 50px; padding: 0 16px;
+      border-radius: var(--r-medio); background: var(--fondo); box-shadow: inset 0 0 0 1px var(--linea);
+      font: 600 13px/1 var(--f-texto); letter-spacing: var(--track-meta); text-transform: uppercase; color: var(--texto-suave);
+    }
+    .filtro-toggle b { color: var(--texto); font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 15px; margin-left: 8px; }
+    .filtro-toggle .n { font-family: var(--f-mono); color: var(--texto-tenue); letter-spacing: 0; }
+    .resultados { padding: 24px var(--gutter) 80px; }
+  }
+
+  /* ---------- biblioteca chica (≤ 3): sin ceremonia de buscador, y el final se vuelve una invitación */
+  .chica .filtros .busqueda, .chica .filtros .rotulo { display: none; }
+  .chica .filtros { padding: 18px 22px; }
+  .chica .encabezado { padding-bottom: 40px; }
+  .cierre-chica { max-width: var(--ancho-max); margin: 28px auto 0; }
+  .invitacion { border-radius: var(--r-grande); padding: 34px 36px; display: flex; flex-direction: column; justify-content: center; gap: 16px;
+    background: radial-gradient(ellipse 70% 120% at 100% 0%, rgb(46 120 255 / .20), transparent 70%), var(--superficie); box-shadow: inset 0 0 0 1px rgb(46 120 255 / .4); }
+  .invitacion .h3 { font-size: 30px; line-height: 1.05; }
+  .invitacion .btn { align-self: flex-start; }
+
+  .campo { all: unset; flex: 1; min-width: 0; color: var(--texto); font: 400 16px/1 var(--f-texto); }
+  .campo::placeholder { color: var(--texto-tenue); opacity: 1; }
+  .campo::-webkit-search-cancel-button { display: none; }
+  .busqueda:focus-within { box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 0 4px rgb(46 120 255 / .18); }
+</style>
+</head>
+<body>
+<div data-nav="simuladores"></div>
+
+<header class="encabezado" id="encabezado">
+  <div class="cuadricula"></div>
+  <h1 class="display degradado">Simuladores</h1>
+  <p class="bajada">Ves · Entendés · Resolvés</p>
+  <div class="contexto">
+    <p>Cada simulador es una pieza interactiva de un tema. Cambiás los valores y ves qué pasa. Son gratis, no hay que registrarse y funcionan en el celular.</p>
+  </div>
+</header>
+
+<section style="padding: 0 var(--gutter)">
+  <div class="panel filtros" id="filtros">
+    <div class="busqueda">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C93C7" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="ph campo" id="q" type="search" placeholder="Buscar por título o tema" aria-label="Buscar por título o tema">
+      <button class="btn btn-secundario" id="limpiar" style="height:42px;padding:0 18px;font-size:15px">Limpiar</button>
+      <button class="btn btn-primario" id="buscar" style="height:42px;padding:0 22px;font-size:15px">Buscar</button>
+    </div>
+    <div class="rotulo">Temas</div>
+    <div class="temas" id="temas"></div>
+    <div class="filtro-toggle" id="toggle"></div>
+    <div id="estado"></div>
+  </div>
+</section>
+
+<section class="resultados" id="resultados">
+  <div class="seccion-dentro grilla-3" id="grilla" style="margin:0 auto"></div>
+</section>
+
+<div data-pie></div>
+
+<script src="js/comun.js"></script>
+<script src="js/simuladores.js"></script>
+<script>
+// Parámetros para los estados: ?tema=Física · ?n=3 · ?sinportada=pendulo-galileo
+const q = new URLSearchParams(location.search);
+const TEMAS = ["Límites", "Derivadas", "Integrales", "Series y sucesiones", "Álgebra lineal", "Funciones", "Geometría", "Física", "Números complejos"];
+// lo más nuevo primero (04-simuladores-modelo-de-datos.md)
+const lista = [...SIMULADORES].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, q.has("n") ? +q.get("n") : SIMULADORES.length);
+const activo = q.get("tema");
+const sinAcentos = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const busqueda = (q.get("q") || "").trim();
+document.getElementById("q").value = busqueda;
+
+const cuenta = t => lista.filter(s => s.tema === t).length;
+
+// píldoras: "Todos" + los temas con contenido; los vacíos se pliegan en "Ver todos los temas"
+const conContenido = TEMAS.filter(t => cuenta(t) > 0 || t === activo);
+const plegados = TEMAS.length - conContenido.length;
+document.getElementById("temas").innerHTML =
+  `<a href="biblioteca.html" class="pildora${activo ? "" : " is-activa"}">Todos <span class="n">(${lista.length})</span></a>` +
+  conContenido.map(t => `<a href="biblioteca.html?tema=${encodeURIComponent(t)}" class="pildora${t === activo ? " is-activa" : ""}">${t} <span class="n">(${cuenta(t)})</span></a>`).join("") +
+  (plegados ? `<a href="#" class="ver-todos" id="ver-todos">Ver todos los temas (${plegados} más)</a>` : "");
+
+document.getElementById("toggle").innerHTML =
+  `<span>Temas<b>${activo || "Todos"}</b> <span class="n">(${activo ? cuenta(activo) : lista.length})</span></span>
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+if (busqueda && !activo) document.getElementById("estado").innerHTML =
+  `<p class="estado"><span>Mostrando los simuladores que coinciden con <b>${busqueda.replace(/</g, "&lt;")}</b>.</span></p>`;
+if (activo) document.getElementById("estado").innerHTML =
+  `<p class="estado"><span>Mostrando los simuladores de <b>${activo}</b>. Podés cambiar de tema sin salir de esta vista.</span></p>`;
+
+let visibles = activo ? lista.filter(s => s.tema === activo) : lista;
+if (busqueda) visibles = visibles.filter(s => sinAcentos(s.titulo + " " + s.tema + " " + s.desc).includes(sinAcentos(busqueda)));
+const sinPortada = q.get("sinportada");
+let html = visibles.map(s => tarjeta(s, { sinPortada: s.id === sinPortada })).join("");
+if (!visibles.length) {
+  html = `<div class="vacio"><div>
+    <div class="icono"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7FB6FF" stroke-width="1.8"><path d="M3 18c3-9 6-12 9-12s6 3 9 12"/><path d="M3 18h18" stroke-opacity=".4"/></svg></div>
+    <p class="h3">Todavía no hay simuladores de este tema.</p>
+    <p class="cuerpo">Están en camino.</p>
+    <a class="btn btn-secundario" href="biblioteca.html">Ver todos los simuladores</a>
+  </div></div>`;
+} else if (busqueda) {
+  // con una búsqueda se muestra sólo lo que coincide
+} else if (!activo) {
+  // la grilla nunca queda coja: el lugar que sobra lo ocupa la invitación a armar uno sobre tu tema.
+  // Con 3 o menos simuladores no hay hueco, así que va abajo, a lo ancho.
+  const invitacion = `<div class="invitacion">
+      <p class="h3">Si querés que armemos uno sobre tu tema, trabajamos juntos en una clase.</p>
+      <a class="btn btn-secundario" href="clases.html">Ver las clases →</a>
+    </div>`;
+  if (lista.length <= 3) {
+    document.body.classList.add("chica");
+    document.getElementById("resultados").insertAdjacentHTML("beforeend", `<div class="cierre-chica">${invitacion}</div>`);
+  } else if (visibles.length % 3 !== 0) html += invitacion;
+}
+document.getElementById("grilla").innerHTML = html;
+// buscar / limpiar: recargan la vista con ?q= (conserva el modo vivo si está)
+const conModo = url => url + (new URLSearchParams(location.search).has("vivo") ? (url.includes("?") ? "&" : "?") + "vivo" : "");
+const buscar = () => { const t = document.getElementById("q").value.trim(); location.href = conModo("biblioteca.html" + (t ? "?q=" + encodeURIComponent(t) : "")); };
+document.getElementById("buscar").addEventListener("click", buscar);
+document.getElementById("q").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
+document.getElementById("limpiar").addEventListener("click", () => location.href = conModo("biblioteca.html"));
+// "Ver todos los temas" despliega también los temas que todavía no tienen simuladores
+document.getElementById("ver-todos")?.addEventListener("click", e => {
+  e.preventDefault();
+  const vacios = TEMAS.filter(t => !conContenido.includes(t));
+  e.currentTarget.outerHTML = vacios.map(t => `<a href="biblioteca.html?tema=${encodeURIComponent(t)}" class="pildora">${t} <span class="n">(0)</span></a>`).join("");
+});
+</script>
+</body>
+</html>

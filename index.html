@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Análisis, Álgebra y Física explicados con animaciones hechas a medida. Simuladores gratuitos para entender, y clases para cuando necesitás algo más.">
+<meta name="theme-color" content="#04060D">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Profee Tonio">
+<meta property="og:title" content="Profee Tonio · Análisis, Álgebra y Física">
+<meta property="og:description" content="Análisis, Álgebra y Física explicados con animaciones hechas a medida. Simuladores gratuitos para entender, y clases para cuando necesitás algo más.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>Profee Tonio · Análisis, Álgebra y Física</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .nav { position: fixed; }
+
+  /* ================================================================ HERO */
+  .hero { position: relative; height: 900px; overflow: hidden; }
+  .hero .cuadricula { -webkit-mask-image: radial-gradient(ellipse 45% 70% at 72% 52%, #000 10%, transparent 80%); mask-image: radial-gradient(ellipse 45% 70% at 72% 52%, #000 10%, transparent 80%); }
+  .hero-dentro {
+    position: absolute; inset: 80px 0 0; max-width: 1312px; margin: 0 auto; padding: 0 var(--gutter);
+    display: grid; grid-template-columns: 1fr 560px; gap: 72px; align-items: center;
+  }
+  .hero .display { font-size: 136px; line-height: .86; margin: 28px 0 30px; text-shadow: 0 0 40px rgb(46 120 255 / .25); }
+  .hero .display span { display: block; }
+  .hero .cuerpo-l { font-size: 23px; max-width: 560px; text-wrap: balance; }
+  .hero .apoyo { margin-top: 14px; max-width: 520px; color: var(--texto-suave); font-size: 17px; }
+  .hero .separador { margin: 34px 0 24px; max-width: 560px; }
+  .hero .separador::after { left: 0; }
+  .hero .tres-tiempos { letter-spacing: .16em; white-space: nowrap; }
+
+  /* el simulador: SU marco es el panel; el sitio no le agrega otro */
+  .sim { position: relative; border-radius: var(--r-grande); background: var(--superficie);
+    box-shadow: inset 0 0 0 1.5px var(--linea), 0 0 90px rgb(46 120 255 / .10); }
+  .sim-barra { height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 18px 0 20px; border-bottom: 1.5px solid var(--linea); }
+  .sim-barra .puntos { display: flex; gap: 7px; }
+  .sim-barra .puntos i { width: 8px; height: 8px; border-radius: 50%; background: #2B3A57; }
+  .sim-barra .titulo { font: 700 14px/1 var(--f-texto); letter-spacing: .1em; text-transform: uppercase; color: var(--texto); }
+  .sim-barra .abrir { margin-left: auto; font: 600 14px/1 var(--f-texto); color: var(--neon-alt); text-decoration: none; }
+  .sim svg { display: block; width: 100%; }
+  .lecturas { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--linea); padding: 16px 0 14px; text-align: center; }
+  .lecturas .et { font-size: 13px; color: var(--texto-suave); }
+  .lecturas .val { font: 600 22px/1.2 var(--f-mono); color: var(--texto); }
+  .sliders { padding: 6px 26px 24px; display: grid; gap: 14px; }
+  .slider { display: grid; grid-template-columns: 64px 1fr 86px; align-items: center; gap: 16px; }
+  .slider .et { font: 400 15px/1 var(--f-mono); color: var(--texto-suave); }
+  .slider .val { font: 600 16px/1 var(--f-mono); color: var(--texto); text-align: right; }
+  .riel { position: relative; height: 6px; border-radius: 6px; background: var(--riel); }
+  .riel .activo { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--neon); }
+  .riel .perilla { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; transform: translate(-50%, -50%); background: var(--neon-core); box-shadow: 0 0 0 8px rgb(46 120 255 / .22), 0 0 16px var(--neon); }
+
+  /* carrusel: cuatro segmentos tipo "historias", el activo se va llenando */
+  .carrusel { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin-top: 18px; }
+  .flecha { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--texto-suave); box-shadow: inset 0 0 0 1px var(--linea); background: var(--fondo-alt); }
+  .segmentos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .seg { display: grid; gap: 8px; }
+  .seg .barra { height: 3px; border-radius: 3px; background: var(--riel); overflow: hidden; }
+  .seg .barra i { display: block; height: 100%; width: 0; background: var(--neon-core); box-shadow: 0 0 8px var(--neon); }
+  .seg .nombre { font: 500 12px/1.3 var(--f-texto); color: var(--texto-tenue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seg .nombre b { font: 600 11px/1 var(--f-mono); margin-right: 6px; }
+  .seg.is-activo .nombre { color: var(--texto); }
+  .seg.is-activo .nombre b { color: var(--neon-core); }
+
+  /* ================================================================ QUIÉN SOY */
+  .quien .seccion-dentro { display: grid; grid-template-columns: 440px 1fr; gap: 96px; align-items: center; }
+  .retrato { position: relative; height: 560px; }
+  .retrato::before { /* halo azul: la luz viene de atrás, como un trazo de Manim */
+    content: ""; position: absolute; left: 50%; top: 46%; width: 420px; height: 420px; transform: translate(-50%, -50%);
+    border-radius: 50%; background: radial-gradient(circle, rgb(46 120 255 / .38) 0%, rgb(46 120 255 / .12) 45%, transparent 70%);
+  }
+  .retrato::after { /* el aro: un círculo trazado, no una sombra */
+    content: ""; position: absolute; left: 50%; top: 46%; width: 380px; height: 380px; transform: translate(-50%, -50%);
+    border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(127 182 255 / .55), 0 0 22px rgb(46 120 255 / .35), inset 0 0 22px rgb(46 120 255 / .20);
+  }
+  .retrato img {
+    position: absolute; left: 50%; bottom: 0; height: 560px; transform: translateX(-52%); z-index: 1;
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 98%); mask-image: linear-gradient(180deg, #000 70%, transparent 98%);
+  }
+  .foto-pendiente { position: absolute; left: 50%; top: 46%; width: 340px; height: 340px; transform: translate(-50%, -50%); border-radius: 50%; z-index: 1; }
+  .quien .h2 { font-size: 56px; line-height: .98; max-width: 640px; }
+  .quien .cuerpo-l { margin-top: 28px; max-width: 600px; color: var(--texto-suave); font-size: 20px; }
+  .quien .segundo { margin-top: 14px; }
+  .quien .a-clases { margin-top: 26px; }
+  .remate { margin-top: 36px; white-space: nowrap; font: 800 31px/1.1 var(--f-titulo); font-stretch: var(--ancho-condensado); text-transform: uppercase; letter-spacing: .01em; }
+  .remate span { color: var(--neon-core); text-shadow: var(--glow-texto); }
+  .datos { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin-top: 44px; border-top: 1px solid var(--linea); padding-top: 26px; }
+  .dato { padding-right: 44px; margin-right: 44px; border-right: 1px solid var(--grilla); }
+  .dato:last-child { border: 0; margin: 0; padding: 0; }
+  .dato .n { font: 600 36px/1 var(--f-mono); color: var(--texto); letter-spacing: -.02em; }
+  .dato .l { margin-top: 10px; font-size: 14px; color: var(--texto-suave); }
+
+  /* ================================================================ SIMULADORES */
+  .destacados { background: linear-gradient(180deg, var(--fondo), var(--fondo-alt) 40%, var(--fondo)); }
+  .destacados .cuadricula { -webkit-mask-image: radial-gradient(ellipse 60% 40% at 50% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 60% 40% at 50% 0%, #000, transparent 75%); opacity: .6; }
+  .pie-seccion { margin-top: 44px; display: flex; justify-content: center; }
+
+  /* ================================================================ CLASES */
+  .clases-home .seccion-dentro { border-radius: var(--r-hero); background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); padding: 72px 80px; position: relative; overflow: hidden; }
+  .clases-home .seccion-dentro::before { content: ""; position: absolute; right: -160px; top: -160px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgb(46 120 255 / .16), transparent 65%); }
+  .clases-home .grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 80px; align-items: center; position: relative; }
+  .clases-home .cuerpo-l { margin-top: 18px; color: var(--texto-suave); }
+  .clases-home .btn { margin-top: 34px; }
+  .pasos { display: grid; gap: 0; position: relative; }
+  .pasos::before { content: ""; position: absolute; left: 23px; top: 30px; bottom: 30px; width: 2px; background: linear-gradient(var(--neon), var(--neon-core)); box-shadow: 0 0 10px var(--neon); opacity: .7; }
+  .paso { display: grid; grid-template-columns: 48px 1fr; gap: 22px; align-items: center; padding: 18px 0; }
+  .paso .num { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--fondo); box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 16px rgb(46 120 255 / .35); font: 600 14px/1 var(--f-mono); color: var(--neon-core); position: relative; }
+  .paso p { font-size: 21px; line-height: 1.35; color: var(--texto); }
+
+  @media (max-width: 640px) {
+    .hero { height: auto; padding: 88px 0 40px; }
+    .hero-dentro { position: static; display: block; padding: 0 var(--gutter); }
+    .hero .cuadricula { -webkit-mask-image: radial-gradient(ellipse 90% 40% at 50% 70%, #000 10%, transparent 80%); mask-image: radial-gradient(ellipse 90% 40% at 50% 70%, #000 10%, transparent 80%); }
+    .hero .pildora { height: 30px; font-size: 11px; }
+    .hero .display { font-size: 78px; margin: 18px 0 16px; }
+    .hero .cuerpo-l { font-size: 18px; }
+    .hero .apoyo, .hero .separador, .hero .tres-tiempos { display: none; }
+    .hero .sim { margin-top: 26px; }
+    .sim-barra { height: 46px; padding: 0 14px; }
+    .sim-barra .puntos { display: none; }
+    .sim-barra .titulo { font-size: 12px; }
+    .sim-barra .abrir { font-size: 13px; }
+    .lecturas { padding: 12px 0 10px; }
+    .lecturas .val { font-size: 18px; }
+    .sliders { padding: 4px 16px 16px; gap: 10px; }
+    .slider { grid-template-columns: 26px 1fr 64px; gap: 12px; }
+    .slider .val { font-size: 14px; }
+    .carrusel { grid-template-columns: 1fr; margin-top: 14px; }
+    .carrusel .flecha { display: none; }
+    .segmentos { gap: 6px; }
+    .seg .nombre { font-size: 11px; }
+    .seg .nombre b { margin-right: 4px; }
+
+    .quien .seccion-dentro { grid-template-columns: 1fr; gap: 32px; }
+    .retrato { height: 300px; }
+    .foto-pendiente { width: 240px; height: 240px; }
+    .retrato::before { width: 300px; height: 300px; }
+    .retrato::after { width: 270px; height: 270px; }
+    .quien .h2 { font-size: 40px; }
+    .quien .cuerpo-l { font-size: 17px; }
+    .remate { font-size: 28px; white-space: normal; }
+    .datos { grid-template-columns: 1fr 1fr 1fr; }
+    .dato { padding-right: 14px; margin-right: 14px; }
+    .dato .n { font-size: 26px; }
+    .dato .l { font-size: 12px; }
+
+    .clases-home { padding-top: 0; }
+    .clases-home .seccion-dentro { padding: 40px 24px; }
+    .clases-home .grid { grid-template-columns: 1fr; gap: 32px; }
+    .paso p { font-size: 17px; }
+  }
+
+  /* carrusel: todas las diapositivas en la misma celda; el alto lo pone la más alta, nada salta */
+  .slides { display: grid; }
+  .slide { grid-area: 1 / 1; visibility: hidden; opacity: 0; transition: opacity .35s var(--ease); }
+  .slide.is-activo { visibility: visible; opacity: 1; }
+  .slide-img { display: flex; flex-direction: column; height: 100%; }
+  .slide-img img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: top left; display: block; border-bottom: 1.5px solid var(--linea); }
+  .slide-img .pie-slide { padding: 16px 22px 18px; display: grid; gap: 8px; align-content: start; }
+  .slide-img .pie-slide p { font-size: 14px; line-height: 1.5; color: var(--texto-suave); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .titulos { display: grid; min-width: 0; }
+  .titulos .titulo { grid-area: 1 / 1; visibility: hidden; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .titulos .titulo.is-activo { visibility: visible; }
+  button.flecha { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--texto-suave); box-shadow: inset 0 0 0 1px var(--linea); background: var(--fondo-alt); }
+  button.flecha:hover { color: var(--texto); box-shadow: inset 0 0 0 1px var(--neon); }
+  button.flecha:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  .seg { all: unset; cursor: pointer; display: grid; gap: 8px; }
+  .seg:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 4px; border-radius: 4px; }
+  @keyframes llenar { from { width: 0; } to { width: 100%; } }
+  .autoplay .seg.is-activo .barra i { animation: llenar 9s linear forwards; }
+  .autoplay.pausado .seg.is-activo .barra i { animation-play-state: paused; }
+  .slide iframe { display: block; width: 100%; height: 470px; border: 0; background: var(--superficie); }
+  @media (max-width: 640px) { .slide iframe { height: 520px; } }
+
+  /* ---------- el reel de Derivadas en lugar de la foto: se reproduce solo, sin sonido, en loop */
+  .reel { margin: 0; display: grid; justify-items: center; gap: 18px; position: relative; }
+  .reel::before { content: ""; position: absolute; left: 50%; top: 45%; width: 460px; height: 460px; transform: translate(-50%, -50%);
+    border-radius: 50%; background: radial-gradient(circle, rgb(46 120 255 / .30), rgb(46 120 255 / .08) 50%, transparent 70%); pointer-events: none; }
+  .reel-marco { position: relative; width: 315px; aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: var(--superficie);
+    box-shadow: 0 0 0 1.5px var(--neon), 0 0 0 9px rgb(4 6 13 / .9), 0 0 0 10.5px rgb(127 182 255 / .30), 0 0 60px rgb(46 120 255 / .40); }
+  .reel-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sonido { all: unset; cursor: pointer; position: absolute; right: 12px; bottom: 12px; width: 40px; height: 40px; border-radius: 50%;
+    display: grid; place-items: center; color: var(--texto); background: rgb(4 6 13 / .6); backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgb(127 182 255 / .45); }
+  .sonido:hover { box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 14px rgb(46 120 255 / .5); }
+  .sonido:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  .play-reel { all: unset; cursor: pointer; position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; transform: translate(-50%, -50%); border-radius: 50%;
+    display: grid; place-items: center; color: var(--neon-core); background: rgb(4 6 13 / .6); backdrop-filter: blur(6px);
+    box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 24px rgb(46 120 255 / .55); }
+  .vistas { position: relative; display: inline-flex; align-items: center; gap: 9px; height: 40px; padding: 0 18px; border-radius: var(--r-pildora);
+    font: 600 17px/1 var(--f-mono); color: var(--texto); background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea), 0 0 20px rgb(46 120 255 / .15); }
+  .vistas svg { color: var(--neon-core); }
+  @media (max-width: 640px) {
+    /* en el celular el reel va entre el título y el texto, más chico, para que no tape toda la pantalla */
+    .quien .seccion-dentro > div:last-child { display: contents; }
+    .quien .rotulo { order: 1; } .quien .h2 { order: 2; } .reel { order: 3; margin: 6px 0 4px; }
+    .quien .cuerpo-l, .quien .a-clases, .remate, .datos { order: 4; }
+    .quien .seccion-dentro { gap: 0; }
+    .quien .h2 { margin-bottom: 24px; }
+    .reel-marco { width: 62vw; max-width: 260px; }
+    .reel::before { width: 320px; height: 320px; }
+  }
+</style>
+</head>
+<body>
+<div data-nav="inicio"></div>
+
+<!-- ================================================================== HERO -->
+<section class="hero" id="hero">
+  <div class="cuadricula"></div>
+  <div class="hero-dentro">
+    <div>
+      <span class="pildora pildora-acento">Aprendizaje visual</span>
+      <h1 class="display"><span>Profee</span><span>Tonio</span></h1>
+      <p class="cuerpo-l">Análisis, Álgebra y Física explicados con <span class="acento">animaciones hechas a medida</span>.</p>
+      <p class="apoyo">Simuladores gratuitos para entender, y clases para cuando necesitás algo más.</p>
+      <div class="separador"></div>
+      <p class="meta tres-tiempos">Lo ves · Los entendés · Los resolvés</p>
+    </div>
+
+    <div>
+      <div class="sim">
+        <div class="sim-barra">
+          <span class="puntos"><i></i><i></i><i></i></span>
+          <span class="titulos" id="titulos"></span>
+          <a class="abrir" id="sim-abrir" href="simulador.html?sim=tiro-oblicuo">Abrir simulador →</a>
+        </div>
+        <div class="slides" id="slides"></div>
+      </div>
+      <div class="carrusel">
+        <button class="flecha" id="ant" aria-label="Anterior"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="segmentos" id="segmentos"></div>
+        <button class="flecha" id="sig" aria-label="Siguiente"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================== QUIÉN SOY -->
+<section class="seccion quien" id="quien" style="padding-top:48px">
+  <div class="seccion-dentro">
+    <figure class="reel" id="reel">
+      <div class="reel-marco">
+        <video src="assets/videos/derivadas-2.mp4" poster="assets/videos/derivadas-2.jpg" muted loop playsinline preload="metadata" aria-label="Video: Derivadas, matemática en 1 minuto"></video>
+        <button class="sonido" id="sonido" aria-label="Activar sonido"></button>
+      </div>
+      <figcaption class="vistas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3.2"/></svg><span>+300.000</span></figcaption>
+    </figure>
+    <div>
+      <div class="rotulo">¿Quién soy?</div>
+      <h2 class="h2">Doy clases desde que tengo 14 años.</h2>
+      <p class="cuerpo-l">Pocas sensaciones se comparan con que un alumno me diga que por fin comprendió algo que nunca había logrado entender. Para eso creé los simuladores y las animaciones: para que por fin entiendas.</p>
+      <p class="cuerpo-l segundo">Tomar una clase conmigo significa experimentar este método de aprendizaje tan único como visual.</p>
+      <a class="btn btn-secundario a-clases" href="clases.html">Ver las clases →</a>
+      <p class="remate">No solo te lo explico. <span>También te lo muestro.</span></p>
+      <div class="datos">
+        <div class="dato"><div class="n">+14.000</div><div class="l">seguidores en Instagram</div></div>
+        <div class="dato"><div class="n">+5</div><div class="l">años dando clases</div></div>
+        <div class="dato"><div class="n">+20</div><div class="l">simuladores creados y publicados</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================== SIMULADORES -->
+<section class="seccion destacados" id="simuladores">
+  <div class="cuadricula"></div>
+  <div class="seccion-dentro" style="position:relative">
+    <div class="cab-seccion">
+      <div>
+        <h2 class="h1 degradado">Simuladores</h2>
+        <p class="cuerpo-l">Movelos, rompelos, volvé a armarlos. Son gratis y no hace falta registrarse.</p>
+      </div>
+      <a class="btn btn-texto" href="biblioteca.html">Ver toda la biblioteca →</a>
+    </div>
+    <div class="grilla-3" id="destacados"></div>
+  </div>
+</section>
+
+<!-- ================================================================== CLASES -->
+<section class="seccion clases-home" id="clases" style="padding-top:0">
+  <div class="seccion-dentro">
+    <div class="grid">
+      <div>
+        <h2 class="h1">Otros profesores</h2>
+        <p class="cuerpo-l">Este proyecto lo llevo a cabo con profesores amigos que son extremadamente buenos en lo que hacen, y por eso los elegí. Los recomiendo ampliamente.</p>
+        <a class="btn btn-secundario" href="clases.html?prof=otros">Ver las opciones →</a>
+      </div>
+      <div class="pasos">
+        <div class="paso"><span class="num">01</span><p>Agendás con el profesor que vos elijas</p></div>
+        <div class="paso"><span class="num">02</span><p>Nos mandás tus ejercicios</p></div>
+        <div class="paso"><span class="num">03</span><p>Recibís una clase totalmente personalizada</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-pie></div>
+
+<script src="js/comun.js"></script>
+<script src="js/simuladores.js"></script>
+<script>
+// ------------------------------------------------ carrusel: cuatro simuladores de verdad, interactivos ahí mismo
+// Cada diapositiva es el simulador en modo "vitrina" (compacto). Se carga recién cuando le toca, para no
+// bajar los cuatro de entrada. Pasa solo cada 9 s; si el visitante lo está usando, se queda quieto.
+const CARRUSEL = ["tiro-oblicuo", "sumas-de-riemann", "transformacion-lineal", "secante-tangente"];
+const CORTOS = { "tiro-oblicuo": "Tiro oblicuo", "sumas-de-riemann": "Riemann", "transformacion-lineal": "Matrices", "secante-tangente": "Derivada" };
+const slides = document.getElementById("slides"), titulos = document.getElementById("titulos");
+CARRUSEL.forEach((id, i) => {
+  slides.insertAdjacentHTML("beforeend", `<div class="slide${i === 0 ? " is-activo" : ""}"><iframe title="${sim(id).titulo}" data-src="${urlSim(sim(id))}?vitrina"></iframe></div>`);
+  titulos.insertAdjacentHTML("beforeend", `<span class="titulo${i === 0 ? " is-activo" : ""}">${sim(id).titulo}</span>`);
+});
+document.getElementById("segmentos").innerHTML = CARRUSEL.map((id, i) =>
+  `<button class="seg${i === 0 ? " is-activo" : ""}" aria-label="${sim(id).titulo}"><div class="barra"><i></i></div><span class="nombre"><b>0${i + 1}</b>${CORTOS[id]}</span></button>`).join("");
+
+let actual = 0, reloj = null, enUso = false;
+function cargar(n) { const f = slides.children[n].querySelector("iframe"); if (!f.src) f.src = f.dataset.src; }
+function ir(n) {
+  actual = (n + CARRUSEL.length) % CARRUSEL.length; cargar(actual);
+  [...slides.children].forEach((el, i) => el.classList.toggle("is-activo", i === actual));
+  [...titulos.children].forEach((el, i) => el.classList.toggle("is-activo", i === actual));
+  document.querySelectorAll(".seg").forEach((el, i) => { el.classList.toggle("is-activo", i === actual); el.classList.remove("lleno"); void el.offsetWidth; });
+  document.getElementById("sim-abrir").href = "simulador.html?sim=" + CARRUSEL[actual];
+  clearTimeout(reloj); if (!enUso) reloj = setTimeout(() => ir(actual + 1), 9000);
+}
+document.querySelectorAll(".seg").forEach((el, i) => el.addEventListener("click", () => ir(i)));
+document.getElementById("ant").addEventListener("click", () => ir(actual - 1));
+document.getElementById("sig").addEventListener("click", () => ir(actual + 1));
+const panelSim = document.querySelector(".hero .sim");
+panelSim.addEventListener("pointerenter", () => { enUso = true; clearTimeout(reloj); document.querySelector(".carrusel").classList.add("pausado"); });
+panelSim.addEventListener("pointerleave", () => { enUso = false; document.querySelector(".carrusel").classList.remove("pausado"); ir(actual); });
+document.querySelector(".carrusel").classList.add("autoplay");
+ir(0);
+
+// ------------------------------------------------ destacados (los que no están en el carrusel)
+document.getElementById("destacados").innerHTML = ["limite-epsilon-delta", "mruv", "polinomio-de-taylor"].map(id => tarjeta(sim(id))).join("");
+
+// ------------------------------------------------ el reel: se reproduce sólo cuando está a la vista (ahorra datos en el celular)
+const reel = document.querySelector("#reel video"), btnSonido = document.getElementById("sonido");
+const ICONO_MUDO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="m17 9 5 6m0-6-5 6"/></svg>';
+const ICONO_SONIDO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const pintarSonido = () => { btnSonido.innerHTML = reel.muted ? ICONO_MUDO : ICONO_SONIDO; btnSonido.setAttribute("aria-label", reel.muted ? "Activar sonido" : "Silenciar"); };
+pintarSonido();
+btnSonido.addEventListener("click", () => { reel.muted = !reel.muted; if (!reel.muted) reel.play(); pintarSonido(); });
+// si el teléfono bloquea el autoplay (iPhone en modo de bajo consumo), aparece un play sobre la portada
+const marco = document.querySelector(".reel-marco");
+const playManual = () => { if (marco.querySelector(".play-reel")) return;
+  marco.insertAdjacentHTML("beforeend", '<button class="play-reel" aria-label="Reproducir"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></button>');
+  marco.querySelector(".play-reel").addEventListener("click", e => { reel.play(); e.currentTarget.remove(); }); };
+new IntersectionObserver(([e]) => { if (e.isIntersecting) reel.play().catch(playManual); else reel.pause(); }, { threshold: 0.35 }).observe(reel);
+</script>
+</body>
+</html>

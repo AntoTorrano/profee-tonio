@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polinomio de Taylor</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// Pₙ(x) = Σ f⁽ᵏ⁾(0)/k! · xᵏ  (Taylor centrado en 0). Cada grado más copia una derivada más de f en 0.
+const FUN = {
+  sen: { f: Math.sin, c: k => k % 2 === 0 ? 0 : ((k - 1) / 2) % 2 === 0 ? 1 : -1, txt: "sen x", y: [-2.6, 2.6] },
+  cos: { f: Math.cos, c: k => k % 2 === 1 ? 0 : (k / 2) % 2 === 0 ? 1 : -1, txt: "cos x", y: [-2.6, 2.6] },
+  exp: { f: Math.exp, c: k => 1, txt: "eˣ", y: [-1.2, 6.5] },
+  ln: { f: x => x > -1 ? Math.log(1 + x) : NaN, c: k => k === 0 ? 0 : ((-1) ** (k + 1)) * fact(k - 1), txt: "ln(1 + x)", y: [-3.2, 2.4] },
+};
+function fact(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+const P = (F, n) => x => { let s = 0, p = 1; for (let k = 0; k <= n; k++) { s += F.c(k) / fact(k) * p; p *= x; } return s; };
+Sim({
+  titulo: "Polinomio de Taylor",
+  vista: v => ({ x: [-6.4, 6.4], y: FUN[v.fn].y }),
+  botones: [{ id: "fn", opciones: [["sen", "sen x"], ["cos", "cos x"], ["exp", "eˣ"], ["ln", "ln(1 + x)"]], valor: "sen" }],
+  controles: [
+    { id: "n", et: "grado del polinomio", min: 0, max: 15, paso: 1, valor: 3, fmt: v => v },
+    { id: "x", et: "x donde comparar", min: -5, max: 5, paso: .05, valor: 2, fmt: v => v.toFixed(2) },
+  ],
+  lecturas: [
+    { id: "fx", et: "f(x)", tipo: "res" },
+    { id: "px", et: "Pₙ(x)", tipo: "calc" },
+    { id: "err", et: "error", ancho: true },
+  ],
+  nota: "Cerca del 0 el polinomio <b>copia</b> a la función; lejos, se despega. Cada grado más agranda la zona donde coinciden. Con <b>ln(1 + x)</b> hay un límite: más allá de x = 1 no mejora nunca.",
+  dibujar(g, v) {
+    const C = g.C, F = FUN[v.fn], p = P(F, v.n);
+    g.cuadricula(1); g.ejes({ marcas: 1, x: "x", y: "y" });
+    g.curva(F.f, { desde: v.fn === "ln" ? -.999 : undefined });
+    g.curva(p, { color: C.amarillo, ancho: 2.2, alfaGlow: .25 });
+    const fx = F.f(v.x), px = p(v.x);
+    g.linea(v.x, g.vista.y0, v.x, g.vista.y1, { dash: [4, 5], alfa: .4 });
+    if (isFinite(fx)) g.punto(v.x, fx, { r: 5 });
+    if (isFinite(px) && px < g.vista.y1 && px > g.vista.y0) g.punto(v.x, px, { color: C.amarillo, r: 5 });
+    g.texto("f(x) = " + F.txt, g.vista.x0, g.vista.y1, { dx: 10, dy: 16, color: C.core, mono: true, tam: 13 });
+    g.texto("P(x), grado " + v.n, g.vista.x0, g.vista.y1, { dx: 10, dy: 36, color: C.amarillo, mono: true, tam: 13 });
+    return { fx: isFinite(fx) ? fx.toFixed(4) : "no definida", px: px.toFixed(4), err: isFinite(fx) ? Math.abs(fx - px).toExponential(2) : "—" };
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformaciones de funciones</title>
+<link rel="stylesheet" href="_sim.css">
+</head>
+<body>
+<script src="_sim.js"></script>
+<script>
+// g(x) = a·f(b·(x − c)) + d. Cada parámetro hace UNA cosa a la gráfica de f:
+// a estira/achata y refleja en vertical · b comprime/estira y refleja en horizontal · c corre a los costados · d sube/baja.
+const BASE = {
+  cuad: { f: x => x * x, txt: "x²", marca: [0, 0] },
+  abs: { f: Math.abs, txt: "|x|", marca: [0, 0] },
+  sen: { f: Math.sin, txt: "sen x", marca: [0, 0] },
+  raiz: { f: x => x >= 0 ? Math.sqrt(x) : NaN, txt: "√x", marca: [0, 0] },
+  inv: { f: x => Math.abs(x) < 1e-6 ? NaN : 1 / x, txt: "1/x", marca: null },
+};
+const n = x => (Math.abs(x) < 5e-3 ? 0 : x).toFixed(2).replace(/\.00$/, "");
+const signo = (x, txt) => x < 0 ? ` − ${n(-x)}${txt}` : x > 0 ? ` + ${n(x)}${txt}` : "";
+Sim({
+  titulo: "Transformaciones de funciones",
+  vista: { x: [-6.5, 6.5], y: [-5, 5], igual: true },
+  botones: [{ id: "f", opciones: [["cuad", "x²"], ["abs", "|x|"], ["sen", "sen x"], ["raiz", "√x"], ["inv", "1/x"]], valor: "cuad" }],
+  controles: [
+    { id: "a", et: "a · estira en vertical", min: -3, max: 3, paso: .05, valor: 1, fmt: n },
+    { id: "b", et: "b · comprime en horizontal", min: -3, max: 3, paso: .05, valor: 1, fmt: n },
+    { id: "c", et: "c · corre a los costados", min: -4, max: 4, paso: .05, valor: 0, fmt: n },
+    { id: "d", et: "d · sube o baja", min: -4, max: 4, paso: .05, valor: 0, fmt: n },
+  ],
+  lecturas: [{ id: "g", et: "la función transformada", tipo: "calc", ancho: true }],
+  nota: "La curva tenue es la <b>original</b>. Ojo con <b>c</b>: x − c corre la gráfica hacia la <b>derecha</b> cuando c es positivo. Con a o b negativos, la gráfica se refleja.",
+  dibujar(gr, v) {
+    const C = gr.C, B = BASE[v.f], { a, b, c, d } = v;
+    const g = x => a * B.f(b * (x - c)) + d;
+    gr.cuadricula(1); gr.ejes({ marcas: 1, x: "x", y: "y" });
+    gr.curva(B.f, { color: C.tenue, glow: false, ancho: 1.6, alfa: .7 });
+    gr.curva(g, { color: C.amarillo, alfaGlow: .3 });
+    if (B.marca && Math.abs(b) > 1e-3) { gr.punto(B.marca[0], B.marca[1], { color: C.tenue, r: 3.5, glow: false }); gr.punto(c + B.marca[0] / b, a * B.marca[1] + d, { color: C.amarillo, r: 5 }); }
+    // el texto: g(x) = a·f(b(x − c)) + d, mostrando sólo lo que no es neutro
+    const uno = x => Math.abs(x - 1) < 1e-3, cero = x => Math.abs(x) < 1e-3;
+    const mov = cero(c) ? "x" : `x ${c > 0 ? "−" : "+"} ${n(Math.abs(c))}`;
+    const inner = uno(b) ? mov : cero(c) ? `${n(b)}x` : `${n(b)}(${mov})`;
+    const simple = inner === "x";
+    const fx = { cuad: simple ? "x²" : `(${inner})²`, abs: `|${inner}|`, sen: `sen(${inner})`, raiz: `√(${inner})`, inv: `1/(${inner})` }[v.f];
+    const pre = uno(a) ? "" : Math.abs(a + 1) < 1e-3 ? "−" : n(a) + "·";
+    const txt = `g(x) = ${pre}${fx}${signo(d, "")}`;
+    return { g: txt };
+  },
+});
+</script>
+</body>
+</html>
