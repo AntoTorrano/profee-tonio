@@ -330,3 +330,42 @@ p { margin: 0; }
 .menu-movil .redes { display: flex; gap: 10px; }
 .menu-movil .redes a { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: var(--r-pildora); box-shadow: inset 0 0 0 1px var(--linea); color: var(--texto); text-decoration: none; font: 500 14px/1 var(--f-texto); }
 .menu-movil .redes a svg { color: var(--neon-core); }
+
+/* ---------------------------------------------------------------- celular y pantallas táctiles
+   Todo lo que se toca mide al menos 44 px (WCAG 2.5.5, Apple; Material pide 48 dp). Se decide por el
+   tipo de puntero (pointer: coarse), no por el ancho: en la compu nada cambia. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, input, select, label, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+@media (pointer: coarse) {
+  .btn:active, .pildora:active { transform: scale(.97); }
+  .migas a { padding: 12px 0; margin: -12px 0; }
+  .nav .logo { min-height: 44px; }
+  .busqueda .ph { align-self: stretch; }   /* el campo ocupa todo el alto de la barra: se toca en cualquier parte */
+}
+
+/* ---------------------------------------------------------------- experiencias (tarjetas de alumnos)
+   Como la referencia: nombre en negrita, materia, estrellas y la frase; "Ver más" si es larga.
+   Estrellas en el amarillo de la marca (lo que "se calcula"/destaca), no en verde. */
+.pista { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(280px, 1fr); gap: 20px; overflow-x: auto;
+  scroll-snap-type: x mandatory; scroll-padding: 0 var(--gutter); padding: 4px 2px 18px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.pista::-webkit-scrollbar { display: none; }
+.pista > * { scroll-snap-align: start; }
+@media (min-width: 1100px) { .pista { grid-auto-columns: calc((100% - 40px) / 3); } }
+.exp { display: flex; flex-direction: column; gap: 14px; padding: 20px 20px 18px; border-radius: var(--r-grande); background: var(--superficie);
+  box-shadow: inset 0 0 0 1px var(--linea); min-width: 0; }
+.exp-cab { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--linea); }
+.exp-ini { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 700 17px/1 var(--f-texto); color: var(--fondo);
+  background: linear-gradient(135deg, var(--neon-core), var(--neon-alt)); box-shadow: 0 0 14px rgb(46 120 255 / .35); }
+.exp-quien { display: grid; gap: 3px; min-width: 0; }
+.exp-nombre { font: 700 16px/1.2 var(--f-texto); color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-materia { font-size: 13px; line-height: 1.3; color: var(--texto-tenue); }
+.exp-estrellas { display: flex; gap: 2px; }
+.exp-estrellas i { display: block; line-height: 0; fill: var(--riel); }
+.exp-estrellas i.on { fill: var(--amarillo); filter: drop-shadow(0 0 4px rgb(255 225 77 / .45)); }
+.exp-texto { margin: 0; font-size: 15px; line-height: 1.6; color: var(--texto-medio); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.exp.abierta .exp-texto { -webkit-line-clamp: unset; display: block; }
+.exp-mas { all: unset; cursor: pointer; align-self: center; margin-top: auto; padding: 6px 12px; font: 600 14px/1 var(--f-texto); color: var(--neon-alt); text-decoration: underline; text-underline-offset: 3px; }
+.exp-mas:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; border-radius: 6px; }
+.exp-mas[hidden] { display: none; }
+@media (pointer: coarse) { .exp-mas { min-height: 44px; display: inline-flex; align-items: center; } }
+@media (max-width: 640px) { .pista { align-items: start; grid-auto-columns: 84%; gap: 14px; margin: 0 calc(-1 * var(--gutter)); padding-left: var(--gutter); padding-right: var(--gutter); } }

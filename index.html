@@ -93,6 +93,36 @@
   .dato .n { font: 600 36px/1 var(--f-mono); color: var(--texto); letter-spacing: -.02em; }
   .dato .l { margin-top: 10px; font-size: 14px; color: var(--texto-suave); }
 
+  /* ================================================================ COMENTARIOS (capturas de los videos) */
+  /* una fila que se desliza (como la referencia): todas a la misma altura, cada captura centrada sobre su propio fondo */
+  .comentarios { padding-top: 40px; }
+  .comentarios .cab-seccion { margin-bottom: 28px; }
+  .comentarios .acciones { display: flex; align-items: center; gap: 16px; }
+  .fila-com { display: flex; align-items: stretch; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    overscroll-behavior-x: contain; padding: 4px 2px 12px; }
+  .fila-com::-webkit-scrollbar { display: none; }
+  .captura { flex: none; scroll-snap-align: start; margin: 0; display: flex; flex-direction: column; border-radius: var(--r-medio); overflow: hidden;
+    background: var(--superficie); box-shadow: 0 0 0 1px var(--linea), 0 8px 24px rgb(0 0 0 / .3); }
+  .captura .foto { flex: 1; display: grid; place-items: center; }
+  .captura img { display: block; width: 100%; height: auto; }
+  .captura figcaption { display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 0 4px; min-height: 44px;
+    border-top: 1px solid var(--linea); font: 500 12px/1.3 var(--f-texto); color: var(--texto-tenue); }
+  .captura figcaption .cap-tema { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .captura figcaption a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; color: var(--neon-alt);
+    text-decoration: none; font-weight: 600; white-space: nowrap; }
+  @media (hover: hover) { .captura figcaption a:hover { color: var(--neon-core); text-shadow: var(--glow-texto); } }
+  .flechas-com { display: flex; gap: 10px; }
+  .flechas-com button { all: unset; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--texto-suave);
+    box-shadow: inset 0 0 0 1px var(--linea); background: var(--fondo-alt); }
+  .flechas-com button:disabled { opacity: .35; cursor: default; }
+  .flechas-com button:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  @media (hover: hover) { .flechas-com button:not(:disabled):hover { color: var(--texto); box-shadow: inset 0 0 0 1px var(--neon); } }
+  @media (max-width: 640px) {
+    .comentarios { padding-top: 24px; }
+    .flechas-com { display: none; }
+    .fila-com { gap: 12px; margin: 0 calc(-1 * var(--gutter)); padding-left: var(--gutter); padding-right: var(--gutter); scroll-padding: 0 var(--gutter); }
+  }
+
   /* ================================================================ SIMULADORES */
   .destacados { background: linear-gradient(180deg, var(--fondo), var(--fondo-alt) 40%, var(--fondo)); }
   .destacados .cuadricula { -webkit-mask-image: radial-gradient(ellipse 60% 40% at 50% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 60% 40% at 50% 0%, #000, transparent 75%); opacity: .6; }
@@ -174,6 +204,15 @@
   .autoplay.pausado .seg.is-activo .barra i { animation-play-state: paused; }
   .slide iframe { display: block; width: 100%; height: 470px; border: 0; background: var(--superficie); }
   @media (max-width: 640px) { .slide iframe { height: 520px; } }
+  /* sin autoplay (alguien ya lo tocó): la pestaña elegida queda llena */
+  .carrusel:not(.autoplay) .seg.is-activo .barra i { width: 100%; }
+  /* dedos: las pestañas y "Abrir simulador" se tocan en 44 px aunque se vean finitas */
+  @media (pointer: coarse) {
+    .seg { padding: 12px 0; margin: -6px 0; }
+    .sim-barra .abrir { align-self: stretch; display: inline-flex; align-items: center; padding: 0 4px 0 12px; }
+    button.flecha { width: 44px; height: 44px; }
+  }
+  @media (hover: none) { button.flecha:hover, .sonido:hover { box-shadow: inset 0 0 0 1px var(--linea); } }
 
   /* ---------- el reel de Derivadas en lugar de la foto: se reproduce solo, sin sonido, en loop */
   .reel { margin: 0; display: grid; justify-items: center; gap: 18px; position: relative; }
@@ -264,6 +303,23 @@
   </div>
 </section>
 
+<!-- ================================================================== COMENTARIOS -->
+<section class="seccion comentarios" id="comentarios">
+  <div class="seccion-dentro">
+    <div class="cab-seccion">
+      <div>
+        <h2 class="h1">Lo que dicen en los comentarios</h2>
+        <p class="cuerpo-l">Comentarios reales de los videos de Profee Tonio.</p>
+      </div>
+      <div class="acciones">
+        <div class="flechas-com"><button id="com-ant" aria-label="Anteriores"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button><button id="com-sig" aria-label="Siguientes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button></div>
+        <a class="btn btn-secundario" href="clases.html#experiencias">Ver experiencias →</a>
+      </div>
+    </div>
+    <div class="fila-com" id="capturas"></div>
+  </div>
+</section>
+
 <!-- ================================================================== SIMULADORES -->
 <section class="seccion destacados" id="simuladores">
   <div class="cuadricula"></div>
@@ -301,6 +357,7 @@
 
 <script src="js/comun.js"></script>
 <script src="js/simuladores.js"></script>
+<script src="js/experiencias.js"></script>
 <script>
 // ------------------------------------------------ carrusel: cuatro simuladores de verdad, interactivos ahí mismo
 // Cada diapositiva es el simulador en modo "vitrina" (compacto). Se carga recién cuando le toca, para no
@@ -325,14 +382,62 @@ function ir(n) {
   document.getElementById("sim-abrir").href = "simulador.html?sim=" + CARRUSEL[actual];
   clearTimeout(reloj); if (!enUso) reloj = setTimeout(() => ir(actual + 1), 9000);
 }
-document.querySelectorAll(".seg").forEach((el, i) => el.addEventListener("click", () => ir(i)));
+const carrusel = document.querySelector(".carrusel");
+// con el dedo no hay "mouse encima": apenas alguien toca el simulador (o elige otro), el carrusel deja de pasar solo
+let detenido = false;
+function detener() { detenido = enUso = true; clearTimeout(reloj); carrusel.classList.remove("autoplay", "pausado"); }
+document.querySelectorAll(".seg").forEach((el, i) => el.addEventListener("click", e => { if (tocado) detener(); ir(i); }));
 document.getElementById("ant").addEventListener("click", () => ir(actual - 1));
 document.getElementById("sig").addEventListener("click", () => ir(actual + 1));
+let tocado = false; addEventListener("pointerdown", e => tocado = e.pointerType !== "mouse", { capture: true });
 const panelSim = document.querySelector(".hero .sim");
-panelSim.addEventListener("pointerenter", () => { enUso = true; clearTimeout(reloj); document.querySelector(".carrusel").classList.add("pausado"); });
-panelSim.addEventListener("pointerleave", () => { enUso = false; document.querySelector(".carrusel").classList.remove("pausado"); ir(actual); });
-document.querySelector(".carrusel").classList.add("autoplay");
+panelSim.addEventListener("pointerenter", e => { if (e.pointerType !== "mouse" || detenido) return; enUso = true; clearTimeout(reloj); carrusel.classList.add("pausado"); });
+panelSim.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse" || detenido) return; enUso = false; carrusel.classList.remove("pausado"); ir(actual); });
+// los simuladores avisan cuándo los usan y cuánto miden; en el celular el marco crece con el simulador
+const angosto = matchMedia("(max-width: 640px)");
+const marcos = [...slides.querySelectorAll("iframe")], altos = new Map();
+function ajustar(f) {
+  f.contentWindow?.postMessage({ profee: "flujo", on: angosto.matches }, "*");
+  f.style.height = angosto.matches && altos.get(f) ? altos.get(f) + "px" : "";
+}
+marcos.forEach(f => f.addEventListener("load", () => ajustar(f)));
+angosto.addEventListener("change", () => marcos.forEach(ajustar));
+addEventListener("message", e => {
+  const f = marcos.find(m => m.contentWindow === e.source); if (!f) return;
+  if (e.data?.profee === "en-uso" && e.data.puntero !== "mouse") detener();   // con mouse alcanza la pausa por estar encima
+  if (e.data?.profee === "alto") { altos.set(f, e.data.alto); ajustar(f); }
+});
+carrusel.classList.add("autoplay");
 ir(0);
+
+// ------------------------------------------------ comentarios de los videos (capturas reales, con nombre y foto)
+// Sin foto ni nombre: sólo el comentario, con el link al video donde se puede ver el original.
+// Todas en una fila que se desliza. La letra queda pareja: cada captura se muestra al 62 % de su tamaño
+// (Instagram y TikTok tienen letra parecida a tamaño real), sin pasarse del ancho de la pantalla.
+const visibles = CAPTURAS;
+const filaCom = document.getElementById("capturas");
+function figura(c) {
+  const f = document.createElement("figure"); f.className = "captura";
+  f.style.width = `min(${Math.round(c.w * .62)}px, 84vw)`;
+  const foto = document.createElement("div"); foto.className = "foto"; foto.style.background = c.fondo;
+  const img = new Image(c.w, c.h); img.src = c.img; img.loading = "lazy"; img.decoding = "async";
+  img.alt = `Comentario en ${c.red}: «${c.texto}»`;
+  const pie = document.createElement("figcaption");
+  // Instagram: directo al comentario (lo abre resaltado). TikTok no permite linkear un comentario: va al video.
+  const a = document.createElement("a"); a.href = c.comentario || c.video; a.target = "_blank"; a.rel = "noopener";
+  a.textContent = c.comentario ? `Ver comentario en ${c.red} ↗` : `Ver video en ${c.red} ↗`;
+  a.title = c.tema;
+  foto.append(img); pie.append(a); f.append(foto, pie); return f;
+}
+if (!visibles.length) document.getElementById("comentarios").remove();
+else {
+  visibles.forEach(c => filaCom.append(figura(c)));
+  const ant = document.getElementById("com-ant"), sig = document.getElementById("com-sig");
+  const flechas = () => { ant.disabled = filaCom.scrollLeft < 4; sig.disabled = filaCom.scrollLeft + filaCom.clientWidth >= filaCom.scrollWidth - 4; };
+  const correr = d => filaCom.scrollBy({ left: d * filaCom.clientWidth * .8, behavior: "smooth" });
+  ant.onclick = () => correr(-1); sig.onclick = () => correr(1);
+  filaCom.addEventListener("scroll", flechas, { passive: true }); addEventListener("resize", flechas); flechas();
+}
 
 // ------------------------------------------------ destacados (los que no están en el carrusel)
 document.getElementById("destacados").innerHTML = ["limite-epsilon-delta", "mruv", "polinomio-de-taylor"].map(id => tarjeta(sim(id))).join("");

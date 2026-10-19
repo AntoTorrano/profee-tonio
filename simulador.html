@@ -113,6 +113,15 @@
   @keyframes barrer { 0% { transform: translateX(-100%); } 100% { transform: translateX(270%); } }
   .emb-cuerpo { max-height: 600px; }
   @media (max-width: 640px) { .emb-iframe { height: 680px; } .emb-cuerpo > .cargando { position: relative; height: 680px; } }
+  /* celular: el marco toma el alto del simulador (un solo scroll, nunca uno adentro de otro) */
+  .auto-alto .emb-cuerpo { aspect-ratio: auto; max-height: none; }
+  .auto-alto .emb-iframe { transition: height .2s var(--ease); }
+  .emb-barra .corto { display: none; }
+  @media (max-width: 640px) {
+    .emb-barra .btn { height: 44px; padding: 0 16px; }
+    .emb-barra .largo { display: none; } .emb-barra .corto { display: inline; }
+  }
+  @media (pointer: coarse) { .migas a { padding: 12px 0; margin: -12px 0; } }
 </style>
 </head>
 <body>
@@ -132,7 +141,7 @@
       <div class="emb-barra">
         <span class="puntos"><i></i><i></i><i></i></span>
         <span class="t" id="barra-t">Simulador</span>
-        <a class="btn btn-secundario" id="completa" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg> Abrir en pantalla completa</a>
+        <a class="btn btn-secundario" id="completa" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg> <span class="largo">Abrir en pantalla completa</span><span class="corto">Pantalla completa</span></a>
       </div>
       <div class="emb-cuerpo"></div>
     </div>
@@ -193,9 +202,25 @@ document.querySelector(".emb-cuerpo").innerHTML = `
   <iframe class="emb-iframe" title="${actual.titulo}"></iframe>`;
 const marco = document.querySelector(".emb-iframe");
 if (!q.has("cargando")) {
-  marco.addEventListener("load", () => document.getElementById("cargando")?.remove());
+  marco.addEventListener("load", () => { document.getElementById("cargando")?.remove(); ajustarMarco(); });
   marco.src = urlSim(actual);
 }
+// celular: el simulador se acomoda en "flujo" y el marco crece con él (el simulador avisa su alto)
+const angosto = matchMedia("(max-width: 640px)");
+let altoSim = 0;
+function ajustarMarco() {
+  const on = angosto.matches;
+  document.getElementById("embebido").classList.toggle("auto-alto", on && altoSim > 0);
+  marco.contentWindow?.postMessage({ profee: "flujo", on }, "*");
+  marco.style.height = on && altoSim ? altoSim + "px" : "";
+}
+addEventListener("message", e => {
+  if (e.source !== marco.contentWindow || e.data?.profee !== "alto") return;
+  altoSim = e.data.alto; ajustarMarco();
+});
+angosto.addEventListener("change", ajustarMarco);
+// en el celular "pantalla completa" va en la misma pestaña (las pestañas nuevas en el celu desorientan)
+if (matchMedia("(pointer: coarse)").matches) document.getElementById("completa").removeAttribute("target");
 
 // más del mismo tema; si no alcanza, se completa con otros
 const otros = SIMULADORES.filter(s => s.id !== actual.id);

@@ -28,15 +28,36 @@
   window.Sim = function (cfg) {
     const q = new URLSearchParams(location.search);
     // ?portada: sólo el gráfico, para sacar la imagen de portada · ?vitrina: compacto, para el carrusel de la home
+    // los modos van en <html> para que el CSS pueda soltar también el alto del documento
+    const raiz = document.documentElement;
     const suelto = window.top === window.self && !q.has("portada");
-    if (q.has("portada")) document.body.classList.add("portada");
-    if (suelto) document.body.classList.add("suelto");
-    if (q.has("vitrina")) document.body.classList.add("vitrina");
+    if (q.has("portada")) raiz.classList.add("portada");
+    if (suelto) raiz.classList.add("suelto");
+    if (q.has("vitrina")) raiz.classList.add("vitrina");
+    const tactil = matchMedia("(pointer: coarse)").matches;
     document.title = cfg.titulo + " · Profee Tonio";
 
+    // suelto: "volver" lleva a la ficha (o atrás, si se llegó desde el sitio en la misma pestaña)
+    const id = location.pathname.split("/").pop().replace(/\.html$/, "");
     document.body.innerHTML = `
-      <header class="cab"><span class="t">${cfg.titulo}</span><a class="marca" href="../index.html">Profee <b>Tonio</b></a></header>
+      <header class="cab"><a class="volver" href="../simulador?sim=${id}">← Volver</a><span class="t">${cfg.titulo}</span><a class="marca" href="../index.html">Profee <b>Tonio</b></a></header>
       <div class="sim"><div class="lienzo"><canvas></canvas></div><aside class="panel"></aside></div>`;
+    const volver = document.querySelector(".volver");
+    volver.addEventListener("click", e => {
+      if (history.length > 1 && document.referrer.startsWith(location.origin)) { e.preventDefault(); history.back(); }
+    });
+    if (!tactil) volver.remove();   // en la compu la pantalla completa se abre en otra pestaña: no hay a dónde volver
+
+    // flujo (un solo scroll, ver _sim.css): suelto lo decide el ancho; embebido lo pide el sitio
+    if (suelto) { const mq = matchMedia("(max-width: 720px)"); const f = () => raiz.classList.toggle("flujo", mq.matches); f(); mq.addEventListener("change", f); }
+    if (!suelto) window.addEventListener("message", e => { if (e.data?.profee === "flujo") raiz.classList.toggle("flujo", !!e.data.on); });
+    // el sitio necesita saber el alto (para no dejar scroll adentro) y cuándo lo están usando (para que el carrusel no cambie solo)
+    if (!suelto) {
+      const avisar = d => parent.postMessage({ profee: d.tipo, ...d }, "*");
+      new ResizeObserver(() => avisar({ tipo: "alto", alto: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+      let puntero = "mouse";   // con qué lo están usando: dedo o mouse
+      ["pointerdown", "input"].forEach(ev => addEventListener(ev, e => { if (e.pointerType) puntero = e.pointerType; avisar({ tipo: "en-uso", puntero }); }, { capture: true, passive: true }));
+    }
     const canvas = document.querySelector("canvas"), ctx = canvas.getContext("2d"), panel = document.querySelector(".panel");
     const v = { t: 0 };
 
@@ -60,11 +81,28 @@
     (cfg.controles || []).forEach(c => {
       v[c.id] = c.valor;
       const caja = document.createElement("div"); caja.className = "ctrl";
+      const et = c.et.replace(/<[^>]+>/g, "");
       caja.innerHTML = `<div class="fila"><span>${c.et}</span><b></b></div>
-        <input type="range" min="${c.min}" max="${c.max}" step="${c.paso ?? (c.max - c.min) / 200}" value="${c.valor}" aria-label="${c.et.replace(/<[^>]+>/g, "")}">`;
+        <div class="riel-fila"><button class="paso-btn" data-d="-1" aria-label="Bajar ${et}">−</button><input type="range" min="${c.min}" max="${c.max}" step="${c.paso ?? (c.max - c.min) / 200}" value="${c.valor}" aria-label="${et}"><button class="paso-btn" data-d="1" aria-label="Subir ${et}">+</button></div>`;
       const inp = caja.querySelector("input"), out = caja.querySelector("b");
       const pintar = () => { out.textContent = (c.fmt || fmtDef)(v[c.id]); inp.style.setProperty("--p", ((v[c.id] - c.min) / (c.max - c.min) * 100) + "%"); };
       inp.oninput = () => { v[c.id] = +inp.value; pintar(); cfg.alCambiar?.(c.id, api); pedir(); };
+      // − / +: un toque = un paso; si lo dejás apretado, sigue solo (cada vez más rápido)
+      const paso = c.paso ?? (c.max - c.min) / 100;
+      caja.querySelectorAll(".paso-btn").forEach(bt => {
+        let reloj = null;
+        const dar = () => {
+          const nuevo = Math.min(c.max, Math.max(c.min, +(v[c.id] + bt.dataset.d * paso).toFixed(10)));
+          if (nuevo === v[c.id]) return parar();
+          inp.value = nuevo; inp.oninput();
+        };
+        const parar = () => { clearTimeout(reloj); reloj = null; };
+        const repetir = (ms) => { reloj = setTimeout(() => { dar(); repetir(Math.max(40, ms * .85)); }, ms); };
+        let tocadoEn = 0;
+        bt.addEventListener("pointerdown", e => { e.preventDefault(); tocadoEn = Date.now(); dar(); repetir(380); });
+        ["pointerup", "pointerleave", "pointercancel"].forEach(ev => bt.addEventListener(ev, parar));
+        bt.addEventListener("click", () => { if (Date.now() - tocadoEn > 800) dar(); });   // teclado (Enter / espacio)
+      });
       sliders[c.id] = { inp, pintar }; pintar();
       panel.appendChild(caja);
     });
@@ -195,19 +233,34 @@
     };
 
     // ---------------------------------------------------------------- arrastrar puntos
-    let agarrado = null;
+    // Con el dedo: radio de agarre de ~34 px (un dedo cubre ~10 mm) y el punto NO salta abajo del dedo:
+    // se mueve manteniendo la distancia con la que lo agarraste, así lo seguís viendo.
+    let agarrado = null, desfase = [0, 0];
+    const RADIO = tactil ? 34 : 22;
     const pos = e => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    const cerca = (px, py) => (cfg.arrastrables || []).find(a => Math.hypot(X(v[a.id].x) - px, Y(v[a.id].y) - py) < 22);
-    canvas.addEventListener("pointerdown", e => { const [px, py] = pos(e); agarrado = cerca(px, py); if (agarrado) { canvas.setPointerCapture(e.pointerId); e.preventDefault(); } });
+    const cerca = (px, py) => {
+      let mejor = null, dmin = RADIO;
+      (cfg.arrastrables || []).forEach(a => { const d = Math.hypot(X(v[a.id].x) - px, Y(v[a.id].y) - py); if (d < dmin) { dmin = d; mejor = a; } });
+      return mejor;
+    };
+    // el scroll de la página se cancela SÓLO si el dedo cae sobre un punto (canvas con touch-action: pan-y)
+    canvas.addEventListener("touchstart", e => {
+      const r = canvas.getBoundingClientRect(), t = e.touches[0];
+      if (e.touches.length === 1 && cerca(t.clientX - r.left, t.clientY - r.top)) e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener("pointerdown", e => {
+      const [px, py] = pos(e); agarrado = cerca(px, py);
+      if (agarrado) { desfase = [X(v[agarrado.id].x) - px, Y(v[agarrado.id].y) - py]; canvas.setPointerCapture(e.pointerId); e.preventDefault(); pedir(); }
+    });
     canvas.addEventListener("pointermove", e => {
       const [px, py] = pos(e);
       if (!agarrado) { canvas.style.cursor = cerca(px, py) ? "grab" : "default"; return; }
       canvas.style.cursor = "grabbing";
-      let x = invX(px), y = invY(py);
+      let x = invX(px + desfase[0]), y = invY(py + desfase[1]);
       if (agarrado.paso) { x = Math.round(x / agarrado.paso) * agarrado.paso; y = Math.round(y / agarrado.paso) * agarrado.paso; }
       v[agarrado.id] = { x, y }; pedir();
     });
-    ["pointerup", "pointercancel"].forEach(ev => canvas.addEventListener(ev, () => { agarrado = null; canvas.style.cursor = "default"; }));
+    ["pointerup", "pointercancel"].forEach(ev => canvas.addEventListener(ev, () => { agarrado = null; canvas.style.cursor = "default"; pedir(); }));
 
     // ---------------------------------------------------------------- ciclo
     let pendiente = false, t0 = performance.now(), visible = true;
@@ -218,7 +271,13 @@
       ctx.fillStyle = C.superficie; ctx.fillRect(0, 0, W, H);
       calcularVista();
       const res = cfg.dibujar(g, v, api) || {};
-      (cfg.arrastrables || []).forEach(a => g.punto(v[a.id].x, v[a.id].y, { color: a.color || C.core, r: 7 }));
+      // arrastrables: más grandes con el dedo, y un aro mientras lo tenés agarrado
+      (cfg.arrastrables || []).forEach(a => {
+        const col = a.color || C.core, x = X(v[a.id].x), y = Y(v[a.id].y);
+        if (tactil || agarrado === a) { ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = agarrado === a ? .7 : .3; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(x, y, agarrado === a ? 24 : 16, 0, 7); ctx.stroke(); ctx.restore(); }
+        g.punto(v[a.id].x, v[a.id].y, { color: col, r: tactil ? 9 : 7 });
+      });
       for (const [k, txt] of Object.entries(res)) { const el = lect.querySelector(`[data-l="${k}"]`); if (el && el.textContent !== txt) el.textContent = txt; }
       if (cfg.animar && visible) pedir();
     }

@@ -1,0 +1,22 @@
+/* ==========================================================================
+   Capa táctil para los simuladores originales (cada uno trae su propio estilo).
+   Sólo actúa con pantalla táctil: en la compu se ven exactamente igual que antes.
+   Todo lo que se toca mide 44 px (WCAG 2.5.5 / Apple; Material pide 48 dp).
+   ========================================================================== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, a, input, select, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+@media (pointer: coarse) {
+  input[type=range] { height: 44px !important; background: transparent !important; margin: 0; }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: #2c313c; }
+  input[type=range]::-webkit-slider-thumb { width: 26px !important; height: 26px !important; margin-top: -10px; }
+  input[type=range]::-moz-range-thumb { width: 26px !important; height: 26px !important; }
+  button, .tab, select { min-height: 44px; }
+  button, .tab { padding-left: 14px; padding-right: 14px; }
+  button:active, .tab:active { transform: scale(.96); }
+  /* iOS hace zoom al tocar un campo con letra de menos de 16 px */
+  select, input:not([type=range]):not([type=checkbox]):not([type=radio]), textarea { font-size: 16px !important; }
+  input[type=checkbox], input[type=radio] { width: 22px; height: 22px; }
+  /* la casilla se toca en toda su fila (el texto es su label) */
+  .chk, label:has(> input[type=checkbox]) { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+}

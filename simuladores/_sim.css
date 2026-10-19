@@ -27,7 +27,9 @@ body { background: var(--superficie); color: var(--texto); font: 15px/1.5 Inter,
 .sim { display: grid; grid-template-columns: 1fr 300px; height: 100%; min-height: 0; }
 .suelto .sim { height: calc(100% - 56px); }
 .lienzo { position: relative; min-height: 0; min-width: 0; }
-.lienzo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+/* pan-y: deslizar el dedo por el gráfico SIGUE bajando la página (con "none" el gráfico atrapaba el scroll).
+   Sólo cuando el dedo agarra un punto arrastrable se cancela el scroll (lo decide _sim.js). */
+.lienzo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y pinch-zoom; }
 .panel { border-left: 1.5px solid var(--linea); padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
 
 .rot { font: 600 11px/1 Inter, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--texto-tenue); }
@@ -66,6 +68,60 @@ input[type=range]:focus-visible { outline: 2px solid var(--neon-core); outline-o
   .sim { grid-template-columns: 1fr; grid-template-rows: minmax(240px, 1fr) auto; }
   .panel { border-left: 0; border-top: 1.5px solid var(--linea); padding: 14px 16px; gap: 12px; max-height: 52%; }
   .lect { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------------------------------------------------------------- celular
+   "flujo": la página entera es UN solo scroll (nada de scroll adentro de scroll).
+   Lo prende el sitio cuando el simulador está embebido en un celular, o el propio simulador
+   cuando se abre suelto en una pantalla angosta. Las lecturas van pegadas al gráfico:
+   lo que cambia se ve al lado de lo que lo hizo cambiar. */
+.flujo, .flujo body { height: auto; }
+.flujo .sim, .flujo.suelto .sim { display: flex; flex-direction: column; height: auto; }
+.flujo .lienzo { flex: none; height: clamp(250px, 84vw, 440px); }
+.flujo .panel { border-left: 0; border-top: 1.5px solid var(--linea); padding: 14px 16px 22px; gap: 14px; max-height: none; overflow: visible; }
+.flujo .lect { order: -1; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px 14px; padding: 0 0 12px; border-top: 0; border-bottom: 1.5px solid var(--linea); }
+.flujo .lect .et { line-height: 1.3; }
+.flujo .lect .v { font-size: 16px; }
+.flujo.vitrina .lienzo { height: clamp(240px, 76vw, 380px); }
+/* suelto en el celular: el gráfico queda fijo arriba y los controles pasan por debajo,
+   así nunca movés un slider sin ver qué le hace al gráfico */
+.flujo.suelto .cab { height: 50px; padding: 0 12px 0 4px; gap: 6px; }
+.flujo.suelto .cab .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.flujo.suelto .cab .marca { display: none; }
+.cab .volver { flex: none; white-space: nowrap; }
+.flujo.suelto .lienzo { position: sticky; top: 0; z-index: 2; height: min(50svh, 96vw); background: var(--superficie);
+  border-bottom: 1.5px solid var(--linea); box-shadow: 0 12px 24px rgb(4 6 13 / .55); }
+.flujo.suelto .panel { border-top: 0; padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+
+/* volver a la ficha (sólo suelto) */
+.cab .volver { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin-left: -8px; border-radius: 10px;
+  color: var(--texto-suave); text-decoration: none; font: 600 14px/1 Inter, sans-serif; }
+.cab .volver:active { background: var(--fondo-alt); }
+
+/* ---------------------------------------------------------------- dedos, no mouse
+   Pantalla táctil: todo lo que se toca mide 44 px (WCAG 2.5.5, Apple; Material pide 48 dp).
+   Se decide por el TIPO de puntero, no por el ancho: una notebook táctil angosta sigue siendo un mouse. */
+button, a, input { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.paso-btn { display: none; }
+@media (pointer: coarse) {
+  .ctrl .fila { font-size: 15px; }
+  .ctrl .fila b { font-size: 15px; }
+  input[type=range] { height: 44px; }
+  input[type=range]::-webkit-slider-thumb { width: 26px; height: 26px; margin-top: -10px; box-shadow: 0 0 0 9px rgb(46 120 255 / .2), 0 0 14px var(--neon); }
+  input[type=range]::-moz-range-thumb { width: 26px; height: 26px; }
+  input[type=range]:active::-webkit-slider-thumb { box-shadow: 0 0 0 14px rgb(46 120 255 / .28), 0 0 18px var(--neon); }
+  .botones { gap: 8px; }
+  .botones button, .accion { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; font-size: 14px; box-sizing: border-box; }
+  .botones button:active, .accion:active { transform: scale(.96); }
+  .ctrl { gap: 4px; }
+  /* − y + al costado de cada slider: con el dedo es imposible clavar un valor exacto arrastrando */
+  .riel-fila { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 10px; }
+  .paso-btn { all: unset; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
+    font: 600 22px/1 Inter, sans-serif; color: var(--texto); background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea);
+    -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  .paso-btn:active { background: var(--riel); box-shadow: inset 0 0 0 1px var(--neon-suave); }
+  .lect .et { font-size: 13px; }
+  .nota { font-size: 14px; }
 }
 /* vitrina (carrusel de la home): sin textos de apoyo, controles compactos */
 .vitrina .nota, .vitrina .rot { display: none; }

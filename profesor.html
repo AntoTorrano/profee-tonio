@@ -41,7 +41,7 @@
   .videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
   .video { position: relative; aspect-ratio: 9 / 16; border-radius: var(--r-grande); overflow: hidden; background: var(--superficie);
     box-shadow: inset 0 0 0 1px var(--linea); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
-  .video:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px var(--neon), 0 0 32px rgb(46 120 255 / .25); }
+  @media (hover: hover) { .video:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px var(--neon), 0 0 32px rgb(46 120 255 / .25); } }
   .video video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .video .play { all: unset; cursor: pointer; position: absolute; inset: 0; display: grid; place-items: end center; padding-bottom: 22px; box-sizing: border-box;
     background: linear-gradient(180deg, transparent 60%, rgb(4 6 13 / .75)); }

@@ -53,7 +53,7 @@ h1{font-size:1.28rem;margin:0 0 3px;letter-spacing:-.012em;font-weight:650}
 .card h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
   color:var(--text-muted);margin:0 0 3px;font-weight:700}
 .card .cap{font-size:.8rem;color:var(--text-secondary);margin:0 0 12px}
-canvas{width:100%;display:block;touch-action:none}
+canvas{width:100%;display:block;touch-action:pan-y pinch-zoom}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
 
 /* filtros en una fila arriba */
@@ -114,6 +114,7 @@ th:first-child,td:first-child{text-align:left}
   border-radius:10px;padding:11px 13px;margin-top:12px}
 .note b{color:var(--text-primary)}
 </style>
+<link rel="stylesheet" href="_movil.css">
 </head>
 <body>
 <div class="wrap">
@@ -201,7 +202,7 @@ const wR   = () => { const s = S.w0*S.w0 - S.G*S.G/2; return s>0 ? Math.sqrt(s) 
 
 // ---------- canvas helpers ----------
 function ctx(c){
-  const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = +c.getAttribute('height');
+  const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = +(c.dataset.h0 ||= c.getAttribute('height'));
   if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){
     c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); c.style.height = h+'px';
   }
@@ -454,5 +455,6 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render(
 render();
 })();
 </script>
+<script src="_marco.js"></script>
 </body>
 </html>

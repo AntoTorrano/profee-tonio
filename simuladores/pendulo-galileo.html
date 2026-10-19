@@ -57,6 +57,7 @@
     display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:600}
   .steps li b{color:var(--tx)}
 </style>
+<link rel="stylesheet" href="_movil.css">
 </head>
 <body>
 <div class="wrap">
@@ -191,7 +192,7 @@
     [sim,plot,iso].forEach(c=>{
       const w = c.parentElement.clientWidth;
       const d = window.devicePixelRatio||1;
-      const h = parseInt(c.getAttribute('height'));
+      const h = +(c.dataset.h ||= c.getAttribute('height'));
       c.width = Math.round(w*d); c.style.height = h+'px'; c.height = Math.round(h*d);
       c.getContext('2d').setTransform(d,0,0,d,0,0);
     });
@@ -406,5 +407,6 @@
   resize(); reset(); requestAnimationFrame(frame);
 })();
 </script>
+<script src="_marco.js"></script>
 </body>
 </html>
