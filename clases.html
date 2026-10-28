@@ -162,44 +162,48 @@
   .exp-esqueleto { height: 210px; border-radius: var(--r-grande); background: linear-gradient(90deg, var(--superficie), var(--fondo-alt), var(--superficie)); background-size: 200% 100%; animation: brillo 1.4s linear infinite; }
   @keyframes brillo { to { background-position: -200% 0; } }
 
-  /* formulario: dejar tu experiencia */
-  .dejar { margin-top: 44px; display: grid; grid-template-columns: 1fr 1.4fr; gap: 56px; padding: 44px 48px; border-radius: var(--r-hero);
-    background: radial-gradient(ellipse 70% 120% at 0% 0%, rgb(46 120 255 / .12), transparent 70%), var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
-  .dejar .h2 { font-size: 40px; }
-  .dejar .intro p { margin-top: 14px; color: var(--texto-suave); }
-  .form-exp { display: grid; gap: 20px; }
-  .form-exp .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .campo-exp { display: grid; gap: 8px; align-content: start; }
-  .campo-exp > span, .campo-exp legend { font: 600 14px/1.2 var(--f-texto); color: var(--texto); padding: 0; }
-  .campo-exp small { font-size: 13px; color: var(--texto-tenue); font-weight: 400; }
-  .campo-exp input, .campo-exp textarea { font: 400 16px/1.5 var(--f-texto); color: var(--texto); background: var(--fondo); border: 0; border-radius: var(--r-medio);
-    box-shadow: inset 0 0 0 1px var(--linea); padding: 12px 16px; min-height: 48px; width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
-  .campo-exp textarea { min-height: 130px; resize: vertical; }
-  .campo-exp input::placeholder, .campo-exp textarea::placeholder { color: var(--texto-tenue); }
-  .campo-exp input:focus, .campo-exp textarea:focus { outline: 0; box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 0 4px rgb(46 120 255 / .18); }
-  .campo-exp .contador { justify-self: end; font: 400 12px/1 var(--f-mono); color: var(--texto-tenue); }
-  fieldset.campo-exp { border: 0; margin: 0; padding: 0; min-width: 0; }
-  fieldset.campo-exp legend { margin-bottom: 12px; }   /* la leyenda no toma el gap de la grilla: se separa a mano */
+  /* formulario: dejar tu experiencia — COMPACTO. De entrada: título, estrellas y una caja de texto.
+     Nombre, materia y profesor aparecen recién cuando empezás a escribir (así no parece un trámite). */
+  .dejar { scroll-margin-top: 84px; max-width: 760px; margin: 36px auto 0; padding: 22px 24px; border-radius: var(--r-grande);
+    background: radial-gradient(ellipse 70% 140% at 0% 0%, rgb(46 120 255 / .12), transparent 70%), var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
+  .form-exp { display: grid; gap: 12px; }
+  .fila-top { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+  .fila-top .h3 { font-size: 24px; }
+  .form-exp input, .form-exp textarea { font: 400 16px/1.5 var(--f-texto); color: var(--texto); background: var(--fondo); border: 0; border-radius: var(--r-medio);
+    box-shadow: inset 0 0 0 1px var(--linea); padding: 11px 15px; min-height: 46px; width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+  .form-exp textarea { min-height: 72px; height: 72px; resize: none; transition: height var(--dur) var(--ease); display: block; }
+  .dejar.abierto .form-exp textarea { height: 110px; resize: vertical; }
+  .form-exp input::placeholder, .form-exp textarea::placeholder { color: var(--texto-tenue); }
+  .form-exp input:focus, .form-exp textarea:focus { outline: 0; box-shadow: inset 0 0 0 1.5px var(--neon), 0 0 0 4px rgb(46 120 255 / .18); }
+  .extra { display: none; gap: 12px; }
+  .dejar.abierto .extra { display: grid; animation: aparecer .25s var(--ease); }
+  @keyframes aparecer { from { opacity: 0; transform: translateY(-4px); } }
+  .form-exp .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .con-quien { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: 14px; color: var(--texto-tenue); }
+  .pie-form { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
+  .pie-form .aviso { flex: 1; font-size: 13px; color: var(--texto-tenue); margin: 0; min-width: 200px; }
+  .pie-form .contador { font: 400 12px/1 var(--f-mono); color: var(--texto-tenue); }
+  .dejar:not(.abierto) .pie-form .contador { display: none; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chips label { position: relative; }
   .chips input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .chips span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: var(--r-pildora); font: 500 15px/1 var(--f-texto);
+  .chips span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: var(--r-pildora); font: 500 15px/1 var(--f-texto);
     color: var(--texto-suave); background: var(--fondo); box-shadow: inset 0 0 0 1px var(--linea); }
   .chips input:checked + span { color: var(--fondo); background: var(--neon-core); box-shadow: 0 0 14px rgb(127 182 255 / .4); }
+  @media (pointer: coarse) { .chips span { min-height: 44px; } }
   .chips input:focus-visible + span { outline: 2px solid var(--neon-core); outline-offset: 2px; }
   /* estrellas: 5 radios; se encienden hasta la elegida */
   .puntaje { display: flex; gap: 4px; }
   .puntaje label { position: relative; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
   .puntaje input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .puntaje svg { width: 30px; height: 30px; fill: var(--riel); transition: fill var(--dur) var(--ease); }
+  .puntaje svg { width: 26px; height: 26px; fill: var(--riel); transition: fill var(--dur) var(--ease); }
   .puntaje label.on svg { fill: var(--amarillo); filter: drop-shadow(0 0 6px rgb(255 225 77 / .5)); }
   .puntaje input:focus-visible + svg { outline: 2px solid var(--neon-core); outline-offset: 3px; border-radius: 6px; }
   .trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-  .form-exp .enviar { justify-self: start; }
-  .form-exp .aviso { font-size: 13px; color: var(--texto-tenue); margin: -6px 0 0; }
   .form-exp .error { color: #FF8A8A; font-size: 14px; margin: 0; }
   .form-exp .error[hidden] { display: none; }
-  .gracias { display: grid; gap: 12px; align-content: center; justify-items: start; }
+  .gracias { display: grid; gap: 8px; align-content: center; justify-items: start; }
   .gracias .h3 { color: var(--verde); text-shadow: 0 0 22px rgb(52 211 153 / .35); }
   .gracias p { color: var(--texto-suave); margin: 0; }
 
@@ -207,10 +211,10 @@
     .experiencias { padding-top: 80px; }
     .experiencias .cab { margin-bottom: 22px; }
     .flechas { display: none; }
-    .dejar { grid-template-columns: 1fr; gap: 24px; padding: 28px 20px; margin-top: 32px; }
-    .dejar .h2 { font-size: 32px; }
+    .dejar { padding: 18px 16px; margin-top: 24px; }
+    .fila-top .h3 { font-size: 21px; }
     .form-exp .dos { grid-template-columns: 1fr; }
-    .form-exp .enviar { justify-self: stretch; justify-content: center; }
+    .pie-form .enviar { flex: 1 1 100%; justify-content: center; }
   }
 </style>
 </head>
@@ -246,29 +250,33 @@
   <div class="pista" id="exp-pista" aria-live="polite"><div class="exp-esqueleto"></div><div class="exp-esqueleto"></div><div class="exp-esqueleto"></div></div>
 
   <div class="dejar" id="dejar">
-    <div class="intro">
-      <h2 class="h2">Contá tu experiencia</h2>
-      <p>Si tomaste una clase o un video te ayudó a entender algo, contalo acá. Se publica después de que la revisemos.</p>
-    </div>
     <form class="form-exp" id="form-exp" novalidate>
-      <div class="dos">
-        <label class="campo-exp"><span>Tu nombre</span><input name="nombre" required minlength="2" maxlength="60" autocomplete="given-name" placeholder="Ej.: Martina G."><small>Con tu nombre y la inicial del apellido alcanza.</small></label>
-        <label class="campo-exp"><span>Materia <small>(opcional)</small></span><input name="materia" maxlength="80" placeholder="Ej.: Análisis Matemático 66 · CBC"></label>
+      <div class="fila-top">
+        <h2 class="h3">¿Tomaste clase? Contá tu experiencia</h2>
+        <div class="puntaje" id="puntaje" role="radiogroup" aria-label="Puntaje"></div>
       </div>
-      <fieldset class="campo-exp"><legend>¿Con quién tomaste clase? <small>(opcional)</small></legend>
-        <div class="chips">
-          <label><input type="radio" name="profesor" value="tonio"><span>Profee Tonio</span></label>
-          <label><input type="radio" name="profesor" value="simon"><span>Simón</span></label>
-          <label><input type="radio" name="profesor" value="videos"><span>Sólo vi los videos</span></label>
+      <label><span class="vh">Tu experiencia</span><textarea name="comentario" required minlength="10" maxlength="1000" placeholder="¿Qué te sirvió? ¿Qué pudiste entender o aprobar?"></textarea></label>
+      <div class="extra">
+        <div class="dos">
+          <label><span class="vh">Tu nombre</span><input name="nombre" required minlength="2" maxlength="60" autocomplete="given-name" placeholder="Tu nombre (ej.: Martina G.)"></label>
+          <label><span class="vh">Materia (opcional)</span><input name="materia" maxlength="80" placeholder="Materia (opcional)"></label>
         </div>
-      </fieldset>
-      <fieldset class="campo-exp"><legend>Puntaje</legend><div class="puntaje" id="puntaje"></div></fieldset>
-      <label class="campo-exp"><span>Tu experiencia</span><textarea name="comentario" required minlength="10" maxlength="1000" placeholder="¿Qué te sirvió? ¿Qué pudiste entender o aprobar?"></textarea><span class="contador" id="contador">0 / 1000</span></label>
+        <div class="con-quien" role="radiogroup" aria-label="¿Con quién tomaste clase? (opcional)"><span>Con:</span>
+          <div class="chips">
+            <label><input type="radio" name="profesor" value="tonio"><span>Profee Tonio</span></label>
+            <label><input type="radio" name="profesor" value="simon"><span>Simón</span></label>
+          </div>
+        </div>
+      </div>
       <label class="trampa" aria-hidden="true">No completar<input name="web" tabindex="-1" autocomplete="off"></label>
       <p class="error" id="exp-error" role="alert" hidden></p>
-      <button class="btn btn-primario enviar" type="submit">Enviar experiencia</button>
-      <p class="aviso">No pedimos mail ni teléfono. Sólo se publica lo que escribiste acá, con tu nombre.</p>
+      <div class="pie-form">
+        <button class="btn btn-primario enviar" type="submit">Enviar</button>
+        <p class="aviso">Se publica después de que la revisemos. No pedimos mail ni teléfono.</p>
+        <span class="contador" id="contador">0 / 1000</span>
+      </div>
     </form>
+  </div>
   </div>
 </section>
 
@@ -410,10 +418,16 @@ puntaje.addEventListener("change", pintarEstrellas); pintarEstrellas();
 
 const form = document.getElementById("form-exp"), errorExp = document.getElementById("exp-error");
 const contador = document.getElementById("contador");
+// la caja se despliega (nombre, materia, profesor) apenas empezás: escribir, tocar una estrella o apretar Enviar
+const dejar = document.getElementById("dejar");
+const abrir = () => dejar.classList.add("abierto");
+form.comentario.addEventListener("focus", abrir);
+puntaje.addEventListener("change", abrir);
 form.comentario.addEventListener("input", () => contador.textContent = form.comentario.value.length + " / 1000");
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  if (new URLSearchParams(location.search).has("editar")) return;   // en el modo edición no se manda nada
+  if (new URLSearchParams(location.search).has("editar")) return;
+  abrir();   // en el modo edición no se manda nada
   const nombre = form.nombre.value.trim(), comentario = form.comentario.value.trim();
   const mal = nombre.length < 2 ? "Escribí tu nombre." : comentario.length < 10 ? "Contanos un poco más (mínimo 10 letras)." : "";
   errorExp.hidden = !mal; errorExp.textContent = mal;
@@ -428,7 +442,7 @@ form.addEventListener("submit", async e => {
     errorExp.hidden = false;
     errorExp.textContent = err.code === "P0001" ? "Ahora no podemos recibir más experiencias. Probá de nuevo en unos días."
       : "No se pudo enviar. Revisá tu conexión y probá de nuevo.";
-    boton.disabled = false; boton.textContent = "Enviar experiencia";
+    boton.disabled = false; boton.textContent = "Enviar";
   }
 });
 function gracias(nombre) {

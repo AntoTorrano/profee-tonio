@@ -93,34 +93,48 @@
   .dato .n { font: 600 36px/1 var(--f-mono); color: var(--texto); letter-spacing: -.02em; }
   .dato .l { margin-top: 10px; font-size: 14px; color: var(--texto-suave); }
 
-  /* ================================================================ COMENTARIOS (capturas de los videos) */
-  /* una fila que se desliza (como la referencia): todas a la misma altura, cada captura centrada sobre su propio fondo */
-  .comentarios { padding-top: 40px; }
-  .comentarios .cab-seccion { margin-bottom: 28px; }
-  .comentarios .acciones { display: flex; align-items: center; gap: 16px; }
-  .fila-com { display: flex; align-items: stretch; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-    overscroll-behavior-x: contain; padding: 4px 2px 12px; }
-  .fila-com::-webkit-scrollbar { display: none; }
-  .captura { flex: none; scroll-snap-align: start; margin: 0; display: flex; flex-direction: column; border-radius: var(--r-medio); overflow: hidden;
-    background: var(--superficie); box-shadow: 0 0 0 1px var(--linea), 0 8px 24px rgb(0 0 0 / .3); }
-  .captura .foto { flex: 1; display: grid; place-items: center; }
-  .captura img { display: block; width: 100%; height: auto; }
-  .captura figcaption { display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 0 4px; min-height: 44px;
-    border-top: 1px solid var(--linea); font: 500 12px/1.3 var(--f-texto); color: var(--texto-tenue); }
-  .captura figcaption .cap-tema { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .captura figcaption a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; color: var(--neon-alt);
-    text-decoration: none; font-weight: 600; white-space: nowrap; }
-  @media (hover: hover) { .captura figcaption a:hover { color: var(--neon-core); text-shadow: var(--glow-texto); } }
-  .flechas-com { display: flex; gap: 10px; }
-  .flechas-com button { all: unset; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--texto-suave);
-    box-shadow: inset 0 0 0 1px var(--linea); background: var(--fondo-alt); }
-  .flechas-com button:disabled { opacity: .35; cursor: default; }
-  .flechas-com button:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
-  @media (hover: hover) { .flechas-com button:not(:disabled):hover { color: var(--texto); box-shadow: inset 0 0 0 1px var(--neon); } }
+  /* ================================================================ TESTIMONIOS
+     Como la referencia: grilla de 3 con líneas finas entre celdas, estrellas, la frase en itálica y quién la dijo.
+     Son las experiencias aprobadas en Supabase (las mismas de /clases#experiencias). */
+  .testimonios { padding-top: 56px; }
+  .testimonios .cab-centro { text-align: center; max-width: 720px; margin: 0 auto 44px; }
+  .testimonios .cab-centro .cuerpo-l { margin-top: 16px; color: var(--texto-suave); }
+  .testis-marco { overflow: hidden; border-radius: var(--r-grande); background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
+  .testis { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 -1px -1px 0; }
+  .testi { display: flex; flex-direction: column; gap: 14px; padding: 30px 30px 28px; border-right: 1px solid var(--linea); border-bottom: 1px solid var(--linea); min-width: 0; }
+  .testi .est { display: flex; gap: 3px; height: 16px; }
+  .testi .est svg { width: 15px; height: 15px; fill: var(--amarillo); filter: drop-shadow(0 0 4px rgb(255 225 77 / .45)); }
+  .testi .comillas { font: 900 44px/.6 var(--f-titulo); color: var(--neon); text-shadow: 0 0 16px rgb(46 120 255 / .55); height: 22px; }
+  .testi blockquote { margin: 0; font-size: 16px; line-height: 1.65; font-style: italic; color: var(--texto-medio); overflow-wrap: anywhere; flex: 1; }
+  .testi .autor { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .testi .ini { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 700 16px/1 var(--f-texto); color: var(--fondo);
+    background: linear-gradient(135deg, var(--neon-core), var(--neon-alt)); box-shadow: 0 0 14px rgb(46 120 255 / .35); }
+  .testi .autor b { display: block; font: 700 15px/1.25 var(--f-texto); color: var(--texto); }
+  .testi .autor .det { display: block; font-size: 13px; line-height: 1.35; color: var(--texto-tenue); }
+  .testi .autor a { color: var(--neon-alt); text-decoration: none; font-weight: 600; }
+  .testi.cargando { min-height: 230px; background: linear-gradient(90deg, transparent, rgb(127 182 255 / .04), transparent); background-size: 200% 100%; animation: brillo 1.4s linear infinite; }
+  @keyframes brillo { to { background-position: -200% 0; } }
+  .testimonios .pie-seccion { margin-top: 32px; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 1000px) { .testis { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 640px) {
-    .comentarios { padding-top: 24px; }
-    .flechas-com { display: none; }
-    .fila-com { gap: 12px; margin: 0 calc(-1 * var(--gutter)); padding-left: var(--gutter); padding-right: var(--gutter); scroll-padding: 0 var(--gutter); }
+    .testimonios { padding-top: 24px; }
+    .testimonios .cab-centro { margin-bottom: 28px; }
+    .testis { grid-template-columns: 1fr; }
+    .testi { padding: 24px 22px; }
+    .testimonios .pie-seccion .btn { flex: 1 1 100%; justify-content: center; }
+  }
+
+  /* ---------- "¿Quién soy?": dos comentarios reales flotando sobre las esquinas del reel (con link al original) */
+  .flota { position: absolute; z-index: 2; width: 236px; display: block; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / .1), 0 18px 40px rgb(0 0 0 / .55), 0 0 30px rgb(46 120 255 / .18); transition: transform var(--dur) var(--ease); }
+  .flota img { display: block; width: 100%; height: auto; }
+  .flota.f1 { right: -40px; top: 44%; transform: rotate(2.5deg); }   /* sobre la zona del gráfico, no sobre la cara */
+  .flota.f2 { left: -18px; bottom: 96px; transform: rotate(-2.5deg); }
+  @media (hover: hover) { .flota:hover { transform: rotate(0) scale(1.04); } }
+  @media (max-width: 640px) {
+    .flota { width: 46vw; max-width: 210px; }
+    .flota.f1 { right: 0; top: 52%; }   /* entre el botón de play y el de sonido */
+    .flota.f2 { left: 0; bottom: 74px; }
   }
 
   /* ================================================================ SIMULADORES */
@@ -285,6 +299,7 @@
         <video src="assets/videos/derivadas-2.mp4" poster="assets/videos/derivadas-2.jpg" muted loop playsinline preload="metadata" aria-label="Video: Derivadas, matemática en 1 minuto"></video>
         <button class="sonido" id="sonido" aria-label="Activar sonido"></button>
       </div>
+      <span id="flotantes"></span>
       <figcaption class="vistas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3.2"/></svg><span>+300.000</span></figcaption>
     </figure>
     <div>
@@ -303,20 +318,21 @@
   </div>
 </section>
 
-<!-- ================================================================== COMENTARIOS -->
-<section class="seccion comentarios" id="comentarios">
+<!-- ================================================================== TESTIMONIOS -->
+<section class="seccion testimonios" id="testimonios">
   <div class="seccion-dentro">
-    <div class="cab-seccion">
-      <div>
-        <h2 class="h1">Lo que dicen en los comentarios</h2>
-        <p class="cuerpo-l">Comentarios reales de los videos de Profee Tonio.</p>
-      </div>
-      <div class="acciones">
-        <div class="flechas-com"><button id="com-ant" aria-label="Anteriores"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button><button id="com-sig" aria-label="Siguientes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button></div>
-        <a class="btn btn-secundario" href="clases.html#experiencias">Ver experiencias →</a>
-      </div>
+    <div class="cab-centro">
+      <div class="rotulo">Testimonios</div>
+      <h2 class="h1">Lo que dicen los alumnos</h2>
+      <p class="cuerpo-l">Experiencias reales de quienes tomaron clase.</p>
     </div>
-    <div class="fila-com" id="capturas"></div>
+    <div class="testis-marco"><div class="testis" id="testis">
+      <div class="testi cargando"></div><div class="testi cargando"></div><div class="testi cargando"></div>
+    </div></div>
+    <div class="pie-seccion">
+      <a class="btn btn-secundario" href="clases.html#experiencias">Ver todas las experiencias →</a>
+      <a class="btn btn-texto" href="clases.html#dejar">Dejá la tuya</a>
+    </div>
   </div>
 </section>
 
@@ -410,34 +426,38 @@ addEventListener("message", e => {
 carrusel.classList.add("autoplay");
 ir(0);
 
-// ------------------------------------------------ comentarios de los videos (capturas reales, con nombre y foto)
-// Sin foto ni nombre: sólo el comentario, con el link al video donde se puede ver el original.
-// Todas en una fila que se desliza. La letra queda pareja: cada captura se muestra al 62 % de su tamaño
-// (Instagram y TikTok tienen letra parecida a tamaño real), sin pasarse del ancho de la pantalla.
-const visibles = CAPTURAS;
-const filaCom = document.getElementById("capturas");
-function figura(c) {
-  const f = document.createElement("figure"); f.className = "captura";
-  f.style.width = `min(${Math.round(c.w * .62)}px, 84vw)`;
-  const foto = document.createElement("div"); foto.className = "foto"; foto.style.background = c.fondo;
-  const img = new Image(c.w, c.h); img.src = c.img; img.loading = "lazy"; img.decoding = "async";
-  img.alt = `Comentario en ${c.red}: «${c.texto}»`;
-  const pie = document.createElement("figcaption");
-  // Instagram: directo al comentario (lo abre resaltado). TikTok no permite linkear un comentario: va al video.
-  const a = document.createElement("a"); a.href = c.comentario || c.video; a.target = "_blank"; a.rel = "noopener";
-  a.textContent = c.comentario ? `Ver comentario en ${c.red} ↗` : `Ver video en ${c.red} ↗`;
-  a.title = c.tema;
-  foto.append(img); pie.append(a); f.append(foto, pie); return f;
+// ------------------------------------------------ testimonios: las experiencias aprobadas (Supabase), las 6 más nuevas.
+// Si no hay suficientes (o no se pudo leer la base), se completa con frases de comentarios de los videos,
+// sin inventarles estrellas: llevan el link al comentario original.
+const ESTRELLA_T = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>';
+const RESPALDO = ["15-tiktok", "18-tiktok", "07-instagram", "03-instagram", "11-instagram", "04-instagram"];   // frases de videos, por si faltan
+function celdaTesti({ texto, estrellas, nombre, detalle, link, red }) {
+  const c = document.createElement("article"); c.className = "testi";
+  c.innerHTML = `<div class="est"${estrellas ? ` role="img" aria-label="${estrellas} de 5 estrellas"` : ""}>${ESTRELLA_T.repeat(estrellas || 0)}</div>
+    <div class="comillas" aria-hidden="true">“</div><blockquote></blockquote>
+    <div class="autor"><span class="ini" aria-hidden="true"></span><div><b></b><span class="det"></span></div></div>`;
+  c.querySelector("blockquote").textContent = texto.trim();   // lo que escribió el visitante: siempre como texto
+  c.querySelector(".ini").textContent = nombre ? (nombre.match(/\p{L}/u) || ["?"])[0].toUpperCase() : (red === "TikTok" ? "♪" : "◎");
+  c.querySelector("b").textContent = nombre || `Comentario en ${red}`;
+  const det = c.querySelector(".autor .det");
+  if (link) { const a = document.createElement("a"); a.href = link; a.target = "_blank"; a.rel = "noopener"; a.textContent = detalle; det.append(a); }
+  else det.textContent = detalle;
+  return c;
 }
-if (!visibles.length) document.getElementById("comentarios").remove();
-else {
-  visibles.forEach(c => filaCom.append(figura(c)));
-  const ant = document.getElementById("com-ant"), sig = document.getElementById("com-sig");
-  const flechas = () => { ant.disabled = filaCom.scrollLeft < 4; sig.disabled = filaCom.scrollLeft + filaCom.clientWidth >= filaCom.scrollWidth - 4; };
-  const correr = d => filaCom.scrollBy({ left: d * filaCom.clientWidth * .8, behavior: "smooth" });
-  ant.onclick = () => correr(-1); sig.onclick = () => correr(1);
-  filaCom.addEventListener("scroll", flechas, { passive: true }); addEventListener("resize", flechas); flechas();
-}
+const respaldo = n => RESPALDO.slice(0, n).map(k => CAPTURAS.find(c => c.img.includes(k))).filter(Boolean)
+  .map(c => ({ texto: c.texto, red: c.red, link: c.comentario || c.video, detalle: (c.comentario ? "Ver el comentario ↗" : "Ver el video ↗") }));
+const testis = document.getElementById("testis");
+leerExperiencias(6).catch(() => []).then(lista => {
+  const items = lista.slice(0, 6).map(x => ({ texto: x.comentario, estrellas: x.estrellas, nombre: x.nombre.trim(), detalle: x.materia || "Alumno/a" }));
+  items.push(...respaldo(6 - items.length));
+  testis.innerHTML = ""; items.forEach(i => testis.append(celdaTesti(i)));
+});
+
+// ------------------------------------------------ "¿Quién soy?": dos comentarios reales sobre el reel (sin nombre ni foto)
+document.getElementById("flotantes").innerHTML = ["10-instagram", "01-instagram"].map((k, i) => {
+  const c = CAPTURAS.find(x => x.img.includes(k));
+  return `<a class="flota f${i + 1}" href="${c.comentario}" target="_blank" rel="noopener" aria-label="Ver el comentario en Instagram"><img src="${c.img}" width="${c.w}" height="${c.h}" alt="Comentario en Instagram: «${c.texto.replace(/"/g, "&quot;")}»" loading="lazy"></a>`;
+}).join("");
 
 // ------------------------------------------------ destacados (los que no están en el carrusel)
 document.getElementById("destacados").innerHTML = ["limite-epsilon-delta", "mruv", "polinomio-de-taylor"].map(id => tarjeta(sim(id))).join("");
