@@ -62,6 +62,8 @@ const SIMULADORES = [
     desc: "Una matriz de 2×2 deforma toda la cuadrícula. El cuadrado unidad se vuelve un paralelogramo cuya área es el determinante." },
   { id: "sistemas-2x2", fecha: "2026-10-17", tema: "Álgebra lineal", titulo: "Sistemas de ecuaciones de 2×2",
     desc: "Cada ecuación es una recta: una solución si se cortan, ninguna si son paralelas, infinitas si son la misma. El determinante decide." },
+  { id: "diagramas-de-lewis", fecha: "2026-10-30", tema: "Química", titulo: "Diagramas de Lewis",
+    desc: "Juntás átomos, movés sus electrones y armás enlaces simples, dobles, triples o iónicos. Te dice al instante si cada átomo completó su octeto." },
 ];
 
 function tarjeta(s, { hover = false, sinPortada = false } = {}) {

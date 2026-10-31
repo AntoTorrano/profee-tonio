@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagramas de Lewis · Profee Tonio</title>
+<link rel="stylesheet" href="_sim.css">
+<style>
+  /* Diagramas de Lewis. Cada átomo tiene 4 lados con sus electrones; si dos NO METALES se tocan,
+     las puntas enfrentadas forman un enlace y lo que hay ahí cuenta para los dos.
+     Un metal pegado a un no metal NO comparte: se forma un par iónico (cada uno conserva sus lados). */
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--fondo); }
+  .lw { max-width: 1180px; margin: 0 auto; padding: 18px 20px 40px; display: grid; gap: 14px; }
+  .cab-lw { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+  .cab-lw h1 { margin: 0; font: 800 22px/1.1 Inter, sans-serif; letter-spacing: .01em; }
+  .cab-lw h1 .formula { color: var(--amarillo); margin-left: 8px; text-shadow: 0 0 14px rgb(255 225 77 / .4); }
+  .cab-lw h1 small { display: block; margin-top: 4px; font: 500 13px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
+  .estado { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px; font: 800 18px/1 Inter, sans-serif; letter-spacing: .12em; }
+  .estado i { width: 12px; height: 12px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+  .estado.ok { color: var(--verde); background: rgb(52 211 153 / .1); box-shadow: inset 0 0 0 1.5px rgb(52 211 153 / .6), 0 0 24px rgb(52 211 153 / .2); }
+  .estado.mal { color: #FF7A7A; background: rgb(255 122 122 / .08); box-shadow: inset 0 0 0 1.5px rgb(255 122 122 / .5); }
+  .estado.nada { color: var(--texto-tenue); box-shadow: inset 0 0 0 1.5px var(--linea); }
+
+  /* zona de trabajo: tabla periódica + controles a la izquierda, la mesa a la derecha */
+  .trabajo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .panel-lw { display: grid; gap: 14px; padding: 14px; border-radius: 16px; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
+  .abrir-tabla { display: none !important; }
+  .tabla-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .tabla-cab .cerrar { display: none; }
+  .pt { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .pt button { all: unset; box-sizing: border-box; aspect-ratio: 1; display: grid; place-items: center; position: relative; border-radius: 8px; cursor: pointer;
+    font: 800 15px/1 Inter, sans-serif; background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); -webkit-tap-highlight-color: transparent; }
+  .pt button small { position: absolute; top: 3px; right: 4px; font: 600 9px/1 "JetBrains Mono", monospace; color: var(--texto-tenue); }
+  .pt button.metal { background: rgb(201 162 255 / .08); }
+  .pt button.noble { background: rgb(255 111 181 / .08); }
+  .pt button:hover { box-shadow: inset 0 0 0 1.5px currentColor; }
+  .pt button:active { transform: scale(.92); }
+  .pt button:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+  .pt button:disabled { opacity: .3; cursor: default; }
+  .leyenda { display: flex; gap: 6px 12px; flex-wrap: wrap; margin-top: 8px; font-size: 11.5px; color: var(--texto-tenue); }
+  .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+  .leyenda i.metal { background: rgb(201 162 255 / .3); } .leyenda i.noble { background: rgb(255 111 181 / .3); }
+  .controles { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { gap: 2px !important; padding: 3px; border-radius: 999px; background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+  .seg button { background: transparent !important; box-shadow: none !important; }
+  .seg button.on { background: var(--neon-core) !important; color: var(--fondo) !important; }
+  .seg.rayas button.on { background: var(--amarillo) !important; }
+  .accion:disabled { opacity: .35; cursor: default; }
+
+  .mesa { position: relative; border-radius: 20px; background: var(--superficie); box-shadow: inset 0 0 0 1.5px var(--linea), 0 0 80px rgb(46 120 255 / .08); overflow: hidden; }
+  .mesa::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(var(--grilla) 1px, transparent 1px), linear-gradient(90deg, var(--grilla) 1px, transparent 1px);
+    background-size: 40px 40px; opacity: .45; -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000, transparent 85%); mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000, transparent 85%); pointer-events: none; }
+  svg { position: relative; display: block; width: 100%; height: auto; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  /* los toques se resuelven por cercanía (ver buscar()), no por el elemento que quedó debajo del dedo */
+  svg * { pointer-events: none; }
+  .zona { fill: transparent; }
+  .zona.hover { fill: rgb(127 182 255 / .09); }
+  .borrar .zona.hover { fill: rgb(255 122 122 / .1); }
+  .zona-enlace.hover { fill: rgb(255 225 77 / .09); }
+  .vacio[hidden] { display: none; }
+  .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--texto-tenue); font-size: 16px; text-align: center; padding: 20px; pointer-events: none; }
+  .objetivo { position: absolute; left: 10px; top: 10px; max-width: calc(100% - 20px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 7px 8px 7px 14px;
+    border-radius: 14px; background: rgb(8 13 26 / .88); box-shadow: inset 0 0 0 1px var(--linea); font-size: 14px; color: var(--texto-suave); pointer-events: none; }
+  .objetivo[hidden] { display: none; }
+  .objetivo b { color: var(--amarillo); font-size: 16px; }
+  .objetivo button { pointer-events: auto; padding: 6px 10px !important; min-height: 0 !important; font-size: 12.5px !important; }
+  .objetivo.logrado { color: var(--verde); box-shadow: inset 0 0 0 1.5px rgb(52 211 153 / .7), 0 0 24px rgb(52 211 153 / .25); }
+  .objetivo.logrado b { color: var(--verde); }
+  .aviso { position: absolute; left: 50%; bottom: 12px; transform: translate(-50%, 8px); opacity: 0; transition: opacity .2s, transform .2s; padding: 8px 14px; border-radius: 12px;
+    background: #24121A; box-shadow: inset 0 0 0 1px rgb(255 122 122 / .4); color: #FFC2C2; font-size: 13.5px; line-height: 1.35; pointer-events: none; width: max-content; max-width: 88%; text-align: center; }
+  .aviso.on { opacity: 1; transform: translate(-50%, 0); }
+
+  .bajo { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .bajo .esp { flex: 1; }
+  .desafios { display: grid; gap: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { font-size: 15px !important; }
+  .chips button.hecho { color: var(--verde); box-shadow: inset 0 0 0 1px rgb(52 211 153 / .6); }
+  .chips button.hecho::after { content: " ✓"; }
+
+  .fichas { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+  .ficha { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); }
+  .ficha.ok { box-shadow: inset 0 0 0 1.5px rgb(52 211 153 / .55); }
+  .ficha .sim-at { font: 800 30px/1 Inter, sans-serif; min-width: 44px; text-align: center; }
+  .ficha .sim-at sup { font-size: 16px; color: var(--amarillo); margin-left: 1px; }
+  .ficha .cuenta { font: 600 26px/1 "JetBrains Mono", monospace; }
+  .ficha .cuenta small { font-size: 15px; color: var(--texto-tenue); }
+  .ficha .det { font-size: 13px; color: var(--texto-suave); margin-top: 4px; }
+  .ficha .det b { color: var(--texto); font-weight: 600; }
+  .ficha .acc { display: grid; gap: 6px; }
+  .ficha .accion { font-size: 12.5px; padding: 6px 10px; }
+  .motivos { margin: 0; padding: 12px 16px 12px 34px; border-radius: 14px; background: var(--fondo-alt); color: var(--texto-suave); font-size: 14.5px; line-height: 1.6; }
+  .motivos:empty { display: none; }
+  .motivos li.bien { color: var(--verde); }
+  .ayuda { font-size: 13.5px; color: var(--texto-tenue); line-height: 1.6; margin: 0; }
+  .ayuda b { color: var(--texto-suave); }
+  .velo { display: none; }
+
+  @media (max-width: 979px) {
+    .trabajo { grid-template-columns: minmax(0, 1fr); }
+    .panel-lw { grid-template-columns: minmax(0, 400px) 1fr; align-items: start; }
+  }
+  /* celular: la tabla periódica pasa a una hoja que sube desde abajo; arriba de la mesa quedan sólo los botones */
+  @media (max-width: 699px) {
+    .lw { padding: 10px 12px 32px; gap: 10px; }
+    .cab-lw { flex-wrap: nowrap; }
+    .cab-lw h1 { font-size: 18px; }
+    .cab-lw h1 .formula { display: block; margin: 4px 0 0; font-size: 17px; min-height: 1em; }
+    .cab-lw h1 small { display: none; }
+    .controles .txt { display: none; }
+    .estado { font-size: 14px; padding: 8px 13px; gap: 8px; }
+    .estado i { width: 10px; height: 10px; }
+    .panel-lw { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; }
+    .abrir-tabla { display: inline-flex !important; color: var(--fondo) !important; background: var(--amarillo) !important; box-shadow: 0 0 16px rgb(255 225 77 / .3) !important; }
+    .controles { flex: 1; justify-content: flex-end; gap: 6px; }
+    .controles .accion { padding: 0 12px !important; }
+    .tabla { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 14px 12px calc(18px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0;
+      background: var(--fondo-alt); box-shadow: 0 -1px 0 var(--linea), 0 -20px 50px rgb(0 0 0 / .6); transform: translateY(105%); transition: transform .25s cubic-bezier(.2, .8, .2, 1); visibility: hidden; }
+    .tabla.abierta { transform: none; visibility: visible; }
+    .tabla-cab .cerrar { display: inline-flex; }
+    .pt { gap: 5px; }
+    .pt button { font-size: 16px; }
+    .velo { display: block; position: fixed; inset: 0; z-index: 29; background: rgb(0 0 0 / .55); opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .velo.on { opacity: 1; pointer-events: auto; }
+    .embebido .tabla { position: static; transform: none; transition: none; display: none; width: 100%; padding: 12px 4px 6px; box-shadow: none; border-radius: 0; background: none; }
+    .embebido .tabla.abierta { display: block; }
+    .embebido .velo { display: none; }
+    .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 4px; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chips button { flex: none; }
+    .fichas { grid-template-columns: 1fr; gap: 8px; }
+    .ficha { padding: 10px 12px; gap: 12px; }
+    .ficha .acc { grid-auto-flow: column; }
+  }
+</style>
+</head>
+<body>
+<div class="lw">
+  <div class="cab-lw">
+    <h1>Diagramas de Lewis <span id="formula" class="formula"></span><small>Acercá los átomos para enlazarlos y mové los electrones hasta que todos completen su capa</small></h1>
+    <div class="estado nada" id="estado" role="status"><i></i><span>—</span></div>
+  </div>
+
+  <div class="trabajo">
+    <div class="panel-lw">
+      <button class="accion abrir-tabla" id="abrir-tabla">＋ Átomo</button>
+      <div class="tabla" id="tabla" aria-label="Tabla periódica">
+        <div class="tabla-cab"><span class="rot">Agregá un átomo</span><button class="accion cerrar" id="cerrar-tabla" aria-label="Cerrar">✕</button></div>
+        <div class="pt" id="paleta"></div>
+        <div class="leyenda"><span><i></i>no metales</span><span><i class="metal"></i>metales</span><span><i class="noble"></i>gases nobles</span><span>· el número: e⁻ de valencia</span></div>
+      </div>
+      <div class="controles">
+        <div class="botones seg" id="modo" role="group" aria-label="Al tocar un lado">
+          <button data-m="poner" class="on" title="Tocar un lado agrega un electrón">+ e⁻</button>
+          <button data-m="sacar" title="Tocar un lado saca un electrón">− e⁻</button>
+        </div>
+        <button class="accion" id="deshacer" title="Deshacer" aria-label="Deshacer">↶<span class="txt">&nbsp;Deshacer</span></button>
+      </div>
+    </div>
+
+    <div class="mesa" id="mesa">
+      <svg id="lienzo" viewBox="0 0 900 520" role="img" aria-label="Diagrama de Lewis"></svg>
+      <div class="vacio" id="vacio">Agregá átomos desde la tabla periódica<br>o elegí un desafío de abajo</div>
+      <div class="objetivo" id="objetivo" hidden><span id="obj-txt"></span><button class="accion" id="solucion">Ver solución</button><button class="accion" id="salir-obj" aria-label="Salir del desafío">✕</button></div>
+      <div class="aviso" id="aviso" role="alert"></div>
+    </div>
+  </div>
+
+  <div class="bajo">
+    <span class="rot">Enlaces</span>
+    <div class="botones seg rayas" id="vista" role="group" aria-label="Cómo se dibujan los enlaces">
+      <button data-v="puntos" class="on">Puntos</button><button data-v="rayas">Rayas</button>
+    </div>
+    <span class="esp"></span>
+    <button class="accion" id="limpiar">Empezar de nuevo</button>
+  </div>
+
+  <div class="desafios">
+    <span class="rot">Desafíos: armá la molécula</span>
+    <div class="chips botones" id="desafios"></div>
+  </div>
+
+  <div class="fichas" id="fichas"></div>
+  <ul class="motivos" id="motivos"></ul>
+  <p class="ayuda"><b>Mové los átomos</b> agarrándolos del símbolo. Si acercás dos no metales, se enganchan: las <b>puntas que se tocan forman un enlace</b>
+    y sus electrones (en amarillo) son <b>compartidos</b>, cuentan para los dos. Un <b>metal</b> no comparte: <b>cede</b> sus electrones (enlace iónico: Na⁺ Cl⁻).
+    <b>Arrastrá un electrón</b> para cambiarlo de lugar. Tocar un lado <b>pone</b> o <b>saca</b> un electrón según el botón + e⁻ / − e⁻: así se forman <b>iones</b>.</p>
+</div>
+<div class="velo" id="velo"></div>
+
+<script>
+// ---------------------------------------------------------------- química
+// fila/col = lugar en la tabla periódica chica (columnas = grupos 1, 2, 13 … 18)
+const ELEM = {
+  H:  { val: 1, meta: 2, color: "#7FB6FF", fila: 1, col: 1 },
+  He: { val: 2, meta: 2, color: "#FF9ED2", fila: 1, col: 8, noble: true },
+  Li: { val: 1, meta: 0, color: "#E39BFF", fila: 2, col: 1, metal: true },
+  B:  { val: 3, meta: 8, color: "#F7A6C8", fila: 2, col: 3, incompleto: 6 },   // BF₃: el boro queda con 6 (excepción)
+  C:  { val: 4, meta: 8, color: "#AAB6CE", fila: 2, col: 4 },
+  N:  { val: 5, meta: 8, color: "#4FC3E8", fila: 2, col: 5 },
+  O:  { val: 6, meta: 8, color: "#FF8A8A", fila: 2, col: 6 },
+  F:  { val: 7, meta: 8, color: "#B4F07A", fila: 2, col: 7 },
+  Ne: { val: 8, meta: 8, color: "#FF6FB5", fila: 2, col: 8, noble: true },
+  Na: { val: 1, meta: 0, color: "#C9A2FF", fila: 3, col: 1, metal: true },
+  Mg: { val: 2, meta: 0, color: "#9FE6C8", fila: 3, col: 2, metal: true },
+  Al: { val: 3, meta: 0, color: "#B9C7DD", fila: 3, col: 3, metal: true },
+  Si: { val: 4, meta: 8, color: "#D8BE84", fila: 3, col: 4 },
+  P:  { val: 5, meta: 8, color: "#FFB454", fila: 3, col: 5 },
+  S:  { val: 6, meta: 8, color: "#FFE14D", fila: 3, col: 6 },
+  Cl: { val: 7, meta: 8, color: "#34D399", fila: 3, col: 7 },
+  Ar: { val: 8, meta: 8, color: "#E07BFF", fila: 3, col: 8, noble: true },
+  K:  { val: 1, meta: 0, color: "#A78BFA", fila: 4, col: 1, metal: true },
+  Ca: { val: 2, meta: 0, color: "#F0C27B", fila: 4, col: 2, metal: true },
+  Se: { val: 6, meta: 8, color: "#FFCF7A", fila: 4, col: 6 },
+  Br: { val: 7, meta: 8, color: "#E0925A", fila: 4, col: 7 },
+  Kr: { val: 8, meta: 8, color: "#7AE0FF", fila: 4, col: 8, noble: true },
+  I:  { val: 7, meta: 8, color: "#B08CFF", fila: 5, col: 7 },
+};
+const LADOS = ["arriba", "derecha", "abajo", "izquierda"];
+const OPUESTO = { arriba: "abajo", abajo: "arriba", derecha: "izquierda", izquierda: "derecha" };
+const DESP = { derecha: [1, 0], izquierda: [-1, 0], abajo: [0, 1], arriba: [0, -1] };
+const MAX_LADO = 2, MAX_PUNTA_ENLACE = 3;   // en un enlace cada punta aporta hasta 3: entran 3 pares (enlace triple)
+const R = 52, D = 150, IMAN = 48, M = 70, MAX_ATOMOS = 12;
+let W = 900, H = 520;   // el mundo; en el celu pasa a ser vertical (ver ajustarMundo)
+
+let atomos = [];        // { id, s, x, y, e: { arriba, derecha, abajo, izquierda } }
+let sigId = 1, modo = "poner", vista = "puntos", objetivo = null, historia = [];
+let sel = null;   // el átomo tocado último: sólo ése muestra la cruz para quitarlo (así no se pisa con los contadores)
+const logrados = new Set();
+
+const atomo = id => atomos.find(a => a.id === +id);
+const clase = s => ELEM[s].metal ? "metal" : ELEM[s].noble ? "noble" : "nometal";
+// sólo dos no metales comparten electrones; metal + no metal = par iónico; los gases nobles no se enlazan
+const covalente = (a, b) => clase(a.s) === "nometal" && clase(b.s) === "nometal";
+function pegadoEn(a, l) {   // el átomo que está justo a distancia de enlace de ese lado
+  const [dx, dy] = DESP[l];
+  return atomos.find(b => b !== a && Math.abs(b.x - (a.x + dx * D)) < 1 && Math.abs(b.y - (a.y + dy * D)) < 1);
+}
+const vecinoEn = (a, l) => { const b = pegadoEn(a, l); return b && covalente(a, b) ? b : null; };
+const enlazado = (a, l) => !!vecinoEn(a, l);
+const enlazadoAlgo = a => LADOS.some(l => enlazado(a, l));
+function enlaces() {   // lista de { a, la, b, lb, n }
+  const out = [];
+  atomos.forEach(a => ["derecha", "abajo"].forEach(l => { const b = vecinoEn(a, l); if (b) out.push({ a, la: l, b, lb: OPUESTO[l], n: a.e[l] + b.e[OPUESTO[l]] }); }));
+  return out;
+}
+function paresIonicos() {   // metal pegado a un no metal: se dibujan juntos, pero sin compartir
+  const out = [];
+  atomos.forEach(a => ["derecha", "abajo"].forEach(l => { const b = pegadoEn(a, l); if (b && !covalente(a, b) && clase(a.s) !== "noble" && clase(b.s) !== "noble") out.push({ a, b, horiz: l === "derecha" }); }));
+  return out;
+}
+const capPunta = (a, l) => enlazado(a, l) ? MAX_PUNTA_ENLACE : MAX_LADO;
+const capAtomo = a => ELEM[a.s].fila === 1 ? 2 : 8;   // H y He: una sola capa de 2
+const propios = a => LADOS.reduce((t, l) => t + a.e[l], 0);
+// alrededor = sus electrones + los de las puntas vecinas que tocan las suyas (los del enlace cuentan para los dos)
+const alrededor = a => propios(a) + LADOS.reduce((t, l) => { const b = vecinoEn(a, l); return t + (b ? b.e[OPUESTO[l]] : 0); }, 0);
+// carga formal: valencia − (no compartidos + mitad de los compartidos)
+const carga = a => ELEM[a.s].val - LADOS.reduce((t, l) => { const b = vecinoEn(a, l); return t + (b ? (a.e[l] + b.e[OPUESTO[l]]) / 2 : a.e[l]); }, 0);
+const fmtCarga = q => q === 0 ? "0" : (q > 0 ? "+" : "−") + Math.abs(q);
+const superCarga = q => q === 0 ? "" : (Math.abs(q) === 1 ? "" : Math.abs(q)) + (q > 0 ? "+" : "−");
+const supIndice = q => superCarga(q).replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]).replace("+", "⁺").replace("−", "⁻");
+const sub = n => n > 1 ? String(n).replace(/\d/g, d => "₀₁₂₃₄₅₆₇₈₉"[d]) : "";
+// cumple su regla: octeto, dueto (H, He), 0 para los metales; el boro también vale con 6 si está enlazado
+function cumple(a) {
+  const E = ELEM[a.s], n = alrededor(a);
+  return n === E.meta || (!!E.incompleto && n === E.incompleto && enlazadoAlgo(a));
+}
+
+// electrones de valencia del átomo neutro: primero uno por lado, después los aparea (regla de Hund).
+// Los gases nobles ya vienen apareados (el He, con su par arriba).
+function valencia(a) {
+  LADOS.forEach(l => a.e[l] = 0);
+  let n = ELEM[a.s].val;
+  if (ELEM[a.s].noble) { for (const l of LADOS) { const k = Math.min(2, n); a.e[l] = k; n -= k; } return; }
+  for (let v = 0; v < 2; v++) for (const l of LADOS) if (n > 0 && a.e[l] <= v) { a.e[l]++; n--; }
+}
+// si un enlace se rompe y una punta quedó con 3, el que sobra pasa a otro lado libre del mismo átomo
+function normalizar() {
+  atomos.forEach(a => LADOS.forEach(l => {
+    while (a.e[l] > capPunta(a, l)) { const o = LADOS.find(k => k !== l && a.e[k] < capPunta(a, k)); if (!o) break; a.e[l]--; a.e[o]++; }
+  }));
+}
+
+// ---------------------------------------------------------------- historia (deshacer)
+const foto = () => JSON.stringify({ atomos, sigId });
+function volverA(f) { const o = JSON.parse(f); atomos = o.atomos; sigId = o.sigId; }
+function anotar(f) { historia.push(f); if (historia.length > 80) historia.shift(); }
+function deshacer() { if (!historia.length) return; volverA(historia.pop()); dibujar(); }
+
+// ---------------------------------------------------------------- avisos
+const avisoEl = document.getElementById("aviso"); let avisoT;
+function avisar(txt) { avisoEl.textContent = txt; avisoEl.classList.add("on"); clearTimeout(avisoT); avisoT = setTimeout(() => avisoEl.classList.remove("on"), 2600); }
+
+// ---------------------------------------------------------------- el mundo (tamaño lógico del dibujo)
+const svg = document.getElementById("lienzo"), mesa = document.getElementById("mesa"), NS = "http://www.w3.org/2000/svg";
+let anchoMesa = 0;
+// En la compu: 900 × 520. En el celu el panel es vertical y más angosto (620 de ancho) para que
+// los átomos y los electrones no queden diminutos: entran 4 por fila y 5 o 6 filas.
+function ajustarMundo() {
+  const ancho = mesa.clientWidth;
+  if (!ancho || ancho === anchoMesa) return;
+  anchoMesa = ancho;
+  let nW = 900, nH = 520;
+  if (ancho < 640) { nW = 620; const alto = Math.max(380, Math.min(Math.min(innerHeight, screen.height) - 250, ancho * 1.5)); nH = Math.round(nW * alto / ancho); }
+  if (nW === W && nH === H) return;
+  W = nW; H = nH;
+  if (atomos.length) {   // corre todo junto para que entre (sin desarmar las moléculas), y recién después recorta
+    const xs = atomos.map(a => a.x), ys = atomos.map(a => a.y);
+    const dx = Math.max(M - Math.min(...xs), Math.min(0, W - M - Math.max(...xs))), dy = Math.max(M - Math.min(...ys), Math.min(0, H - M - Math.max(...ys)));
+    atomos.forEach(a => { a.x = Math.max(M, Math.min(W - M, a.x + dx)); a.y = Math.max(M, Math.min(H - M, a.y + dy)); });
+  }
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  dibujar();
+}
+
+// ---------------------------------------------------------------- dibujo (SVG)
+const el = (tag, at, padre = svg) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); padre.appendChild(n); return n; };
+const posLado = (a, l) => [a.x + DESP[l][0] * R, a.y + DESP[l][1] * R];
+const rectLado = (a, l) => { const [x, y] = posLado(a, l); return l === "arriba" || l === "abajo" ? [x - 40, y - 26, 80, 52] : [x - 26, y - 40, 52, 80]; };
+const ER = () => W < 900 ? 7.5 : 6;   // en el celu los electrones se dibujan un poco más grandes
+function electron(x, y, col) { const r = ER(); el("circle", { cx: x, cy: y, r: r * 2, fill: col, opacity: .18 }); el("circle", { cx: x, cy: y, r, fill: col }); }
+// n electrones en grupos de a 2 sobre un punto
+function grupo(x, y, n, horizontalEje, col) {
+  const pares = Math.ceil(n / 2), paso = 24, sep = W < 900 ? 11 : 10;
+  for (let k = 0; k < n; k++) {
+    const g = Math.floor(k / 2), solo = n - k === 1 && k % 2 === 0, off = solo ? 0 : (k % 2 ? sep : -sep), d = (g - (pares - 1) / 2) * paso;
+    horizontalEje ? electron(x + d, y + off, col) : electron(x + off, y + d, col);
+  }
+}
+// enlace como rayas: una raya por par (y un punto si quedó uno suelto)
+function rayas(a, b, n, horiz) {
+  const pares = Math.floor(n / 2), suelto = n % 2, tot = pares + suelto, paso = 15;
+  for (let k = 0; k < tot; k++) {
+    const o = (k - (tot - 1) / 2) * paso;
+    if (k < pares) {
+      const at = horiz ? { x1: a.x + 40, y1: a.y + o, x2: b.x - 40, y2: b.y + o } : { x1: a.x + o, y1: a.y + 40, x2: b.x + o, y2: b.y - 40 };
+      el("line", { ...at, stroke: "#FFE14D", "stroke-width": 11, "stroke-linecap": "round", opacity: .15 });
+      el("line", { ...at, stroke: "#FFE14D", "stroke-width": 4.5, "stroke-linecap": "round" });
+    } else electron(horiz ? (a.x + b.x) / 2 : a.x + o, horiz ? a.y + o : (a.y + b.y) / 2, "#FFE14D");
+  }
+}
+
+let pendiente = false;
+const pedirDibujo = () => { if (!pendiente) { pendiente = true; requestAnimationFrame(() => { pendiente = false; dibujar(); }); } };
+function dibujar() {
+  normalizar();
+  svg.innerHTML = "";
+  svg.classList.toggle("borrar", modo === "sacar");
+  document.getElementById("vacio").hidden = atomos.length > 0;
+  const defs = el("defs", {}); const f = el("filter", { id: "halo", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs);
+  el("feGaussianBlur", { stdDeviation: 8 }, f);
+  // pares iónicos: una línea punteada tenue (están juntos por atracción, no comparten)
+  paresIonicos().forEach(({ a, b, horiz }) => el("line", { ...(horiz ? { x1: a.x + 44, y1: a.y, x2: b.x - 44, y2: b.y } : { x1: a.x, y1: a.y + 44, x2: b.x, y2: b.y - 44 }),
+    stroke: "#7C93C7", "stroke-width": 2, "stroke-dasharray": "3 9", "stroke-linecap": "round", opacity: .6 }));
+  // enlaces: una sola zona entre los dos átomos, con los electrones de las dos puntas (en amarillo: compartidos)
+  enlaces().forEach(({ a, la, b, lb, n }) => {
+    const horiz = la === "derecha", xm = (a.x + b.x) / 2, ym = (a.y + b.y) / 2;
+    const z = el("rect", horiz ? { x: xm - 30, y: ym - 44, width: 60, height: 88, rx: 14 } : { x: xm - 44, y: ym - 30, width: 88, height: 60, rx: 14 });
+    z.setAttribute("class", "zona zona-enlace"); z.dataset.z = `enl:${a.id}:${la}:${b.id}:${lb}`;
+    if (!n) return;
+    vista === "rayas" ? rayas(a, b, n, horiz) : grupo(xm, ym, n, horiz, "#FFE14D");
+  });
+  atomos.forEach(a => {
+    const E = ELEM[a.s], col = E.color;
+    LADOS.forEach(l => {
+      if (enlazado(a, l)) return;   // esa punta está en un enlace: la dibuja el enlace
+      const r = rectLado(a, l), z = el("rect", { x: r[0], y: r[1], width: r[2], height: r[3], rx: 14, class: "zona" });
+      z.dataset.z = `lado:${a.id}:${l}`;
+      const [x, y] = posLado(a, l);
+      if (a.e[l]) grupo(x, y, a.e[l], l === "derecha" || l === "izquierda", "#7FB6FF");
+    });
+    el("text", { x: a.x, y: a.y + 19, "text-anchor": "middle", fill: col, opacity: .35, "font-size": 56, "font-weight": 800, "font-family": "Inter, sans-serif", filter: "url(#halo)" }).textContent = a.s;
+    el("text", { x: a.x, y: a.y + 19, "text-anchor": "middle", fill: "#F8FAFC", "font-size": 56, "font-weight": 800, "font-family": "Inter, sans-serif" }).textContent = a.s;
+    const q = carga(a);
+    if (q !== 0) el("text", { x: a.x + (a.s.length > 1 ? 38 : 26), y: a.y - 18, fill: q > 0 ? "#FFE14D" : "#7FB6FF", "font-size": 22, "font-weight": 700, "font-family": "Inter, sans-serif" }).textContent = superCarga(q);
+    // contador en la esquina: electrones alrededor / los que necesita
+    const ok = cumple(a), txt = `${alrededor(a)}/${ok && E.incompleto && alrededor(a) === E.incompleto ? E.incompleto : E.meta}`, bw = 14 + txt.length * 9.5;
+    const cx = Math.max(bw / 2 + 4, a.x - 62), cy = Math.max(17, a.y - 62);   // que no se corte contra el borde
+    el("rect", { x: cx - bw / 2, y: cy - 13, width: bw, height: 26, rx: 13, fill: ok ? "rgb(52 211 153 / .16)" : "#0A0E14", stroke: ok ? "#34D399" : "#1E3157", "stroke-width": 1.5 });
+    el("text", { x: cx, y: cy + 5.5, "text-anchor": "middle", fill: ok ? "#34D399" : "#AAB6CE", "font-size": 15, "font-weight": 600, "font-family": "JetBrains Mono, monospace" }).textContent = txt;
+    // el seleccionado: un anillo y la cruz para quitarlo
+    if (a.id !== sel) return;
+    el("circle", { cx: a.x, cy: a.y, r: 40, fill: "none", stroke: "#7FB6FF", "stroke-width": 1.5, "stroke-dasharray": "4 6", opacity: .55 });
+    const bx = a.x + 62, by = a.y + 62;
+    el("circle", { cx: bx, cy: by, r: 15, fill: "#24121A", stroke: "#FF7A7A", "stroke-width": 1.5 });
+    el("path", { d: `M${bx - 5} ${by - 5}L${bx + 5} ${by + 5}M${bx + 5} ${by - 5}L${bx - 5} ${by + 5}`, stroke: "#FFB3B3", "stroke-width": 2.2, "stroke-linecap": "round" });
+  });
+  if (arrastre?.fantasma) svg.appendChild(arrastre.fantasma);
+  if (hoverZ) svg.querySelector(`[data-z="${hoverZ}"]`)?.classList.add("hover");
+  refrescar();
+  evaluar();
+}
+
+// ---------------------------------------------------------------- zonas (un lado o un enlace)
+// las "puntas" de una zona: [[átomo, lado]] (un lado) o [[A, la], [B, lb]] (un enlace)
+function puntas(z) {
+  const p = z.split(":");
+  return p[0] === "lado" ? [[atomo(p[1]), p[2]]] : [[atomo(p[1]), p[2]], [atomo(p[3]), p[4]]];
+}
+const leer = z => puntas(z).reduce((t, [a, l]) => t + a.e[l], 0);
+const puedePoner = (a, l) => a.e[l] < capPunta(a, l) && propios(a) < capAtomo(a);
+// pone un electrón; en un enlace va a la punta del átomo preferido (el que lo aporta) o, si no, a la que tiene menos
+function poner(z, pref) {
+  const ps = puntas(z).filter(([a, l]) => puedePoner(a, l));
+  if (!ps.length) return false;
+  const [a, l] = ps.find(([a]) => a.id === pref) || ps.sort((x, y) => x[0].e[x[1]] - y[0].e[y[1]])[0];
+  a.e[l]++; return true;
+}
+// saca un electrón (del átomo preferido, o de la punta que tiene más); devuelve de qué átomo salió
+function sacar(z, pref) {
+  const ps = puntas(z).filter(([a, l]) => a.e[l] > 0);
+  if (!ps.length) return null;
+  const [a, l] = ps.find(([a]) => a.id === pref) || ps.sort((x, y) => y[0].e[y[1]] - x[0].e[x[1]])[0];
+  a.e[l]--; return a;
+}
+function porQueNoEntra(z) {
+  const ps = puntas(z);
+  if (ps.length === 2 && leer(z) >= 2 * MAX_PUNTA_ENLACE) return "Ese enlace ya tiene 3 pares (es un enlace triple).";
+  const lleno = ps.find(([a]) => propios(a) >= capAtomo(a));
+  if (lleno && ps.every(([a, l]) => !puedePoner(a, l))) return lleno[0].s === "H" || lleno[0].s === "He"
+    ? `El ${lleno[0].s} tiene una sola capa: entran 2 electrones como máximo.` : `El ${lleno[0].s} ya tiene 8 electrones propios: no entran más.`;
+  return "En cada lado entran 2 electrones como máximo.";
+}
+function tocar(z) {
+  const antes = foto();
+  if (modo === "poner") { if (!poner(z)) return avisar(porQueNoEntra(z)); }
+  else if (!sacar(z)) return avisar("Ahí no hay electrones para sacar.");
+  anotar(antes); dibujar();
+}
+// arrastrar un electrón de una zona a otra: si las dos zonas tienen un átomo en común, el electrón sigue siendo de ese átomo
+// (pasar un electrón propio a un enlace NO se lo regala al vecino)
+function mover(z1, z2) {
+  if (z1 === z2) return;
+  const antes = foto(), en2 = puntas(z2).map(([a]) => a.id);
+  const comun = puntas(z1).map(([a]) => a.id).find(id => en2.includes(id));
+  const donante = sacar(z1, comun);
+  if (!donante) return;
+  if (!poner(z2, donante.id)) { volverA(antes); dibujar(); return avisar(porQueNoEntra(z2)); }
+  anotar(antes); dibujar();
+}
+
+// ---------------------------------------------------------------- tocar y arrastrar (por cercanía: cómodo con el dedo)
+const enSvg = (cx, cy) => { const p = svg.createSVGPoint(); p.x = cx; p.y = cy; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+// lo más cercano al punto: la cruz de un átomo, su núcleo (para moverlo), un lado o un enlace
+function buscar(p, tactil) {
+  const t = tactil ? 1.3 : 1, d = (x, y) => Math.hypot(p.x - x, p.y - y);
+  const s = atomo(sel);
+  if (s && d(s.x + 62, s.y + 62) < 22 * t) return { tipo: "quitar", a: s };
+  let mejor = null;
+  const prueba = (o, dist, max) => { if (dist < max * t && (!mejor || dist < mejor.dist)) mejor = { ...o, dist }; };
+  for (const a of atomos) {
+    prueba({ tipo: "atomo", a }, d(a.x, a.y) * .85, 34);
+    for (const l of LADOS) if (!enlazado(a, l)) { const [x, y] = posLado(a, l); prueba({ tipo: "zona", z: `lado:${a.id}:${l}` }, d(x, y), 40); }
+  }
+  for (const { a, la, b, lb } of enlaces()) prueba({ tipo: "zona", z: `enl:${a.id}:${la}:${b.id}:${lb}` }, d((a.x + b.x) / 2, (a.y + b.y) / 2), 46);
+  return mejor;
+}
+let arrastre = null, hoverZ = null;
+const SUBE = 56;   // con el dedo, el electrón que arrastrás se ve arriba del dedo (si no, lo tapa)
+svg.addEventListener("pointerdown", e => {
+  if (e.button > 0 || arrastre) return;
+  const tactil = e.pointerType !== "mouse", p = enSvg(e.clientX, e.clientY), o = buscar(p, tactil);
+  if (!o) { if (sel) { sel = null; dibujar(); } return; }
+  if (o.tipo === "atomo" && sel !== o.a.id) { sel = o.a.id; dibujar(); }
+  e.preventDefault(); svg.setPointerCapture(e.pointerId);
+  arrastre = { o, tactil, id: e.pointerId, x0: e.clientX, y0: e.clientY, movio: false, antes: foto(), fantasma: null };
+  if (o.tipo === "atomo") Object.assign(arrastre, { dx: o.a.x - p.x, dy: o.a.y - p.y, px: o.a.x, py: o.a.y });
+});
+svg.addEventListener("pointermove", e => {
+  const p = enSvg(e.clientX, e.clientY);
+  if (!arrastre) {   // con el mouse: resaltar lo que se tocaría
+    if (e.pointerType !== "mouse") return;
+    const o = buscar(p, false), z = o?.tipo === "zona" ? o.z : null;
+    svg.style.cursor = !o ? "" : o.tipo === "atomo" ? "grab" : "pointer";
+    if (z !== hoverZ) { svg.querySelector(".zona.hover")?.classList.remove("hover"); hoverZ = z; if (z) svg.querySelector(`[data-z="${z}"]`)?.classList.add("hover"); }
+    return;
+  }
+  if (e.pointerId !== arrastre.id) return;
+  if (!arrastre.movio && Math.hypot(e.clientX - arrastre.x0, e.clientY - arrastre.y0) > 7) arrastre.movio = true;
+  if (!arrastre.movio) return;
+  const o = arrastre.o;
+  if (o.tipo === "atomo") {
+    const a = o.a; svg.style.cursor = "grabbing";
+    let x = Math.max(M, Math.min(W - M, p.x + arrastre.dx)), y = Math.max(M, Math.min(H - M, p.y + arrastre.dy));
+    // imán: si queda cerca de pegarse a otro átomo (arriba, abajo o a un costado), se engancha justo a distancia de enlace
+    for (const b of atomos) if (b !== a) for (const l of LADOS) {
+      const tx = b.x + DESP[l][0] * D, ty = b.y + DESP[l][1] * D;
+      if (tx < M || tx > W - M || ty < M || ty > H - M) continue;
+      if (Math.hypot(x - tx, y - ty) < IMAN && !atomos.some(c => c !== a && Math.hypot(c.x - tx, c.y - ty) < 1)) { x = tx; y = ty; }
+    }
+    a.x = x; a.y = y; pedirDibujo(); return;
+  }
+  if (o.tipo === "zona") {
+    if (!arrastre.fantasma) {
+      if (!leer(o.z)) return;
+      arrastre.fantasma = el("g", {}); el("circle", { r: 18, fill: "#FFE14D", opacity: .25 }, arrastre.fantasma); el("circle", { r: 9, fill: "#FFE14D" }, arrastre.fantasma);
+    }
+    arrastre.fantasma.setAttribute("transform", `translate(${p.x} ${p.y - (arrastre.tactil ? SUBE : 0)})`);
+    const dest = buscar({ x: p.x, y: p.y - (arrastre.tactil ? SUBE : 0) }, arrastre.tactil), z = dest?.tipo === "zona" ? dest.z : null;
+    if (z !== hoverZ) { svg.querySelector(".zona.hover")?.classList.remove("hover"); hoverZ = z; if (z) svg.querySelector(`[data-z="${z}"]`)?.classList.add("hover"); }
+  }
+});
+function soltar(e, cancelado) {
+  if (!arrastre || e.pointerId !== arrastre.id) return;
+  const a = arrastre; arrastre = null; hoverZ = null; svg.style.cursor = "";
+  a.fantasma?.remove();
+  if (cancelado) { if (a.o.tipo === "atomo") { a.o.a.x = a.px; a.o.a.y = a.py; } return dibujar(); }
+  const o = a.o;
+  if (o.tipo === "quitar") { if (!a.movio) quitar(o.a); return; }
+  if (o.tipo === "atomo") {
+    if (!a.movio) return dibujar();
+    // no se pueden encimar: si quedó demasiado cerca de otro (sin estar enganchado), vuelve a donde estaba
+    if (atomos.some(b => b !== o.a && Math.hypot(b.x - o.a.x, b.y - o.a.y) < 118)) { o.a.x = a.px; o.a.y = a.py; avisar("Muy cerca de otro átomo: acercalos de frente para que se enganchen."); }
+    else if (o.a.x !== a.px || o.a.y !== a.py) anotar(a.antes);
+    return dibujar();
+  }
+  if (!a.movio) return tocar(o.z);
+  if (!a.fantasma) return dibujar();
+  const p = enSvg(e.clientX, e.clientY), dest = buscar({ x: p.x, y: p.y - (a.tactil ? SUBE : 0) }, a.tactil);
+  if (dest?.tipo === "zona") mover(o.z, dest.z); else dibujar();
+}
+svg.addEventListener("pointerup", e => soltar(e, false));
+svg.addEventListener("pointercancel", e => soltar(e, true));
+svg.addEventListener("pointerleave", e => { if (!arrastre && hoverZ) { svg.querySelector(".zona.hover")?.classList.remove("hover"); hoverZ = null; } });
+// con el dedo: si tocaste algo del dibujo, la página no scrollea; si tocaste un lugar vacío, sí
+svg.addEventListener("touchstart", e => { const t = e.touches[0]; if (e.touches.length === 1 && buscar(enSvg(t.clientX, t.clientY), true)) e.preventDefault(); }, { passive: false });
+
+// ---------------------------------------------------------------- agregar / quitar átomos
+// lugar libre: cerca del centro pero lejos de los demás (así no se enganchan solos)
+function lugarLibre() {
+  let mejor = null;
+  for (let y = M; y <= H - M; y += 30) for (let x = M; x <= W - M; x += 30) {
+    const dist = atomos.reduce((m, a) => Math.min(m, Math.hypot(a.x - x, a.y - y)), Infinity);
+    if (atomos.some(a => (Math.abs(a.x - x) < 1 && Math.abs(Math.abs(a.y - y) - D) < 1) || (Math.abs(a.y - y) < 1 && Math.abs(Math.abs(a.x - x) - D) < 1))) continue;
+    const centro = Math.hypot(x - W / 2, y - H / 2), lejos = dist >= 190;
+    const puntaje = lejos ? 1e6 - centro : dist;   // primero los que están lejos de todos; entre ésos, el más central
+    if (dist >= 125 && (!mejor || puntaje > mejor.puntaje)) mejor = { x, y, puntaje };
+  }
+  return mejor;
+}
+function agregarAtomo(s, anotarlo = true) {
+  if (atomos.length >= MAX_ATOMOS) { avisar(`Hay ${MAX_ATOMOS} átomos: es el máximo.`); return false; }
+  const l = lugarLibre();
+  if (!l) { avisar("No queda lugar libre: juntá o quitá algún átomo."); return false; }
+  if (anotarlo) anotar(foto());
+  const a = { id: sigId++, s, x: l.x, y: l.y, e: {} }; valencia(a); sel = a.id;
+  atomos.push(a);
+  if (anotarlo) dibujar();
+  return true;
+}
+function quitar(a) { anotar(foto()); atomos = atomos.filter(o => o !== a); sel = null; dibujar(); }
+
+// ---------------------------------------------------------------- desafíos
+// at: [símbolo, columna, fila, carga]; dobles/triples: [i, j, orden]. El resto de los electrones va en pares a los lados libres.
+const DESAFIOS = [
+  { f: "H₂", n: "hidrógeno", at: [["H", 0, 0], ["H", 1, 0]] },
+  { f: "Cl₂", n: "cloro", at: [["Cl", 0, 0], ["Cl", 1, 0]] },
+  { f: "O₂", n: "oxígeno", at: [["O", 0, 0], ["O", 1, 0]], orden: [[0, 1, 2]] },
+  { f: "N₂", n: "nitrógeno", at: [["N", 0, 0], ["N", 1, 0]], orden: [[0, 1, 3]] },
+  { f: "HCl", n: "cloruro de hidrógeno", at: [["H", 0, 0], ["Cl", 1, 0]] },
+  { f: "H₂O", n: "agua", at: [["H", 0, 0], ["O", 1, 0], ["H", 1, 1]] },
+  { f: "NH₃", n: "amoníaco", at: [["H", 0, 1], ["N", 1, 1], ["H", 2, 1], ["H", 1, 2]] },
+  { f: "CH₄", n: "metano", at: [["H", 1, 0], ["H", 0, 1], ["C", 1, 1], ["H", 2, 1], ["H", 1, 2]] },
+  { f: "CO₂", n: "dióxido de carbono", at: [["O", 0, 0], ["C", 1, 0], ["O", 2, 0]], orden: [[0, 1, 2], [1, 2, 2]] },
+  { f: "HCN", n: "cianuro de hidrógeno", at: [["H", 0, 0], ["C", 1, 0], ["N", 2, 0]], orden: [[1, 2, 3]] },
+  { f: "C₂H₄", n: "eteno", at: [["H", 1, 0], ["H", 0, 1], ["C", 1, 1], ["C", 2, 1], ["H", 3, 1], ["H", 2, 2]], orden: [[2, 3, 2]] },
+  { f: "BF₃", n: "trifluoruro de boro", at: [["F", 1, 0], ["F", 0, 1], ["B", 1, 1], ["F", 2, 1]] },
+  { f: "NH₄⁺", n: "ion amonio", at: [["H", 1, 0], ["H", 0, 1], ["N", 1, 1, 1], ["H", 2, 1], ["H", 1, 2]] },
+  { f: "NaCl", n: "cloruro de sodio", at: [["Na", 0, 0, 1], ["Cl", 1, 0, -1]] },
+  { f: "MgO", n: "óxido de magnesio", at: [["Mg", 0, 0, 2], ["O", 1, 0, -2]] },
+  { f: "CaCl₂", n: "cloruro de calcio", at: [["Cl", 0, 0, -1], ["Ca", 1, 0, 2], ["Cl", 2, 0, -1]] },
+];
+const contar = lista => lista.reduce((m, s) => (m[s] = (m[s] || 0) + 1, m), {});
+const mismaComposicion = (d) => {
+  const a = contar(atomos.map(x => x.s)), b = contar(d.at.map(x => x[0]));
+  const q = atomos.reduce((t, x) => t + carga(x), 0), qd = d.at.reduce((t, x) => t + (x[3] || 0), 0);
+  return q === qd && Object.keys(a).length === Object.keys(b).length && Object.keys(b).every(s => a[s] === b[s]);
+};
+function empezarDesafio(d) {
+  anotar(foto());
+  atomos = []; objetivo = d;
+  d.at.forEach(([s]) => agregarAtomo(s, false));
+  sel = null; dibujar();
+}
+function armarSolucion(d) {
+  anotar(foto());
+  const cols = Math.max(...d.at.map(x => x[1])) + 1, filas = Math.max(...d.at.map(x => x[2])) + 1;
+  const x0 = Math.round(W / 2 - (cols - 1) * D / 2), y0 = Math.round(H / 2 - (filas - 1) * D / 2);
+  sel = null;
+  atomos = d.at.map(([s, c, f]) => ({ id: sigId++, s, x: x0 + c * D, y: y0 + f * D, e: { arriba: 0, derecha: 0, abajo: 0, izquierda: 0 } }));
+  const orden = (i, j) => (d.orden || []).find(([a, b]) => (a === i && b === j) || (a === j && b === i))?.[2] || 1;
+  enlaces().forEach(({ a, la, b, lb }) => { const k = orden(atomos.indexOf(a), atomos.indexOf(b)); a.e[la] = k; b.e[lb] = k; });
+  atomos.forEach((a, i) => {
+    let resto = ELEM[a.s].val - (d.at[i][3] || 0) - propios(a);
+    // los pares libres van primero a los lados perpendiculares al enlace (O=C=O con los pares arriba y abajo: simétrico)
+    const horiz = enlazado(a, "derecha") || enlazado(a, "izquierda"), vert = enlazado(a, "arriba") || enlazado(a, "abajo");
+    const orden = horiz && !vert ? ["arriba", "abajo", "izquierda", "derecha"] : vert && !horiz ? ["izquierda", "derecha", "arriba", "abajo"] : LADOS;
+    for (const l of orden) if (!enlazado(a, l) && resto > 0) { const k = Math.min(2, resto); a.e[l] = k; resto -= k; }
+  });
+  dibujar();
+}
+
+// ---------------------------------------------------------------- ¿estable?
+// orden de escritura: metales primero; después la secuencia de la IUPAC (CO₂, NH₃, CH₄, BF₃);
+// el H va adelante en los ácidos (H₂O, HCl, H₂S, HCN)
+const SECUENCIA = ["Kr", "Ar", "Ne", "He", "B", "Si", "C", "P", "N", "H", "Se", "S", "I", "Br", "Cl", "O", "F"];
+function formula() {
+  const c = contar(atomos.map(a => a.s)), hPrimero = ["O", "S", "Se", "F", "Cl", "Br", "I"].some(s => s in c) || ("C" in c && "N" in c);
+  const rango = s => ELEM[s].metal ? -100 + ELEM[s].col : s === "H" && hPrimero ? -50 : SECUENCIA.indexOf(s);
+  const orden = Object.keys(c).sort((a, b) => rango(a) - rango(b));
+  const q = atomos.reduce((t, a) => t + carga(a), 0);
+  return orden.map(s => s + sub(c[s])).join("") + (q ? supIndice(q) : "");
+}
+function nombre(a) {
+  const iguales = atomos.filter(b => b.s === a.s);
+  return iguales.length === 1 ? `El ${a.s}` : `Un ${a.s}`;
+}
+function evaluar() {
+  const est = document.getElementById("estado"), mot = document.getElementById("motivos"), fichas = document.getElementById("fichas");
+  fichas.innerHTML = ""; mot.innerHTML = "";
+  document.getElementById("formula").textContent = atomos.length ? formula() : "";
+  const objEl = document.getElementById("objetivo");
+  objEl.hidden = !objetivo; objEl.classList.remove("logrado");
+  if (objetivo) document.getElementById("obj-txt").innerHTML = `Armá <b>${objetivo.f}</b> (${objetivo.n})`;
+  if (!atomos.length) { est.className = "estado nada"; est.querySelector("span").textContent = "—"; return; }
+  const motivos = [], lista = enlaces();
+  atomos.forEach(a => {
+    const E = ELEM[a.s], n = alrededor(a), q = carga(a), ok = cumple(a);
+    const meta = E.fila === 1 ? "2 (dueto)" : E.metal ? `0 (cede ${E.val === 1 ? "su e⁻" : `sus ${E.val} e⁻`})` : E.incompleto ? "8 (o 6: excepción)" : "8 (octeto)";
+    if (!ok) motivos.push(E.metal ? `${nombre(a)} tiene ${n} e⁻: se estabiliza cediendo ${E.val === 1 ? "su electrón" : `sus ${E.val} electrones`} (tiene que quedar con 0).`
+      : E.incompleto ? `${nombre(a)} tiene ${n} e⁻ alrededor: necesita 8, o 6 si está enlazado (el boro es una excepción al octeto).`
+      : `${nombre(a)} tiene ${n} e⁻ alrededor y necesita ${E.meta}.`);
+    const f = document.createElement("div"); f.className = "ficha" + (ok ? " ok" : "");
+    f.innerHTML = `<div class="sim-at" style="color:${E.color}">${a.s}${q ? `<sup>${superCarga(q)}</sup>` : ""}</div>
+      <div><div class="cuenta">${n} <small>e⁻ alrededor</small></div>
+        <div class="det">Necesita <b>${meta}</b> · valencia <b>${E.val}</b> · carga <b>${fmtCarga(q)}</b></div></div>
+      <div class="acc"><button class="accion" title="Vuelve a sus electrones de valencia (átomo neutro)">Neutro</button><button class="accion">Quitar</button></div>`;
+    const [bN, bQ] = f.querySelectorAll("button");
+    bN.onclick = () => { anotar(foto()); valencia(a); dibujar(); };
+    bQ.onclick = () => quitar(a);
+    fichas.appendChild(f);
+  });
+  if (lista.some(b => b.n % 2)) motivos.push("Hay un enlace con un electrón sin pareja: los enlaces se forman con PARES de electrones.");
+
+  const estable = !motivos.length;
+  est.className = "estado " + (estable ? "ok" : "mal");
+  est.querySelector("span").textContent = estable ? "ESTABLE" : "INESTABLE";
+  if (estable) {
+    const nombreE = { 2: "simple", 4: "doble", 6: "triple" }, c = {};
+    lista.filter(b => b.n).forEach(b => c[nombreE[b.n]] = (c[nombreE[b.n]] || 0) + 1);
+    const partes = Object.entries(c).map(([k, n]) => n === 1 ? `1 enlace ${k}` : `${n} enlaces ${k}s`);
+    const ionesC = {};
+    atomos.filter(a => carga(a) !== 0 && !enlazadoAlgo(a)).forEach(a => { const k = a.s + supIndice(carga(a)); ionesC[k] = (ionesC[k] || 0) + 1; });
+    const iones = Object.entries(ionesC).sort(([a], [b]) => b.includes("⁺") - a.includes("⁺")).map(([k, n]) => (n > 1 ? n + " " : "") + k);   // cationes primero
+    const hayCation = Object.keys(ionesC).some(k => k.includes("⁺")), hayAnion = Object.keys(ionesC).some(k => k.includes("⁻"));
+    const nobles = atomos.filter(a => ELEM[a.s].noble && carga(a) === 0).map(a => a.s);
+    const boro = atomos.some(a => ELEM[a.s].incompleto && alrededor(a) === ELEM[a.s].incompleto);
+    const qTotal = atomos.filter(enlazadoAlgo).reduce((t, a) => t + carga(a), 0);
+    const txt = [partes.join(" y "),
+      iones.length ? `${hayCation && hayAnion ? "enlace iónico entre " : iones.length === 1 && !iones[0].match(/^\d/) ? "ion " : "iones "}${iones.join(" y ")}` : "",
+      qTotal ? `es un ion poliatómico (carga total ${fmtCarga(qTotal)})` : "",
+      boro ? "el B queda con 6 (octeto incompleto, una excepción)" : "",
+      nobles.length ? `${[...new Set(nobles)].join(" y ")}: gas noble, ya tiene su capa completa` : ""].filter(Boolean).join("; ");
+    mot.innerHTML = `<li class="bien">Todos los átomos completaron su capa${txt ? ": " + txt : ""}.</li>`;
+  } else mot.innerHTML = motivos.map(m => `<li>${m}</li>`).join("");
+
+  if (objetivo && estable && mismaComposicion(objetivo)) {
+    objEl.classList.add("logrado");
+    document.getElementById("obj-txt").innerHTML = `¡Lo armaste! <b>${objetivo.f}</b> ✓`;
+    if (!logrados.has(objetivo.f)) { logrados.add(objetivo.f); pintarDesafios(); }
+  }
+}
+
+// ---------------------------------------------------------------- controles
+const tabla = document.getElementById("tabla"), velo = document.getElementById("velo");
+const celdas = [];
+for (let f = 1; f <= 5; f++) for (let c = 1; c <= 8; c++) {
+  const s = Object.keys(ELEM).find(k => ELEM[k].fila === f && ELEM[k].col === c);
+  celdas.push(s ? `<button class="${clase(s)}" data-s="${s}" style="color:${ELEM[s].color}" title="${s}: ${ELEM[s].val} e⁻ de valencia"><small>${ELEM[s].val}</small>${s}</button>` : `<span class="hueco"></span>`);
+}
+document.getElementById("paleta").innerHTML = celdas.join("");
+const abrirTabla = abrir => { tabla.classList.toggle("abierta", abrir); velo.classList.toggle("on", abrir); };
+document.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { if (agregarAtomo(b.dataset.s)) abrirTabla(false); });
+document.getElementById("abrir-tabla").onclick = () => abrirTabla(true);
+document.getElementById("cerrar-tabla").onclick = () => abrirTabla(false);
+velo.onclick = () => abrirTabla(false);
+document.querySelectorAll("#modo button").forEach(b => b.onclick = () => {
+  modo = b.dataset.m; document.querySelectorAll("#modo button").forEach(o => o.classList.toggle("on", o === b)); dibujar(); });
+document.querySelectorAll("#vista button").forEach(b => b.onclick = () => {
+  vista = b.dataset.v; document.querySelectorAll("#vista button").forEach(o => o.classList.toggle("on", o === b)); dibujar(); });
+document.getElementById("deshacer").onclick = deshacer;
+document.getElementById("limpiar").onclick = () => { if (atomos.length) anotar(foto()); atomos = []; objetivo = null; dibujar(); };
+document.getElementById("solucion").onclick = () => objetivo && armarSolucion(objetivo);
+document.getElementById("salir-obj").onclick = () => { objetivo = null; dibujar(); };
+addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); deshacer(); } if (e.key === "Escape") abrirTabla(false); });
+function pintarDesafios() {
+  const cont = document.getElementById("desafios");
+  cont.innerHTML = DESAFIOS.map((d, i) => `<button data-d="${i}" class="${logrados.has(d.f) ? "hecho" : ""}" title="${d.n}">${d.f}</button>`).join("");
+  cont.querySelectorAll("button").forEach(b => b.onclick = () => empezarDesafio(DESAFIOS[+b.dataset.d]));
+}
+function refrescar() {
+  const lleno = atomos.length >= MAX_ATOMOS;
+  document.querySelectorAll("[data-s]").forEach(b => b.disabled = lleno);
+  document.getElementById("deshacer").disabled = !historia.length;
+}
+// embebido en la ficha del sitio: avisa su alto (en el celu el marco crece y no queda scroll adentro)
+// y cuándo lo están usando. Ahí la tabla periódica se despliega en el lugar: una hoja "fija" quedaría al fondo del marco.
+if (parent !== window) {
+  document.documentElement.classList.add("embebido");
+  const avisarSitio = d => parent.postMessage({ profee: d.tipo, ...d }, "*");
+  new ResizeObserver(() => avisarSitio({ tipo: "alto", alto: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+  addEventListener("pointerdown", e => avisarSitio({ tipo: "en-uso", puntero: e.pointerType }), { capture: true, passive: true });
+}
+pintarDesafios();
+addEventListener("resize", ajustarMundo);
+ajustarMundo();
+dibujar();
+</script>
+</body>
+</html>

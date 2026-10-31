@@ -123,7 +123,7 @@
 <script>
 // Parámetros para los estados: ?tema=Física · ?n=3 · ?sinportada=pendulo-galileo
 const q = new URLSearchParams(location.search);
-const TEMAS = ["Límites", "Derivadas", "Integrales", "Series y sucesiones", "Álgebra lineal", "Funciones", "Geometría", "Física", "Números complejos"];
+const TEMAS = ["Límites", "Derivadas", "Integrales", "Series y sucesiones", "Álgebra lineal", "Funciones", "Geometría", "Física", "Química", "Números complejos"];
 // lo más nuevo primero (04-simuladores-modelo-de-datos.md)
 const lista = [...SIMULADORES].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, q.has("n") ? +q.get("n") : SIMULADORES.length);
 const activo = q.get("tema");
