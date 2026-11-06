@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programación lineal: método gráfico · Profee Tonio</title>
+<link rel="stylesheet" href="_sim.css">
+<style>
+  /* Programación lineal con dos variables, por el método gráfico (Álgebra 71, Práctica V).
+     Tres problemas del material; para cada uno: enunciado, modelo, región factible, recta de nivel Z = k,
+     análisis de sensibilidad y, en el óptimo, qué recursos se saturan, cuánto sobra y su precio sombra. */
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--fondo); }
+  .pl { margin: 0 auto; padding: 18px 20px 40px; display: grid; gap: 14px; }
+  .cab-pl { display: flex; align-items: center; justify-content: space-between; gap: 10px 18px; flex-wrap: wrap; }
+  .cab-pl h1 { margin: 0; font: 800 22px/1.15 Inter, sans-serif; }
+  .cab-pl h1 small { display: block; margin-top: 4px; font: 500 13px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 600 13.5px/1.2 Inter, sans-serif; color: var(--texto-suave);
+    background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+  .tabs button b { color: var(--texto-tenue); margin-right: 6px; font-family: "JetBrains Mono", monospace; }
+  .tabs button.on { color: var(--fondo); background: var(--neon-core); box-shadow: 0 0 16px rgb(127 182 255 / .4); }
+  .tabs button.on b { color: var(--fondo); }
+  .tabs button:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 2px; }
+
+  /* compu ancha: texto | gráfico | controles, todo a lo ancho de la pantalla; el gráfico queda fijo mientras bajás */
+  .area { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .trabajo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 14px; align-items: start; }
+  .col-texto, .col-ctrl { display: grid; gap: 14px; min-width: 0; }
+  .col-graf { position: sticky; top: 14px; min-width: 0; }
+  .tarj { padding: 16px 18px; border-radius: 16px; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); min-width: 0; }
+  .tarj > .rot { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .tarj > .rot i { font-style: normal; font: 700 11px/1 "JetBrains Mono", monospace; color: var(--fondo); background: var(--neon-core); border-radius: 6px; padding: 3px 6px; letter-spacing: 0; }
+  .enunciado p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.6; color: var(--texto-medio); }
+  .tabla-datos { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 4px; }
+  .tabla-datos th, .tabla-datos td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--linea); white-space: nowrap; }
+  .tabla-datos th:first-child, .tabla-datos td:first-child { text-align: left; white-space: normal; }
+  .tabla-datos th { font-weight: 600; color: var(--texto-tenue); font-size: 12px; }
+  .tabla-datos td { font-family: "JetBrains Mono", monospace; color: var(--texto); }
+  .tabla-datos td:first-child { font-family: Inter, sans-serif; color: var(--texto-suave); }
+  .tabla-datos tr.obj td { color: var(--amarillo); }
+  .tabla-datos tr.obj td:first-child { color: var(--amarillo); }
+  .fuente { margin: 10px 0 0; font-size: 12px; color: var(--texto-tenue); }
+
+  .modelo { font: 500 15px/1.75 "JetBrains Mono", monospace; color: var(--texto); }
+  .modelo .fo { color: var(--amarillo); font-weight: 600; }
+  .modelo .sa { color: var(--texto-tenue); font: 500 13px/1 Inter, sans-serif; margin: 6px 0 2px; }
+  .modelo .r { display: flex; align-items: baseline; gap: 10px; }
+  .modelo .r i { width: 10px; height: 10px; border-radius: 3px; flex: none; transform: translateY(1px); }
+  .modelo .r span.n { font: 500 12.5px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
+  .modelo .var { color: var(--texto-suave); font: 500 13px/1.5 Inter, sans-serif; margin-top: 8px; }
+  .modelo b.cambio { color: var(--cian); }
+
+  .grafico { position: relative; padding: 0; overflow: hidden; }
+  .grafico svg { display: block; width: 100%; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+  .estado { position: absolute; top: 12px; right: 12px; max-width: calc(100% - 24px); padding: 8px 13px; border-radius: 12px; font: 600 13px/1.35 Inter, sans-serif;
+    background: rgb(8 13 26 / .92); box-shadow: inset 0 0 0 1px var(--linea); color: var(--texto-suave); pointer-events: none; }
+  .estado b { color: var(--amarillo); }
+  .estado.ok { color: var(--verde); box-shadow: inset 0 0 0 1.5px rgb(52 211 153 / .7), 0 0 26px rgb(52 211 153 / .3); background: rgb(6 30 24 / .92); }
+  .estado.ok b { color: var(--verde); }
+
+  .nivel { display: grid; gap: 10px; }
+  .nivel .fila-k { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .nivel .ec { font: 600 15px/1.3 "JetBrains Mono", monospace; color: var(--amarillo); }
+  .nivel .ec.ok { color: var(--verde); }
+  .botones-k { display: flex; gap: 8px; flex-wrap: wrap; }
+  .accion.verde { color: var(--verde); box-shadow: inset 0 0 0 1px rgb(52 211 153 / .55); }
+  .ctrl .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--texto-suave); }
+  .ctrl .fila b { font: 600 14px/1 "JetBrains Mono", monospace; color: var(--texto); white-space: nowrap; }
+  .ctrl .fila b.cambio { color: var(--cian); }
+  .ctrl { display: grid; gap: 6px; }
+  .riel-fila { display: grid; grid-template-columns: 1fr; align-items: center; }
+
+  .sens-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .interruptor { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font: 600 14px/1.2 Inter, sans-serif; color: var(--texto); }
+  .interruptor .pista { width: 42px; height: 24px; border-radius: 999px; background: var(--riel); position: relative; transition: background .2s; flex: none; }
+  .interruptor .pista::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--texto-suave); transition: transform .2s, background .2s; }
+  .interruptor[aria-checked="true"] .pista { background: var(--neon); }
+  .interruptor[aria-checked="true"] .pista::after { transform: translateX(18px); background: #fff; }
+  .interruptor:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 4px; border-radius: 8px; }
+  .sens { display: none; gap: 14px; margin-top: 14px; }
+  .sens.on { display: grid; grid-template-columns: 1fr; }
+  .sens .grupo { display: grid; gap: 12px; align-content: start; }
+  .sens .grupo > .rot { margin: 0; }
+  .ayuda-sens { font-size: 13px; color: var(--texto-tenue); margin: 6px 0 0; line-height: 1.5; }
+
+  .res { overflow-x: auto; }
+  .res table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 520px; }
+  .res th, .res td { padding: 8px 9px; text-align: right; border-bottom: 1px solid var(--linea); white-space: nowrap; }
+  .res th { font-weight: 600; color: var(--texto-tenue); font-size: 12px; }
+  .res th:first-child, .res td:first-child { text-align: left; }
+  .res td { font-family: "JetBrains Mono", monospace; }
+  .res td:first-child { font-family: Inter, sans-serif; font-weight: 600; }
+  .res td:first-child i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; }
+  .pild { display: inline-block; padding: 3px 9px; border-radius: 999px; font: 600 12px/1.3 Inter, sans-serif; }
+  .pild.sat { color: #FFB3B3; background: rgb(255 122 122 / .1); box-shadow: inset 0 0 0 1px rgb(255 122 122 / .45); }
+  .pild.lib { color: var(--verde); background: rgb(52 211 153 / .08); box-shadow: inset 0 0 0 1px rgb(52 211 153 / .45); }
+  .res td.sombra { color: var(--amarillo); }
+  .optimo-txt { margin: 0 0 12px; font-size: 15px; line-height: 1.55; color: var(--texto-medio); }
+  .optimo-txt b { color: var(--verde); }
+  .lecturas-pl { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: var(--texto-suave); }
+  .lecturas-pl b { color: var(--texto); }
+  .vert td.opt { color: var(--verde); font-weight: 600; }
+
+  /* compu mediana: el texto arriba (enunciado y modelo lado a lado) y abajo gráfico | controles */
+  @media (max-width: 1279px) {
+    .area { grid-template-columns: minmax(0, 1fr); }
+    .col-texto { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }
+  }
+  /* celu y tablet: una columna; el gráfico queda pegado arriba mientras movés los controles de abajo */
+  @media (max-width: 899px) {
+    .col-texto, .trabajo { grid-template-columns: minmax(0, 1fr); }
+    .col-graf { top: 0; z-index: 3; padding: 6px 0 8px; background: var(--fondo); }
+  }
+  .resumen .fila-r { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--linea); font-size: 13.5px; }
+  .resumen .fila-r:last-child { border-bottom: 0; }
+  .resumen .fila-r i { width: 9px; height: 9px; border-radius: 3px; }
+  .resumen .fila-r .d { font: 500 12px/1.3 "JetBrains Mono", monospace; color: var(--texto-suave); text-align: right; }
+  .resumen .fila-r .d b { color: var(--amarillo); font-weight: 600; }
+  .resumen .opt { font: 600 14.5px/1.45 Inter, sans-serif; color: var(--texto); margin-bottom: 4px; }
+  .resumen .opt b { color: var(--verde); }
+  @media (max-width: 640px) {
+    .pl { padding: 10px 12px 32px; gap: 10px; }
+    .cab-pl h1 { font-size: 19px; }
+    .cab-pl h1 small { font-size: 12px; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -12px; padding: 0 12px 4px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabs button { flex: none; }
+    .tarj { padding: 14px; }
+    .modelo { font-size: 14px; }
+    .estado { top: 8px; right: 8px; font-size: 12px; padding: 7px 10px; }
+  }
+  @media (pointer: coarse) { .tabs button { min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; } }
+</style>
+</head>
+<body>
+<div class="pl">
+  <div class="cab-pl">
+    <h1>Programación lineal: método gráfico<small>Región factible, rectas de nivel Z = k y análisis de sensibilidad</small></h1>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Problema"></div>
+  </div>
+
+  <div class="area">
+    <div class="col-texto">
+      <section class="tarj enunciado" id="enunciado"></section>
+      <section class="tarj"><div class="rot">Modelo matemático</div><div class="modelo" id="modelo"></div></section>
+    </div>
+    <!-- el gráfico y los controles van juntos: mientras movés algo, el gráfico sigue a la vista -->
+    <div class="trabajo">
+      <div class="col-graf">
+        <section class="tarj grafico"><svg id="graf" role="img" aria-label="Región factible y recta de nivel"></svg><div class="estado" id="estado"></div></section>
+      </div>
+      <div class="col-ctrl">
+        <section class="tarj nivel">
+          <div class="rot" style="margin:0">Recta de nivel: movela hasta el óptimo</div>
+          <div class="ctrl" id="ctrl-k"></div>
+          <div class="fila-k"><span class="ec" id="ec-k"></span>
+            <div class="botones-k"><button class="accion verde" id="al-optimo">✓ Llevar la recta al óptimo</button></div></div>
+          <p class="ayuda-sens" style="margin:0">También podés arrastrar la recta amarilla sobre el gráfico.</p>
+        </section>
+        <section class="tarj">
+          <div class="sens-cab">
+            <div class="rot" style="margin:0">Análisis de sensibilidad</div>
+            <button class="interruptor" id="modo-sens" role="switch" aria-checked="false"><span class="pista"></span>Cambiar los datos</button>
+          </div>
+          <div class="sens" id="sens"></div>
+        </section>
+        <section class="tarj resumen"><div class="rot">En el óptimo</div><div id="resumen"></div></section>
+      </div>
+    </div>
+  </div>
+
+  <section class="tarj">
+    <div class="rot">En el óptimo: recursos saturados, sobrantes y precios sombra</div>
+    <p class="optimo-txt" id="optimo-txt"></p>
+    <div class="res" id="res"></div>
+    <ul class="lecturas-pl" id="lecturas"></ul>
+    <div class="res vert" id="vertices" style="margin-top:14px"></div>
+  </section>
+</div>
+
+<script>
+// ---------------------------------------------------------------- los tres problemas (Álgebra 71, Práctica V: ejercicios 10, 18 y 15)
+const COLORES = ["#4FC3E8", "#FF8A8A", "#B08CFF"];
+const PROBLEMAS = [
+  {
+    id: "insumos", tab: "Insumos", tipo: "max", x: "x", y: "y", queX: "unidades de P1", queY: "unidades de P2",
+    titulo: "Una fábrica, dos productos y tres insumos",
+    texto: ["Para fabricar dos productos, <b>P1</b> y <b>P2</b>, una fábrica usa tres insumos. La tabla indica cuántas unidades de cada insumo lleva una unidad de cada producto, cuánto hay disponible de cada insumo y el beneficio que deja cada producto.",
+      "¿Cuánto conviene fabricar de cada producto para que el <b>beneficio sea máximo</b>?"],
+    cabeza: ["", "P1", "P2", "Disponible"],
+    obj: { nombre: "Beneficio", letra: "B", c: [2, 3], u: "$", porU: "$/u" },
+    rest: [
+      { nombre: "Insumo 1", a: [5, 10], s: "≤", b: 80, u: "u" },
+      { nombre: "Insumo 2", a: [40, 20], s: "≤", b: 360, u: "u" },
+      { nombre: "Insumo 3", a: [10, 10], s: "≤", b: 100, u: "u" },
+    ],
+    fuente: "Práctica V, ejercicio 10",
+  },
+  {
+    id: "deptos", tab: "Departamentos", tipo: "max", x: "xA", y: "xB", queX: "unidades del artículo A", queY: "unidades del artículo B",
+    titulo: "Dos artículos que pasan por tres departamentos",
+    texto: ["Una empresa fabrica dos artículos, <b>A</b> y <b>B</b>. Cada uno pasa por tres departamentos, que tienen una cantidad limitada de horas disponibles. La tabla da las horas que necesita cada artículo en cada departamento y el beneficio por unidad.",
+      "¿Qué <b>plan de producción</b> maximiza el beneficio?"],
+    cabeza: ["", "Artículo A", "Artículo B", "Disponible (hs)"],
+    obj: { nombre: "Beneficio", letra: "Z", c: [4, 6], u: "$", porU: "$/u" },
+    rest: [
+      { nombre: "Depto. I", de: "en el", a: [2, 1], s: "≤", b: 180, u: "hs" },
+      { nombre: "Depto. II", de: "en el", a: [1, 2], s: "≤", b: 160, u: "hs" },
+      { nombre: "Depto. III", de: "en el", a: [1, 1], s: "≤", b: 100, u: "hs" },
+    ],
+    fuente: "Práctica V, ejercicio 18",
+  },
+  {
+    id: "dieta", tab: "Mezcla al mínimo costo", tipo: "min", x: "xA", y: "xB", queX: "unidades del producto A", queY: "unidades del producto B",
+    titulo: "Un alimento que cumpla los requerimientos al menor costo",
+    texto: ["Se quiere formular un alimento que tenga, <b>como mínimo</b>, 45 g de lípidos, 56 g de hidratos de carbono y 60 g de proteínas. Para eso se mezclan dos productos del mercado, <b>A</b> y <b>B</b>, cuya composición (en gramos por unidad) da la tabla. A cuesta $6 por unidad y B, $8.",
+      "¿Cuántas unidades de cada producto hay que mezclar para que el <b>costo sea mínimo</b>?"],
+    cabeza: ["", "Producto A", "Producto B", "Mínimo (g)"],
+    obj: { nombre: "Costo", letra: "C", c: [6, 8], u: "$", porU: "$/u" },
+    rest: [
+      { nombre: "Lípidos", a: [10, 5], s: "≥", b: 45, u: "g" },
+      { nombre: "Hidratos", a: [7, 7], s: "≥", b: 56, u: "g" },
+      { nombre: "Proteínas", a: [5, 15], s: "≥", b: 60, u: "g" },
+    ],
+    fuente: "Práctica V, ejercicio 15",
+  },
+];
+
+// ---------------------------------------------------------------- formato (coma decimal, fracciones chicas como en la guía)
+const fmt = (v, d = 2) => {
+  if (!isFinite(v)) return "∞";
+  const r = Math.round(v * 10 ** d) / 10 ** d;
+  return (Object.is(r, -0) ? 0 : r).toLocaleString("es-AR", { maximumFractionDigits: d });
+};
+function fraccion(v) {   // 0,2 → 1/5 · 0,7142… → 5/7 (si es una fracción con denominador chico)
+  if (Math.abs(v - Math.round(v)) < 1e-6) return null;
+  for (let d = 2; d <= 20; d++) { const n = Math.round(v * d); if (Math.abs(v - n / d) < 1e-6) return (n < 0 ? "−" : "") + Math.abs(n) + "/" + d; }
+  return null;
+}
+const conFraccion = (v, d = 3) => { const f = fraccion(v); return f ? `${f} ≈ ${fmt(v, d)}` : fmt(v, d); };
+const LARGO = { u: "unidad", hs: "hora", g: "gramo" };
+const coef = (c, v, primero) => (c === 1 ? "" : fmt(c)) + v;
+const lineaEc = (a, x, y) => `${coef(a[0], x)} + ${coef(a[1], y)}`;
+
+// ---------------------------------------------------------------- estado
+let P = PROBLEMAS[0], datos = null, k = 0, sens = false;
+const copia = p => ({ c: [...p.obj.c], b: p.rest.map(r => r.b) });
+
+// ---------------------------------------------------------------- resolver (método gráfico: los vértices de la región)
+const EPS = 1e-9;
+function factible(d, x, y) {
+  if (x < -1e-7 || y < -1e-7) return false;
+  return P.rest.every((r, i) => { const v = r.a[0] * x + r.a[1] * y, b = d.b[i]; return r.s === "≤" ? v <= b * (1 + 1e-9) + 1e-7 : v >= b * (1 - 1e-9) - 1e-7; });
+}
+// todas las rectas frontera: las restricciones como igualdad y los ejes
+function rectas(d) { return [...P.rest.map((r, i) => ({ a: r.a, b: d.b[i], i })), { a: [1, 0], b: 0, i: "x" }, { a: [0, 1], b: 0, i: "y" }]; }
+function vertices(d) {
+  const L = rectas(d), out = [];
+  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+    const [a1, b1] = L[i].a, [a2, b2] = L[j].a, det = a1 * b2 - a2 * b1;
+    if (Math.abs(det) < EPS) continue;
+    const x = (L[i].b * b2 - L[j].b * b1) / det, y = (a1 * L[j].b - a2 * L[i].b) / det;
+    if (factible(d, x, y) && !out.some(p => Math.hypot(p.x - x, p.y - y) < 1e-7)) out.push({ x: Math.abs(x) < 1e-9 ? 0 : x, y: Math.abs(y) < 1e-9 ? 0 : y });
+  }
+  return out;
+}
+const Z = (d, x, y) => d.c[0] * x + d.c[1] * y;
+function optimo(d) {
+  const V = vertices(d).map(p => ({ ...p, z: Z(d, p.x, p.y) }));
+  if (!V.length) return null;
+  const mejor = P.tipo === "max" ? Math.max(...V.map(p => p.z)) : Math.min(...V.map(p => p.z));
+  const tol = 1e-7 * Math.max(1, Math.abs(mejor)), opt = V.filter(p => Math.abs(p.z - mejor) <= tol);
+  return { V, z: mejor, opt };
+}
+// precio sombra: cuánto cambia el óptimo si el término independiente sube una unidad (lo medimos con un pasito)
+function sombras(d) {
+  const z0 = optimo(d).z;
+  return d.b.map((b, i) => { const h = 1e-4 * Math.max(1, Math.abs(b)), d2 = { c: d.c, b: d.b.map((x, j) => j === i ? x + h : x) }; return (optimo(d2).z - z0) / h; });
+}
+
+// ---------------------------------------------------------------- gráfico (SVG en píxeles reales: el texto no se achica en el celu)
+const svg = document.getElementById("graf"), NS = "http://www.w3.org/2000/svg";
+const el = (tag, at, padre = svg) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); padre.appendChild(n); return n; };
+let Wpx = 600, Hpx = 480, vista = null;
+const M = { izq: 50, der: 18, arr: 40, aba: 32 };
+const X = x => M.izq + (x - vista.x0) / (vista.x1 - vista.x0) * (Wpx - M.izq - M.der);
+const Y = y => Hpx - M.aba - (y - vista.y0) / (vista.y1 - vista.y0) * (Hpx - M.arr - M.aba);
+const invX = px => vista.x0 + (px - M.izq) / (Wpx - M.izq - M.der) * (vista.x1 - vista.x0);
+const invY = py => vista.y0 + (Hpx - M.aba - py) / (Hpx - M.arr - M.aba) * (vista.y1 - vista.y0);
+// paso "lindo" para las marcas de los ejes
+const pasoLindo = r => { const e = 10 ** Math.floor(Math.log10(r / 6)), m = r / 6 / e; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * e; };
+function calcularVista(d) {
+  // la escala sigue a la región (sus vértices) y deja un margen: así la región ocupa casi todo el gráfico
+  let mx = 0, my = 0;
+  const o = optimo(d); if (o) o.V.forEach(p => { mx = Math.max(mx, p.x); my = Math.max(my, p.y); });
+  if (!mx) mx = my || 1; if (!my) my = mx;
+  const f = 1.3;
+  const px = pasoLindo(mx * f), py = pasoLindo(my * f);
+  vista = { x0: 0, x1: Math.ceil(mx * f / px) * px, y0: 0, y1: Math.ceil(my * f / py) * py, px, py };
+}
+// recortar un semiplano a·p (≤|≥) b contra un polígono (Sutherland–Hodgman)
+function recortar(poli, a, b, s) {
+  const dentro = p => s === "≤" ? a[0] * p[0] + a[1] * p[1] <= b + 1e-9 : a[0] * p[0] + a[1] * p[1] >= b - 1e-9;
+  const corte = (p, q) => { const fp = a[0] * p[0] + a[1] * p[1] - b, fq = a[0] * q[0] + a[1] * q[1] - b, t = fp / (fp - fq); return [p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]; };
+  const out = [];
+  poli.forEach((p, i) => { const q = poli[(i + 1) % poli.length], ip = dentro(p), iq = dentro(q);
+    if (ip) out.push(p); if (ip !== iq) out.push(corte(p, q)); });
+  return out;
+}
+// el segmento de la recta c·p = k que queda dentro del rectángulo de la vista
+function segmentoRecta(a, b) {
+  const pts = [], { x0, x1, y0, y1 } = vista;
+  if (Math.abs(a[1]) > EPS) { [x0, x1].forEach(x => { const y = (b - a[0] * x) / a[1]; if (y >= y0 - 1e-9 && y <= y1 + 1e-9) pts.push([x, y]); }); }
+  if (Math.abs(a[0]) > EPS) { [y0, y1].forEach(y => { const x = (b - a[1] * y) / a[0]; if (x >= x0 - 1e-9 && x <= x1 + 1e-9) pts.push([x, y]); }); }
+  const u = []; pts.forEach(p => { if (!u.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-9)) u.push(p); });
+  return u.length >= 2 ? [u[0], u[u.length - 1]] : null;
+}
+// la parte de la recta de nivel que cae DENTRO de la región factible
+function tramoFactible(d, poli) {
+  if (poli.length < 2) return null;
+  const s = segmentoRecta(d.c, k); if (!s) return null;
+  // parametrizo la recta y me quedo con lo que está adentro del polígono convexo
+  let t0 = 0, t1 = 1; const [p, q] = s, dir = [q[0] - p[0], q[1] - p[1]];
+  const reg = P.rest.map((r, i) => ({ a: r.a, b: datos.b[i], s: r.s })).concat([{ a: [1, 0], b: 0, s: "≥" }, { a: [0, 1], b: 0, s: "≥" }]);
+  for (const r of reg) {
+    const f0 = r.a[0] * p[0] + r.a[1] * p[1] - r.b, fd = r.a[0] * dir[0] + r.a[1] * dir[1], sg = r.s === "≤" ? 1 : -1;
+    // condición: sg·(f0 + t·fd) ≤ 0
+    if (Math.abs(fd) < 1e-12) { if (sg * f0 > 1e-7) return null; continue; }
+    const t = -f0 / fd;
+    if (sg * fd > 0) t1 = Math.min(t1, t); else t0 = Math.max(t0, t);
+  }
+  if (t1 < t0 - 1e-9) return null;
+  return [[p[0] + t0 * dir[0], p[1] + t0 * dir[1]], [p[0] + t1 * dir[0], p[1] + t1 * dir[1]]];
+}
+function texto(s, x, y, o = {}) {
+  const t = el("text", { x, y, fill: o.color || "#AAB6CE", "font-size": o.tam || 12, "font-weight": o.peso || 500, "text-anchor": o.alin || "start",
+    "font-family": o.mono ? "JetBrains Mono, monospace" : "Inter, sans-serif", "dominant-baseline": "middle", ...(o.extra || {}) }, o.padre || svg);
+  t.textContent = s; return t;
+}
+function etiquetaConFondo(s, x, y, o = {}) {
+  const g = el("g", {}), t = texto(s, x, y, { ...o, padre: g }), w = s.length * (o.tam || 12) * (o.mono ? .62 : .56) + 10;
+  const x0 = o.alin === "middle" ? x - w / 2 : o.alin === "end" ? x - w : x - 5;
+  const r = el("rect", { x: x0, y: y - 10, width: w, height: 20, rx: 6, fill: "rgba(8,13,26,.88)" }, g); g.insertBefore(r, t);
+  return g;
+}
+
+function dibujar() {
+  const o = optimo(datos);
+  calcularVista(datos);
+  svg.innerHTML = "";
+  svg.setAttribute("viewBox", `0 0 ${Wpx} ${Hpx}`); svg.setAttribute("height", Hpx);
+  const defs = el("defs", {});
+  const f = el("filter", { id: "glow", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs); el("feGaussianBlur", { stdDeviation: 4 }, f);
+  // cuadrícula y ejes
+  const { x0, x1, y0, y1, px, py } = vista;
+  for (let x = 0; x <= x1 + 1e-9; x += px) {
+    el("line", { x1: X(x), y1: Y(y0), x2: X(x), y2: Y(y1), stroke: "#16233A", "stroke-width": 1 });
+    texto(fmt(x), X(x), Y(0) + 16, { alin: "middle", tam: 11, mono: true, color: "#7C93C7" });
+  }
+  for (let y = 0; y <= y1 + 1e-9; y += py) {
+    el("line", { x1: X(x0), y1: Y(y), x2: X(x1), y2: Y(y), stroke: "#16233A", "stroke-width": 1 });
+    if (y > 0) texto(fmt(y), X(0) - 8, Y(y), { alin: "end", tam: 11, mono: true, color: "#7C93C7" });
+  }
+  el("line", { x1: X(0), y1: Y(0), x2: X(x1), y2: Y(0), stroke: "#AAB6CE", "stroke-width": 1.6, opacity: .6 });
+  el("line", { x1: X(0), y1: Y(0), x2: X(0), y2: Y(y1), stroke: "#AAB6CE", "stroke-width": 1.6, opacity: .6 });
+  texto(P.x, X(x1) - 4, Y(0) - 12, { alin: "end", tam: 13, peso: 600, color: "#F8FAFC", extra: { "font-style": "italic" } });
+  texto(P.y, X(0) + 10, Y(y1) + 10, { tam: 13, peso: 600, color: "#F8FAFC", extra: { "font-style": "italic" } });
+
+  // región factible: el rectángulo de la vista recortado por cada restricción
+  let poli = [[0, 0], [x1, 0], [x1, y1], [0, y1]];
+  P.rest.forEach((r, i) => { poli = recortar(poli, r.a, datos.b[i], r.s); });
+  if (poli.length > 2) {
+    const d = poli.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("") + "Z";
+    el("path", { d, fill: "rgb(46 120 255 / .2)", stroke: "none" });
+    if (P.tipo === "min") texto("región no acotada ↗", X(x1) - 8, Y(y1) + 14, { alin: "end", tam: 11.5, color: "#7FB6FF" });
+  }
+  // restricciones: cada recta con su color y su nombre en el lugar de la recta más alejado de los vértices y de los otros nombres
+  const ocupados = (o ? o.V : []).map(p => [X(p.x), Y(p.y)]), rotulos = [];
+  P.rest.forEach((r, i) => {
+    const s = segmentoRecta(r.a, datos.b[i]); if (!s) return;
+    el("line", { x1: X(s[0][0]), y1: Y(s[0][1]), x2: X(s[1][0]), y2: Y(s[1][1]), stroke: COLORES[i], "stroke-width": 2.2, opacity: .9 });
+    const w = r.nombre.length * 6.6 + 10;
+    let mejor = null;
+    for (let fr = 0.08; fr <= 0.92; fr += 0.04) {
+      const lx = X(s[0][0] + (s[1][0] - s[0][0]) * fr) + 6, ly = Y(s[0][1] + (s[1][1] - s[0][1]) * fr) - 12;
+      if (lx < M.izq + 4 || lx + w > Wpx - 6 || ly < M.arr + 8 || ly > Hpx - M.aba - 10) continue;
+      const cx = lx + w / 2, dist = Math.min(...ocupados.map(([x, y]) => Math.hypot((x - cx) / 2.2, y - ly)), Infinity);   // los nombres son anchos: cuenta más lo vertical
+      if (!mejor || dist > mejor.dist) mejor = { lx, ly, dist };
+    }
+    if (mejor) { rotulos.push([mejor.lx, mejor.ly, r.nombre, i]); ocupados.push([mejor.lx + w / 2, mejor.ly]); }
+  });
+  // borde de la región
+  if (poli.length > 2) el("path", { d: poli.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("") + "Z", fill: "none", stroke: "#7FB6FF", "stroke-width": 1.4, opacity: .55 });
+
+  // recta de nivel Z = k (amarilla; verde cuando toca el óptimo)
+  const enOpt = o && Math.abs(k - o.z) <= tolK();
+  const col = enOpt ? "#34D399" : "#FFE14D";
+  const s = segmentoRecta(datos.c, k);
+  if (s) {
+    el("line", { x1: X(s[0][0]), y1: Y(s[0][1]), x2: X(s[1][0]), y2: Y(s[1][1]), stroke: col, "stroke-width": 2, "stroke-dasharray": "7 6", opacity: .9 });
+    const t = tramoFactible(datos, poli);
+    if (t) {
+      el("line", { x1: X(t[0][0]), y1: Y(t[0][1]), x2: X(t[1][0]), y2: Y(t[1][1]), stroke: col, "stroke-width": 9, opacity: .35, filter: "url(#glow)", "stroke-linecap": "round" });
+      el("line", { x1: X(t[0][0]), y1: Y(t[0][1]), x2: X(t[1][0]), y2: Y(t[1][1]), stroke: col, "stroke-width": 4, "stroke-linecap": "round" });
+    }
+    // flecha: hacia dónde crece Z (el vector de coeficientes)
+    const m = [(s[0][0] + s[1][0]) / 2, (s[0][1] + s[1][1]) / 2], g = [datos.c[0] / (x1 - x0) * (Wpx - M.izq - M.der), -datos.c[1] / (y1 - y0) * (Hpx - M.arr - M.aba)];
+    const n = Math.hypot(...g), L = 34, ex = X(m[0]) + g[0] / n * L, ey = Y(m[1]) + g[1] / n * L;
+    if (ex > M.izq && ex < Wpx - M.der && ey > M.arr && ey < Hpx - M.aba) {
+      el("line", { x1: X(m[0]), y1: Y(m[1]), x2: ex, y2: ey, stroke: col, "stroke-width": 2, opacity: .8 });
+      el("circle", { cx: ex, cy: ey, r: 3.5, fill: col });
+      texto(P.obj.letra + " crece", ex + 6, ey - 8, { tam: 11, color: col, peso: 600 });
+    }
+  }
+  // vértices; el óptimo resaltado
+  if (o) o.V.forEach(p => {
+    const esOpt = o.opt.some(q => q.x === p.x && q.y === p.y);
+    if (p.x > x1 + 1e-9 || p.y > y1 + 1e-9) return;
+    if (esOpt) el("circle", { cx: X(p.x), cy: Y(p.y), r: 13, fill: enOpt ? "#34D399" : "#FFE14D", opacity: .3, filter: "url(#glow)" });
+    el("circle", { cx: X(p.x), cy: Y(p.y), r: esOpt ? 6.5 : 4.5, fill: esOpt ? (enOpt ? "#34D399" : "#FFE14D") : "#7FB6FF", stroke: "#04060D", "stroke-width": 1.5 });
+    const der = X(p.x) < Wpx * .7;
+    etiquetaConFondo(`(${fmt(p.x)}; ${fmt(p.y)})`, X(p.x) + (der ? 10 : -10), Y(p.y) - 14, { tam: 11, mono: true, alin: der ? "start" : "end", color: esOpt && enOpt ? "#34D399" : "#EDEDED" });
+  });
+  rotulos.forEach(([x, y, s, i]) => etiquetaConFondo(s, x, y, { tam: 11.5, peso: 600, color: COLORES[i] }));
+  pintarEstado(o, enOpt);
+  pintarResultados(o);
+}
+
+// ---------------------------------------------------------------- la recta de nivel: slider, rango y estado
+const tolK = () => (kMax() - kMin()) * 0.006;
+const kMin = () => 0;
+const kMax = () => { const o = optimo(datos); return (o ? o.z : 1) * (P.tipo === "max" ? 1.5 : 2.2); };
+const ctrlK = document.getElementById("ctrl-k");
+let sliderK = null;
+function slider(caja, et, valor, min, max, paso, alCambiar, fmtV = fmt) {
+  caja.innerHTML = `<div class="fila"><span>${et}</span><b></b></div><div class="riel-fila"><input type="range"></div>`;
+  const inp = caja.querySelector("input"), out = caja.querySelector("b");
+  const api = {
+    poner(v, mn = min, mx = max, ps = paso) { min = mn; max = mx; paso = ps; inp.min = min; inp.max = max; inp.step = paso; inp.value = v; pintar(v); },
+    out,
+  };
+  const pintar = v => { out.textContent = fmtV(v); inp.style.setProperty("--p", ((v - min) / (max - min) * 100) + "%"); };
+  inp.setAttribute("aria-label", et.replace(/<[^>]+>/g, ""));
+  inp.addEventListener("input", () => { const v = +inp.value; pintar(v); alCambiar(v); });
+  api.poner(valor);
+  return api;
+}
+function ponerK(v) { k = Math.max(kMin(), Math.min(kMax(), v)); sliderK.poner(k, kMin(), kMax(), (kMax() - kMin()) / 1000); dibujar(); }
+function pintarEstado(o, enOpt) {
+  const est = document.getElementById("estado"), ec = document.getElementById("ec-k");
+  const fo = `${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y)}`;
+  ec.textContent = `${fo} = ${fmt(k)}`; ec.classList.toggle("ok", enOpt);
+  est.classList.toggle("ok", enOpt);
+  if (!o) { est.textContent = "No hay región factible."; return; }
+  const dondeOpt = o.opt.length > 1 ? "en todo un lado de la región (solución múltiple)" : `en (${fmt(o.opt[0].x)}; ${fmt(o.opt[0].y)})`;
+  if (enOpt) { est.innerHTML = `✓ ¡Estás en el óptimo! <b>${P.obj.letra} = ${fmt(o.z)}</b> ${dondeOpt}`; return; }
+  const max = P.tipo === "max", adentro = max ? k < o.z : k > o.z;
+  est.innerHTML = adentro
+    ? `${P.obj.letra} = <b>${fmt(k)}</b>: la recta corta la región, hay planes que dan eso. ${max ? "Subí k." : "Bajá k."}`
+    : `${P.obj.letra} = <b>${fmt(k)}</b>: ningún plan factible ${max ? "llega a" : "baja a"} ese valor. ${max ? "Bajá k." : "Subí k."}`;
+}
+
+// ---------------------------------------------------------------- enunciado, modelo y resultados
+function pintarEnunciado() {
+  const filas = P.rest.map((r, i) => `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${COLORES[i]};margin-right:7px"></i>${r.nombre}</td><td>${fmt(r.a[0])}</td><td>${fmt(r.a[1])}</td><td>${fmt(r.b)}</td></tr>`).join("");
+  document.getElementById("enunciado").innerHTML = `<div class="rot">Enunciado · ${P.titulo}</div>
+    ${P.texto.map(t => `<p>${t}</p>`).join("")}
+    <table class="tabla-datos"><tr>${P.cabeza.map(c => `<th>${c}</th>`).join("")}</tr>${filas}
+      <tr class="obj"><td>${P.obj.nombre} por unidad</td><td>$${fmt(P.obj.c[0])}</td><td>$${fmt(P.obj.c[1])}</td><td></td></tr></table>
+    <p class="fuente">Álgebra (71), ${P.fuente}.</p>`;
+}
+function pintarModelo() {
+  const orig = copia(P), cambio = (v, o) => Math.abs(v - o) > 1e-9 ? `<b class="cambio">${fmt(v)}</b>` : fmt(v);
+  const c = datos.c.map((v, i) => cambio(v, orig.c[i]));
+  document.getElementById("modelo").innerHTML = `
+    <div class="fo">${P.tipo === "max" ? "Maximizar" : "Minimizar"} ${P.obj.letra} = ${c[0]}${P.x} + ${c[1]}${P.y}</div>
+    <div class="sa">sujeto a</div>
+    ${P.rest.map((r, i) => `<div class="r"><i style="background:${COLORES[i]}"></i><span>${lineaEc(r.a, P.x, P.y)} ${r.s} ${cambio(datos.b[i], orig.b[i])}</span><span class="n">${r.nombre}</span></div>`).join("")}
+    <div class="r"><i style="background:transparent"></i><span>${P.x} ≥ 0 ; ${P.y} ≥ 0</span></div>
+    <div class="var">${P.x} = ${P.queX} · ${P.y} = ${P.queY}</div>`;
+}
+function pintarResultados(o) {
+  const txt = document.getElementById("optimo-txt"), res = document.getElementById("res"), lec = document.getElementById("lecturas"), ver = document.getElementById("vertices");
+  if (!o) { txt.textContent = "No hay región factible."; res.innerHTML = lec.innerHTML = ver.innerHTML = document.getElementById("resumen").innerHTML = ""; return; }
+  const p = o.opt[0], multiple = o.opt.length > 1;
+  txt.innerHTML = multiple
+    ? `Hay <b>solución múltiple</b>: todos los puntos del segmento entre (${fmt(o.opt[0].x)}; ${fmt(o.opt[0].y)}) y (${fmt(o.opt[1].x)}; ${fmt(o.opt[1].y)}) dan <b>${P.obj.letra} = ${fmt(o.z)}</b>. La recta de nivel quedó paralela a un lado de la región.`
+    : `El óptimo es <b>${P.x} = ${fmt(p.x)}</b>, <b>${P.y} = ${fmt(p.y)}</b> (${fmt(p.x)} ${P.queX} y ${fmt(p.y)} ${P.queY}), con <b>${P.obj.nombre.toLowerCase()} ${P.tipo === "max" ? "máximo" : "mínimo"} = $${fmt(o.z)}</b>.`;
+  const sp = sombras(datos), max = P.tipo === "max";
+  // resumen corto al lado del gráfico (se ve mientras cambiás los datos)
+  document.getElementById("resumen").innerHTML = (multiple
+    ? `<div class="opt">Solución múltiple: <b>${P.obj.letra} = $${fmt(o.z)}</b> en todo un lado de la región</div>`
+    : `<div class="opt">${P.x} = <b>${fmt(p.x)}</b> · ${P.y} = <b>${fmt(p.y)}</b> → ${P.obj.letra} = <b>$${fmt(o.z)}</b></div>`) +
+    P.rest.map((r, i) => {
+      const usado = r.a[0] * p.x + r.a[1] * p.y, h = max ? datos.b[i] - usado : usado - datos.b[i], sat = Math.abs(h) < 1e-6 * Math.max(1, datos.b[i]);
+      return `<div class="fila-r"><i style="background:${COLORES[i]}"></i><span>${r.nombre} <span class="pild ${sat ? "sat" : "lib"}">${sat ? (max ? "saturado" : "justo") : (max ? "sobra " : "excede ") + fmt(h) + " " + r.u}</span></span>
+        <span class="d">sombra <b>$${fraccion(Math.abs(sp[i])) || fmt(Math.abs(sp[i]), 3)}</b></span></div>`;
+    }).join("");
+  res.innerHTML = `<table><tr><th>${max ? "Recurso" : "Requerimiento"}</th><th>${max ? "se usa" : "se obtiene"}</th><th>${max ? "disponible" : "mínimo"}</th><th>estado</th><th>${max ? "sobra" : "excedente"}</th><th>precio sombra</th></tr>
+    ${P.rest.map((r, i) => {
+      const usado = r.a[0] * p.x + r.a[1] * p.y, h = max ? datos.b[i] - usado : usado - datos.b[i], sat = Math.abs(h) < 1e-6 * Math.max(1, datos.b[i]);
+      return `<tr><td><i style="background:${COLORES[i]}"></i>${r.nombre}</td><td>${fmt(usado)} ${r.u}</td><td>${fmt(datos.b[i])} ${r.u}</td>
+        <td><span class="pild ${sat ? "sat" : "lib"}">${sat ? (max ? "saturado" : "justo en el mínimo") : (max ? "no saturado" : "se pasa")}</span></td>
+        <td>${sat ? "0" : fmt(h)} ${r.u}</td><td class="sombra">$${conFraccion(Math.abs(sp[i]))} por ${r.u}</td></tr>`;
+    }).join("")}</table>`;
+  // qué significa cada precio sombra, en criollo
+  lec.innerHTML = P.rest.map((r, i) => {
+    const s = Math.abs(sp[i]);
+    if (s < 1e-9) return `<li><b>${r.nombre}:</b> precio sombra 0. ${max ? `Sobran ${fmt(datos.b[i] - (r.a[0] * p.x + r.a[1] * p.y))} ${r.u}: tener más no cambia el beneficio (y se podría disminuir esa cantidad sin perder nada).` : `El alimento ya se pasa del mínimo: exigir un poco más no cuesta nada.`}</li>`;
+    return max ? `<li><b>${r.nombre}:</b> está saturado. Cada ${LARGO[r.u]} más ${r.de || "de"} ${r.nombre} aumentaría el beneficio máximo en <b>$${conFraccion(s)}</b>: es lo máximo que convendría pagar por una unidad extra.</li>`
+      : `<li><b>${r.nombre}:</b> se cumple justo. Exigir 1 ${LARGO[r.u]} más aumentaría el costo mínimo en <b>$${conFraccion(s)}</b>.</li>`;
+  }).join("") + `<li style="color:var(--texto-tenue)">El precio sombra vale mientras el óptimo siga estando en la intersección de las mismas rectas. Probalo en el modo de sensibilidad.</li>`;
+  // el método: evaluar Z en cada vértice
+  // los vértices en orden, recorriendo el borde de la región (como en la guía: A, B, C…)
+  const cx = o.V.reduce((s, v) => s + v.x, 0) / o.V.length, cy = o.V.reduce((s, v) => s + v.y, 0) / o.V.length;
+  const ang = v => (Math.atan2(v.y - cy, v.x - cx) + 2 * Math.PI) % (2 * Math.PI);
+  const V = [...o.V].sort((a, b) => ang(a) - ang(b));   // sentido antihorario
+  const i0 = V.reduce((m, v, i) => v.x < V[m].x - 1e-9 || (Math.abs(v.x - V[m].x) < 1e-9 && v.y < V[m].y) ? i : m, 0);   // arranca en el de menor x
+  const Vo = V.map((_, j) => V[(i0 + j) % V.length]);
+  ver.innerHTML = `<table><tr><th>Evaluamos ${P.obj.letra} en cada vértice</th><th>${P.x}</th><th>${P.y}</th><th>${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y)}</th></tr>
+    ${Vo.map((v, j) => { const es = o.opt.some(q => q.x === v.x && q.y === v.y); return `<tr><td>${"ABCDEFGH"[j]}${es ? ` <span class="pild lib">★ ${P.tipo === "max" ? "máximo" : "mínimo"}</span>` : ""}</td><td>${fmt(v.x)}</td><td>${fmt(v.y)}</td><td class="${es ? "opt" : ""}">${fmt(v.z)}</td></tr>`; }).join("")}</table>`;
+}
+
+// ---------------------------------------------------------------- análisis de sensibilidad: un slider por coeficiente y por término independiente
+const sensEl = document.getElementById("sens");
+function pintarSens() {
+  const orig = copia(P);
+  sensEl.innerHTML = `<div class="grupo" id="g-precios"><div class="rot">${P.obj.nombre} por unidad (coeficientes de ${P.obj.letra})</div></div>
+    <div class="grupo" id="g-limites"><div class="rot">${P.tipo === "max" ? "Disponibilidades" : "Requerimientos mínimos"} (términos independientes)</div></div>
+    <div class="grupo"><button class="accion" id="restaurar">Volver a los datos del enunciado</button>
+      <p class="ayuda-sens">Fijate qué pasa con la región, el vértice óptimo y los precios sombra. Si un precio cambia mucho, la recta de nivel gira y el óptimo puede saltar a otro vértice.</p></div>`;
+  const nombres = [P.queX.replace("unidades del ", "").replace("unidades de ", ""), P.queY.replace("unidades del ", "").replace("unidades de ", "")];
+  datos.c.forEach((v, i) => {
+    const caja = document.createElement("div"); caja.className = "ctrl"; document.getElementById("g-precios").appendChild(caja);
+    const s = slider(caja, `${P.obj.nombre} de ${nombres[i]} (${P.obj.porU})`, v, orig.c[i] * 0.1, orig.c[i] * 3, orig.c[i] / 100, x => { datos.c[i] = x; marcar(s, x, orig.c[i]); actualizar(); }, x => "$" + fmt(x));
+    marcar(s, v, orig.c[i]);
+  });
+  datos.b.forEach((v, i) => {
+    const r = P.rest[i], caja = document.createElement("div"); caja.className = "ctrl"; document.getElementById("g-limites").appendChild(caja);
+    const s = slider(caja, `<i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${COLORES[i]};margin-right:6px"></i>${r.nombre} (${r.u})`, v, orig.b[i] * 0.3, orig.b[i] * 2, orig.b[i] / 200, x => { datos.b[i] = x; marcar(s, x, orig.b[i]); actualizar(); });
+    marcar(s, v, orig.b[i]);
+  });
+  document.getElementById("restaurar").onclick = () => { datos = copia(P); pintarSens(); actualizar(); };
+}
+const marcar = (s, v, o) => s.out.classList.toggle("cambio", Math.abs(v - o) > 1e-9);
+// cuando cambian los datos: si la recta estaba en el óptimo, la sigue
+function actualizar() {
+  pintarModelo();
+  const o = optimo(datos);
+  if (seguirOptimo && o) k = o.z;
+  ponerK(k);
+}
+let seguirOptimo = false;
+document.getElementById("modo-sens").onclick = e => {
+  sens = !sens; e.currentTarget.setAttribute("aria-checked", sens);
+  sensEl.classList.toggle("on", sens);
+  if (sens) pintarSens(); else { datos = copia(P); actualizar(); }
+};
+
+// ---------------------------------------------------------------- cambiar de problema
+function elegir(i) {
+  P = PROBLEMAS[i]; datos = copia(P); seguirOptimo = false;
+  document.querySelectorAll("#tabs button").forEach((b, j) => { b.classList.toggle("on", i === j); b.setAttribute("aria-selected", i === j); });
+  pintarEnunciado(); pintarModelo();
+  if (sens) pintarSens();
+  const o = optimo(datos);
+  k = Math.round(o.z * (P.tipo === "max" ? 0.45 : 1.6));   // arranca lejos del óptimo: hay que buscarlo
+  ponerK(k);
+}
+document.getElementById("tabs").innerHTML = PROBLEMAS.map((p, i) => `<button role="tab" data-i="${i}"><b>${i + 1}</b>${p.tab}</button>`).join("");
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => elegir(+b.dataset.i));
+sliderK = slider(ctrlK, "valor de k", 0, 0, 1, 0.01, v => { k = v; seguirOptimo = Math.abs(k - (optimo(datos)?.z ?? -1)) <= tolK(); dibujar(); });
+document.getElementById("al-optimo").onclick = () => {
+  const o = optimo(datos); if (!o) return;
+  const ini = k, t0 = performance.now();
+  (function paso() {
+    const t = Math.min(1, (performance.now() - t0) / 600), e = t * t * (3 - 2 * t);
+    k = ini + (o.z - ini) * e; sliderK.poner(k, kMin(), kMax(), (kMax() - kMin()) / 1000); dibujar();
+    if (t < 1) requestAnimationFrame(paso); else seguirOptimo = true;
+  })();
+};
+
+// ---------------------------------------------------------------- arrastrar la recta de nivel sobre el gráfico
+let arrastrando = false;
+const posSvg = e => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) * Wpx / r.width, (e.clientY - r.top) * Hpx / r.height]; };
+function cercaDeLaRecta(px, py, tactil) {
+  const s = segmentoRecta(datos.c, k); if (!s) return false;
+  const a = [X(s[0][0]), Y(s[0][1])], b = [X(s[1][0]), Y(s[1][1])], d = [b[0] - a[0], b[1] - a[1]];
+  const t = Math.max(0, Math.min(1, ((px - a[0]) * d[0] + (py - a[1]) * d[1]) / (d[0] ** 2 + d[1] ** 2)));
+  return Math.hypot(px - a[0] - t * d[0], py - a[1] - t * d[1]) < (tactil ? 30 : 16);
+}
+svg.addEventListener("pointerdown", e => {
+  const [px, py] = posSvg(e);
+  if (!cercaDeLaRecta(px, py, e.pointerType !== "mouse")) return;
+  arrastrando = true; svg.setPointerCapture(e.pointerId); e.preventDefault();
+});
+svg.addEventListener("pointermove", e => {
+  const [px, py] = posSvg(e);
+  if (!arrastrando) { svg.style.cursor = e.pointerType === "mouse" && cercaDeLaRecta(px, py, false) ? "grab" : ""; return; }
+  svg.style.cursor = "grabbing";
+  const v = datos.c[0] * invX(px) + datos.c[1] * invY(py);
+  const o = optimo(datos);
+  // un "imán" suave en el óptimo: si pasás cerca, se queda justo ahí
+  k = o && Math.abs(v - o.z) <= tolK() * 1.5 ? o.z : v;
+  seguirOptimo = o && k === o.z;
+  ponerK(k);
+});
+["pointerup", "pointercancel"].forEach(ev => svg.addEventListener(ev, () => { arrastrando = false; svg.style.cursor = ""; }));
+svg.addEventListener("touchstart", e => { const t = e.touches[0]; if (e.touches.length === 1 && cercaDeLaRecta(...posSvg(t), true)) e.preventDefault(); }, { passive: false });
+
+// ---------------------------------------------------------------- tamaño del gráfico (en píxeles reales)
+const caja = svg.parentElement;
+let anchoAnterior = 0;
+function medir() {
+  const w = caja.clientWidth; if (!w || w === anchoAnterior) return;
+  anchoAnterior = w; Wpx = w;
+  // en la compu el gráfico entra entero en la pantalla (está fijo mientras bajás); en el celu ocupa menos de la mitad, para ver los controles abajo
+  const angosto = innerWidth < 900;
+  Hpx = Math.round(angosto ? Math.min(w * 0.95, Math.max(300, innerHeight * 0.46)) : Math.min(w * 0.8, Math.max(380, innerHeight - 64)));
+  dibujar();
+}
+new ResizeObserver(medir).observe(caja);
+
+// embebido en la ficha del sitio: avisa su alto (en el celu el marco crece) y cuándo lo están usando
+if (parent !== window) {
+  const avisar = d => parent.postMessage({ profee: d.tipo, ...d }, "*");
+  new ResizeObserver(() => avisar({ tipo: "alto", alto: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+  addEventListener("pointerdown", e => avisar({ tipo: "en-uso", puntero: e.pointerType }), { capture: true, passive: true });
+}
+elegir(0);
+medir();
+</script>
+</body>
+</html>

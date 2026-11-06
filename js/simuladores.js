@@ -64,6 +64,8 @@ const SIMULADORES = [
     desc: "Cada ecuación es una recta: una solución si se cortan, ninguna si son paralelas, infinitas si son la misma. El determinante decide." },
   { id: "diagramas-de-lewis", fecha: "2026-10-30", tema: "Química", titulo: "Diagramas de Lewis",
     desc: "Juntás átomos, movés sus electrones y armás enlaces simples, dobles, triples o iónicos. Te dice al instante si cada átomo completó su octeto." },
+  { id: "programacion-lineal", fecha: "2026-11-06", tema: "Programación lineal", titulo: "Programación lineal: método gráfico",
+    desc: "Tres problemas con productos e insumos: la región factible, la recta Z = k que movés hasta el óptimo y el análisis de sensibilidad, con recursos saturados y precios sombra." },
 ];
 
 function tarjeta(s, { hover = false, sinPortada = false } = {}) {
