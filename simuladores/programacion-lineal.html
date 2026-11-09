@@ -11,7 +11,7 @@
      análisis de sensibilidad y, en el óptimo, qué recursos se saturan, cuánto sobra y su precio sombra. */
   html, body { height: auto; min-height: 100%; }
   body { background: var(--fondo); }
-  .pl { margin: 0 auto; padding: 18px 20px 40px; display: grid; gap: 14px; }
+  .pl { margin: 0 auto; padding: 18px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .cab-pl { display: flex; align-items: center; justify-content: space-between; gap: 10px 18px; flex-wrap: wrap; }
   .cab-pl h1 { margin: 0; font: 800 22px/1.15 Inter, sans-serif; }
   .cab-pl h1 small { display: block; margin-top: 4px; font: 500 13px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
@@ -41,6 +41,33 @@
   .tabla-datos tr.obj td { color: var(--amarillo); }
   .tabla-datos tr.obj td:first-child { color: var(--amarillo); }
   .fuente { margin: 10px 0 0; font-size: 12px; color: var(--texto-tenue); }
+  /* editor del problema libre */
+  .ed-bloque { display: grid; gap: 10px; margin-bottom: 16px; }
+  .ed-tit { font: 600 13px/1.2 Inter, sans-serif; color: var(--texto-suave); }
+  .ed-tit span { color: var(--texto-tenue); font-weight: 500; }
+  .ed-ec { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font: 500 15px/1 "JetBrains Mono", monospace; color: var(--texto); }
+  .ed-n { width: 50px; padding: 8px 4px; border-radius: 9px; border: 0; background: var(--fondo); color: var(--texto); font: 600 15px/1 "JetBrains Mono", monospace; text-align: center;
+    box-shadow: inset 0 0 0 1px var(--linea); -moz-appearance: textfield; }
+  .ed-n.ancho { width: 62px; }
+  .ed-n:focus, .ed-nom:focus, .ed-s:focus { outline: 0; box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 0 3px rgb(46 120 255 / .2); }
+  .ed-n.mal { box-shadow: inset 0 0 0 1.5px #FF7A7A; color: #FFB3B3; }
+  .ed-s { padding: 8px 3px; border-radius: 9px; border: 0; background: var(--fondo); color: var(--amarillo); font: 700 15px/1 "JetBrains Mono", monospace; box-shadow: inset 0 0 0 1px var(--linea); cursor: pointer; }
+  .ed-r { display: grid; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--fondo-alt); box-shadow: inset 3px 0 0 var(--c), inset 0 0 0 1px var(--linea); }
+  .ed-cab { display: flex; align-items: center; gap: 8px; }
+  .ed-cab i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+  .ed-nom { flex: 1; min-width: 0; padding: 4px 6px; border-radius: 7px; border: 0; background: transparent; color: var(--texto); font: 600 13.5px/1.2 Inter, sans-serif; }
+  .ed-nom:hover { box-shadow: inset 0 0 0 1px var(--linea); }
+  .ed-x { all: unset; cursor: pointer; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--texto-tenue); }
+  .ed-x:hover { color: #FF9A9A; background: rgb(255 122 122 / .1); }
+  .seg-ed { gap: 2px !important; padding: 3px; border-radius: 999px; background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); justify-self: start; }
+  .seg-ed button { background: transparent !important; box-shadow: none !important; }
+  .seg-ed button.on { background: var(--neon-core) !important; color: var(--fondo) !important; }
+  .ed-nn { font: 600 14px/1.4 "JetBrains Mono", monospace; color: var(--texto); padding: 10px 12px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--linea); margin-bottom: 14px; }
+  .ed-nn span { font: 500 12.5px/1.4 Inter, sans-serif; color: var(--texto-tenue); margin-left: 8px; }
+  .ed-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .ed-ayuda { font-size: 12px; color: var(--texto-tenue); }
+  .accion:disabled { opacity: .35; cursor: default; }
+  @media (pointer: coarse) { .ed-n, .ed-s { min-height: 44px; font-size: 16px; } .ed-x { width: 44px; height: 44px; } .ed-nom { font-size: 16px; } }
 
   .modelo { font: 500 15px/1.75 "JetBrains Mono", monospace; color: var(--texto); }
   .modelo .fo { color: var(--amarillo); font-weight: 600; }
@@ -123,7 +150,7 @@
     .pl { padding: 10px 12px 32px; gap: 10px; }
     .cab-pl h1 { font-size: 19px; }
     .cab-pl h1 small { font-size: 12px; }
-    .tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -12px; padding: 0 12px 4px; scrollbar-width: none; }
+    .tabs { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; margin: 0 -12px; padding: 0 12px 4px; scrollbar-width: none; }   /* se desliza, no estira la página */
     .tabs::-webkit-scrollbar { display: none; }
     .tabs button { flex: none; }
     .tarj { padding: 14px; }
@@ -181,7 +208,7 @@
 
 <script>
 // ---------------------------------------------------------------- los tres problemas (Álgebra 71, Práctica V: ejercicios 10, 18 y 15)
-const COLORES = ["#4FC3E8", "#FF8A8A", "#B08CFF"];
+const COLORES = ["#4FC3E8", "#FF8A8A", "#B08CFF", "#FFB454", "#B4F07A"];
 const PROBLEMAS = [
   {
     id: "insumos", tab: "Insumos", tipo: "max", x: "x", y: "y", queX: "unidades de P1", queY: "unidades de P2",
@@ -189,7 +216,7 @@ const PROBLEMAS = [
     texto: ["Para fabricar dos productos, <b>P1</b> y <b>P2</b>, una fábrica usa tres insumos. La tabla indica cuántas unidades de cada insumo lleva una unidad de cada producto, cuánto hay disponible de cada insumo y el beneficio que deja cada producto.",
       "¿Cuánto conviene fabricar de cada producto para que el <b>beneficio sea máximo</b>?"],
     cabeza: ["", "P1", "P2", "Disponible"],
-    obj: { nombre: "Beneficio", letra: "B", c: [2, 3], u: "$", porU: "$/u" },
+    obj: { nombre: "Beneficio", letra: "B", c: [2, 3], u: "$", porU: "$/u", optNombre: "beneficio máximo", frase: "el beneficio máximo" },
     rest: [
       { nombre: "Insumo 1", a: [5, 10], s: "≤", b: 80, u: "u" },
       { nombre: "Insumo 2", a: [40, 20], s: "≤", b: 360, u: "u" },
@@ -203,7 +230,7 @@ const PROBLEMAS = [
     texto: ["Una empresa fabrica dos artículos, <b>A</b> y <b>B</b>. Cada uno pasa por tres departamentos, que tienen una cantidad limitada de horas disponibles. La tabla da las horas que necesita cada artículo en cada departamento y el beneficio por unidad.",
       "¿Qué <b>plan de producción</b> maximiza el beneficio?"],
     cabeza: ["", "Artículo A", "Artículo B", "Disponible (hs)"],
-    obj: { nombre: "Beneficio", letra: "Z", c: [4, 6], u: "$", porU: "$/u" },
+    obj: { nombre: "Beneficio", letra: "Z", c: [4, 6], u: "$", porU: "$/u", optNombre: "beneficio máximo", frase: "el beneficio máximo" },
     rest: [
       { nombre: "Depto. I", de: "en el", a: [2, 1], s: "≤", b: 180, u: "hs" },
       { nombre: "Depto. II", de: "en el", a: [1, 2], s: "≤", b: 160, u: "hs" },
@@ -217,7 +244,7 @@ const PROBLEMAS = [
     texto: ["Se quiere formular un alimento que tenga, <b>como mínimo</b>, 45 g de lípidos, 56 g de hidratos de carbono y 60 g de proteínas. Para eso se mezclan dos productos del mercado, <b>A</b> y <b>B</b>, cuya composición (en gramos por unidad) da la tabla. A cuesta $6 por unidad y B, $8.",
       "¿Cuántas unidades de cada producto hay que mezclar para que el <b>costo sea mínimo</b>?"],
     cabeza: ["", "Producto A", "Producto B", "Mínimo (g)"],
-    obj: { nombre: "Costo", letra: "C", c: [6, 8], u: "$", porU: "$/u" },
+    obj: { nombre: "Costo", letra: "C", c: [6, 8], u: "$", porU: "$/u", optNombre: "costo mínimo", frase: "el costo mínimo" },
     rest: [
       { nombre: "Lípidos", a: [10, 5], s: "≥", b: 45, u: "g" },
       { nombre: "Hidratos", a: [7, 7], s: "≥", b: 56, u: "g" },
@@ -226,6 +253,22 @@ const PROBLEMAS = [
     fuente: "Práctica V, ejercicio 15",
   },
 ];
+
+// el problema libre: sin enunciado, se arma con el editor (hasta 5 restricciones; x ≥ 0 e y ≥ 0 siempre)
+const MAX_REST = 5;
+const EJEMPLO_LIBRE = () => ({ tipo: "max", c: [3, 2], rest: [
+  { nombre: "Recurso 1", a: [1, 1], s: "≤", b: 4 },
+  { nombre: "Recurso 2", a: [1, 3], s: "≤", b: 9 },
+  { nombre: "Recurso 3", a: [1, 0], s: "≤", b: 3 },
+] });
+let ed = EJEMPLO_LIBRE();   // lo que hay escrito en el editor
+const LIBRE = { id: "libre", tab: "✎ Armá tu problema", libre: true, x: "x", y: "y", queX: "x", queY: "y" };
+function armarLibre() {
+  Object.assign(LIBRE, { tipo: ed.tipo, obj: { nombre: "Z", letra: "Z", c: [...ed.c], u: "", porU: "" }, rest: ed.rest.map(r => ({ ...r, a: [...r.a], u: "" })) });
+  return LIBRE;
+}
+const optNombre = () => P.libre ? `${P.obj.letra} ${P.tipo === "max" ? "máximo" : "mínimo"}` : P.obj.optNombre;
+const frase = () => P.libre ? `el ${P.tipo === "max" ? "máximo" : "mínimo"} de ${P.obj.letra}` : P.obj.frase;
 
 // ---------------------------------------------------------------- formato (coma decimal, fracciones chicas como en la guía)
 const fmt = (v, d = 2) => {
@@ -240,8 +283,17 @@ function fraccion(v) {   // 0,2 → 1/5 · 0,7142… → 5/7 (si es una fracció
 }
 const conFraccion = (v, d = 3) => { const f = fraccion(v); return f ? `${f} ≈ ${fmt(v, d)}` : fmt(v, d); };
 const LARGO = { u: "unidad", hs: "hora", g: "gramo" };
-const coef = (c, v, primero) => (c === 1 ? "" : fmt(c)) + v;
-const lineaEc = (a, x, y) => `${coef(a[0], x)} + ${coef(a[1], y)}`;
+// "3x − 2y", "y", "−x + 4y": sin "+ −", sin coeficientes 1 ni términos con 0.
+// marca(i) dice si el coeficiente i cambió (se pinta en celeste, y se muestra aunque valga 0 o 1)
+function lineaEc(a, x, y, marca = () => false) {
+  let s = "";
+  [[a[0], x, marca(0)], [a[1], y, marca(1)]].forEach(([c, v, ch]) => {
+    if (Math.abs(c) < 1e-12 && !ch) return;
+    const m = ch ? `<b class="cambio">${fmt(Math.abs(c))}</b>` : Math.abs(c) === 1 ? "" : fmt(Math.abs(c));
+    s += (c < 0 ? (s ? " − " : "−") : (s ? " + " : "")) + m + v;
+  });
+  return s || "0";
+}
 
 // ---------------------------------------------------------------- estado
 let P = PROBLEMAS[0], datos = null, k = 0, sens = false;
@@ -266,9 +318,22 @@ function vertices(d) {
   return out;
 }
 const Z = (d, x, y) => d.c[0] * x + d.c[1] * y;
+// direcciones en las que la región sigue para siempre (en el plano alcanza con probar los ejes y la dirección de cada recta)
+function rayos() {
+  const cand = [[1, 0], [0, 1]];
+  P.rest.forEach(r => cand.push([r.a[1], -r.a[0]], [-r.a[1], r.a[0]]));
+  return cand.filter(([u, v]) => {
+    const n = Math.hypot(u, v); if (n < 1e-12 || u < -1e-12 * n || v < -1e-12 * n) return false;
+    return P.rest.every(r => { const s = (r.a[0] * u + r.a[1] * v) / n, tol = 1e-9 * Math.hypot(...r.a); return r.s === "≤" ? s <= tol : s >= -tol; });
+  });
+}
+const regionNoAcotada = () => rayos().length > 0;
 function optimo(d) {
   const V = vertices(d).map(p => ({ ...p, z: Z(d, p.x, p.y) }));
-  if (!V.length) return null;
+  if (!V.length) return null;   // región vacía
+  // si la región sigue para siempre en una dirección en la que Z mejora, no hay óptimo
+  const mejora = rayos().some(([u, v]) => { const g = (d.c[0] * u + d.c[1] * v) / Math.hypot(u, v); return P.tipo === "max" ? g > 1e-9 : g < -1e-9; });
+  if (mejora) return { V, z: NaN, opt: [], ilimitado: true };
   const mejor = P.tipo === "max" ? Math.max(...V.map(p => p.z)) : Math.min(...V.map(p => p.z));
   const tol = 1e-7 * Math.max(1, Math.abs(mejor)), opt = V.filter(p => Math.abs(p.z - mejor) <= tol);
   return { V, z: mejor, opt };
@@ -276,7 +341,8 @@ function optimo(d) {
 // precio sombra: cuánto cambia el óptimo si el término independiente sube una unidad (lo medimos con un pasito)
 function sombras(d) {
   const z0 = optimo(d).z;
-  return d.b.map((b, i) => { const h = 1e-4 * Math.max(1, Math.abs(b)), d2 = { c: d.c, b: d.b.map((x, j) => j === i ? x + h : x) }; return (optimo(d2).z - z0) / h; });
+  return d.b.map((b, i) => { const h = 1e-4 * Math.max(1, Math.abs(b)), d2 = { c: d.c, b: d.b.map((x, j) => j === i ? x + h : x) }, o2 = optimo(d2);
+    return o2 && !o2.ilimitado ? (o2.z - z0) / h : NaN; });
 }
 
 // ---------------------------------------------------------------- gráfico (SVG en píxeles reales: el texto no se achica en el celu)
@@ -294,8 +360,9 @@ function calcularVista(d) {
   // la escala sigue a la región (sus vértices) y deja un margen: así la región ocupa casi todo el gráfico
   let mx = 0, my = 0;
   const o = optimo(d); if (o) o.V.forEach(p => { mx = Math.max(mx, p.x); my = Math.max(my, p.y); });
-  if (!mx) mx = my || 1; if (!my) my = mx;
-  const f = 1.3;
+  else P.rest.forEach((r, i) => { if (r.a[0] > 0 && d.b[i] > 0) mx = Math.max(mx, d.b[i] / r.a[0]); if (r.a[1] > 0 && d.b[i] > 0) my = Math.max(my, d.b[i] / r.a[1]); });
+  if (!mx) mx = my || 8; if (!my) my = mx;
+  const f = o && o.ilimitado ? 2.2 : 1.3;   // si no hay óptimo, se abre más: que se vea que la región sigue
   const px = pasoLindo(mx * f), py = pasoLindo(my * f);
   vista = { x0: 0, x1: Math.ceil(mx * f / px) * px, y0: 0, y1: Math.ceil(my * f / py) * py, px, py };
 }
@@ -373,7 +440,7 @@ function dibujar() {
   if (poli.length > 2) {
     const d = poli.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("") + "Z";
     el("path", { d, fill: "rgb(46 120 255 / .2)", stroke: "none" });
-    if (P.tipo === "min") texto("región no acotada ↗", X(x1) - 8, Y(y1) + 14, { alin: "end", tam: 11.5, color: "#7FB6FF" });
+    if (regionNoAcotada()) texto("región no acotada ↗", X(x1) - 8, Y(y1) + 14, { alin: "end", tam: 11.5, color: "#7FB6FF" });
   }
   // restricciones: cada recta con su color y su nombre en el lugar de la recta más alejado de los vértices y de los otros nombres
   const ocupados = (o ? o.V : []).map(p => [X(p.x), Y(p.y)]), rotulos = [];
@@ -429,8 +496,9 @@ function dibujar() {
 
 // ---------------------------------------------------------------- la recta de nivel: slider, rango y estado
 const tolK = () => (kMax() - kMin()) * 0.006;
-const kMin = () => 0;
-const kMax = () => { const o = optimo(datos); return (o ? o.z : 1) * (P.tipo === "max" ? 1.5 : 2.2); };
+const esquinas = () => { calcularVista(datos); const { x1, y1 } = vista; return [[0, 0], [x1, 0], [0, y1], [x1, y1]].map(([x, y]) => Z(datos, x, y)); };
+const kMin = () => Math.min(...esquinas());
+const kMax = () => { const e = esquinas(), a = Math.min(...e), b = Math.max(...e); return b > a ? b : a + 1; };
 const ctrlK = document.getElementById("ctrl-k");
 let sliderK = null;
 function slider(caja, et, valor, min, max, paso, alCambiar, fmtV = fmt) {
@@ -446,13 +514,15 @@ function slider(caja, et, valor, min, max, paso, alCambiar, fmtV = fmt) {
   api.poner(valor);
   return api;
 }
-function ponerK(v) { k = Math.max(kMin(), Math.min(kMax(), v)); sliderK.poner(k, kMin(), kMax(), (kMax() - kMin()) / 1000); dibujar(); }
+function ponerK(v) { const a = kMin(), b = kMax(); k = Math.max(a, Math.min(b, v)); sliderK.poner(k, a, b, (b - a) / 1000); dibujar(); }
 function pintarEstado(o, enOpt) {
   const est = document.getElementById("estado"), ec = document.getElementById("ec-k");
   const fo = `${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y)}`;
   ec.textContent = `${fo} = ${fmt(k)}`; ec.classList.toggle("ok", enOpt);
   est.classList.toggle("ok", enOpt);
-  if (!o) { est.textContent = "No hay región factible."; return; }
+  document.getElementById("al-optimo").disabled = !o || !!o.ilimitado;
+  if (!o) { est.innerHTML = "No hay región factible: las restricciones se contradicen."; return; }
+  if (o.ilimitado) { est.innerHTML = `${P.obj.letra} = <b>${fmt(k)}</b>. La región no está acotada y ${P.obj.letra} ${P.tipo === "max" ? "crece" : "baja"} sin límite: <b>no hay ${P.tipo === "max" ? "máximo" : "mínimo"}</b>.`; return; }
   const dondeOpt = o.opt.length > 1 ? "en todo un lado de la región (solución múltiple)" : `en (${fmt(o.opt[0].x)}; ${fmt(o.opt[0].y)})`;
   if (enOpt) { est.innerHTML = `✓ ¡Estás en el óptimo! <b>${P.obj.letra} = ${fmt(o.z)}</b> ${dondeOpt}`; return; }
   const max = P.tipo === "max", adentro = max ? k < o.z : k > o.z;
@@ -472,77 +542,100 @@ function pintarEnunciado() {
 }
 function pintarModelo() {
   const orig = copia(P), cambio = (v, o) => Math.abs(v - o) > 1e-9 ? `<b class="cambio">${fmt(v)}</b>` : fmt(v);
-  const c = datos.c.map((v, i) => cambio(v, orig.c[i]));
   document.getElementById("modelo").innerHTML = `
-    <div class="fo">${P.tipo === "max" ? "Maximizar" : "Minimizar"} ${P.obj.letra} = ${c[0]}${P.x} + ${c[1]}${P.y}</div>
+    <div class="fo">${P.tipo === "max" ? "Maximizar" : "Minimizar"} ${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y, i => Math.abs(datos.c[i] - orig.c[i]) > 1e-9)}</div>
     <div class="sa">sujeto a</div>
     ${P.rest.map((r, i) => `<div class="r"><i style="background:${COLORES[i]}"></i><span>${lineaEc(r.a, P.x, P.y)} ${r.s} ${cambio(datos.b[i], orig.b[i])}</span><span class="n">${r.nombre}</span></div>`).join("")}
     <div class="r"><i style="background:transparent"></i><span>${P.x} ≥ 0 ; ${P.y} ≥ 0</span></div>
-    <div class="var">${P.x} = ${P.queX} · ${P.y} = ${P.queY}</div>`;
+    ${P.libre ? `<div class="var">${P.x} ≥ 0 e ${P.y} ≥ 0 siempre: la no negatividad no se puede sacar.</div>` : `<div class="var">${P.x} = ${P.queX} · ${P.y} = ${P.queY}</div>`}`;
 }
 function pintarResultados(o) {
-  const txt = document.getElementById("optimo-txt"), res = document.getElementById("res"), lec = document.getElementById("lecturas"), ver = document.getElementById("vertices");
-  if (!o) { txt.textContent = "No hay región factible."; res.innerHTML = lec.innerHTML = ver.innerHTML = document.getElementById("resumen").innerHTML = ""; return; }
-  const p = o.opt[0], multiple = o.opt.length > 1;
+  const txt = document.getElementById("optimo-txt"), res = document.getElementById("res"), lec = document.getElementById("lecturas"), ver = document.getElementById("vertices"), resumen = document.getElementById("resumen");
+  const nada = () => { res.innerHTML = lec.innerHTML = ""; };
+  if (!o) {
+    txt.innerHTML = `<b style="color:#FF9A9A">No hay región factible</b>: ningún punto con ${P.x} ≥ 0 e ${P.y} ≥ 0 cumple todas las restricciones a la vez.`;
+    nada(); ver.innerHTML = ""; resumen.innerHTML = `<div class="opt">No hay región factible.</div>`; return;
+  }
+  pintarVertices(o);
+  const mm = P.tipo === "max" ? "máximo" : "mínimo";
+  if (o.ilimitado) {
+    txt.innerHTML = `La región no está acotada y ${P.obj.letra} ${P.tipo === "max" ? "crece" : "baja"} sin límite dentro de ella: <b style="color:#FF9A9A">el problema no tiene ${mm}</b>. Agregá una restricción que la cierre en esa dirección.`;
+    nada(); resumen.innerHTML = `<div class="opt">No hay ${mm}: ${P.obj.letra} ${P.tipo === "max" ? "crece" : "baja"} sin límite.</div>`; return;
+  }
+  const p = o.opt[0], multiple = o.opt.length > 1, U = P.obj.u;
   txt.innerHTML = multiple
-    ? `Hay <b>solución múltiple</b>: todos los puntos del segmento entre (${fmt(o.opt[0].x)}; ${fmt(o.opt[0].y)}) y (${fmt(o.opt[1].x)}; ${fmt(o.opt[1].y)}) dan <b>${P.obj.letra} = ${fmt(o.z)}</b>. La recta de nivel quedó paralela a un lado de la región.`
-    : `El óptimo es <b>${P.x} = ${fmt(p.x)}</b>, <b>${P.y} = ${fmt(p.y)}</b> (${fmt(p.x)} ${P.queX} y ${fmt(p.y)} ${P.queY}), con <b>${P.obj.nombre.toLowerCase()} ${P.tipo === "max" ? "máximo" : "mínimo"} = $${fmt(o.z)}</b>.`;
-  const sp = sombras(datos), max = P.tipo === "max";
+    ? `Hay <b>solución múltiple</b>: todos los puntos del segmento entre (${fmt(o.opt[0].x)}; ${fmt(o.opt[0].y)}) y (${fmt(o.opt[1].x)}; ${fmt(o.opt[1].y)}) dan <b>${P.obj.letra} = ${U}${fmt(o.z)}</b>. La recta de nivel quedó paralela a un lado de la región.`
+    : `El óptimo es <b>${P.x} = ${fmt(p.x)}</b>, <b>${P.y} = ${fmt(p.y)}</b>${P.libre ? "" : ` (${fmt(p.x)} ${P.queX} y ${fmt(p.y)} ${P.queY})`}, con <b>${optNombre()} = ${U}${fmt(o.z)}</b>.`;
+  const sp = sombras(datos), conU = (v, r) => fmt(v) + (r.u ? " " + r.u : "");
+  const filas = P.rest.map((r, i) => {
+    const v = r.a[0] * p.x + r.a[1] * p.y, h = r.s === "≤" ? datos.b[i] - v : v - datos.b[i];
+    return { r, i, v, h, sat: Math.abs(h) < 1e-6 * Math.max(1, Math.abs(datos.b[i])), sp: sp[i] };
+  });
+  // precio sombra con signo: en un ≥ de un problema de máximo, pedir más ACHICA la región y el óptimo baja
+  const spCorto = f => isNaN(f.sp) ? "–" : (f.sp < -1e-12 ? "−" : "") + U + (fraccion(Math.abs(f.sp)) || fmt(Math.abs(f.sp), 3));
+  const spLargo = f => isNaN(f.sp) ? "–" : (f.sp < -1e-12 ? "−" : "") + U + conFraccion(Math.abs(f.sp));
   // resumen corto al lado del gráfico (se ve mientras cambiás los datos)
-  document.getElementById("resumen").innerHTML = (multiple
-    ? `<div class="opt">Solución múltiple: <b>${P.obj.letra} = $${fmt(o.z)}</b> en todo un lado de la región</div>`
-    : `<div class="opt">${P.x} = <b>${fmt(p.x)}</b> · ${P.y} = <b>${fmt(p.y)}</b> → ${P.obj.letra} = <b>$${fmt(o.z)}</b></div>`) +
-    P.rest.map((r, i) => {
-      const usado = r.a[0] * p.x + r.a[1] * p.y, h = max ? datos.b[i] - usado : usado - datos.b[i], sat = Math.abs(h) < 1e-6 * Math.max(1, datos.b[i]);
-      return `<div class="fila-r"><i style="background:${COLORES[i]}"></i><span>${r.nombre} <span class="pild ${sat ? "sat" : "lib"}">${sat ? (max ? "saturado" : "justo") : (max ? "sobra " : "excede ") + fmt(h) + " " + r.u}</span></span>
-        <span class="d">sombra <b>$${fraccion(Math.abs(sp[i])) || fmt(Math.abs(sp[i]), 3)}</b></span></div>`;
-    }).join("");
-  res.innerHTML = `<table><tr><th>${max ? "Recurso" : "Requerimiento"}</th><th>${max ? "se usa" : "se obtiene"}</th><th>${max ? "disponible" : "mínimo"}</th><th>estado</th><th>${max ? "sobra" : "excedente"}</th><th>precio sombra</th></tr>
-    ${P.rest.map((r, i) => {
-      const usado = r.a[0] * p.x + r.a[1] * p.y, h = max ? datos.b[i] - usado : usado - datos.b[i], sat = Math.abs(h) < 1e-6 * Math.max(1, datos.b[i]);
-      return `<tr><td><i style="background:${COLORES[i]}"></i>${r.nombre}</td><td>${fmt(usado)} ${r.u}</td><td>${fmt(datos.b[i])} ${r.u}</td>
-        <td><span class="pild ${sat ? "sat" : "lib"}">${sat ? (max ? "saturado" : "justo en el mínimo") : (max ? "no saturado" : "se pasa")}</span></td>
-        <td>${sat ? "0" : fmt(h)} ${r.u}</td><td class="sombra">$${conFraccion(Math.abs(sp[i]))} por ${r.u}</td></tr>`;
-    }).join("")}</table>`;
+  resumen.innerHTML = (multiple
+    ? `<div class="opt">Solución múltiple: <b>${P.obj.letra} = ${U}${fmt(o.z)}</b> en todo un lado de la región</div>`
+    : `<div class="opt">${P.x} = <b>${fmt(p.x)}</b> · ${P.y} = <b>${fmt(p.y)}</b> → ${P.obj.letra} = <b>${U}${fmt(o.z)}</b></div>`) +
+    filas.map(f => `<div class="fila-r"><i style="background:${COLORES[f.i]}"></i><span>${f.r.nombre} <span class="pild ${f.sat ? "sat" : "lib"}">${f.sat ? (f.r.s === "≤" ? "saturado" : "justo") : (f.r.s === "≤" ? "sobra " : "excede ") + conU(f.h, f.r)}</span></span>
+      <span class="d">sombra <b>${spCorto(f)}</b></span></div>`).join("");
+  const menor = P.rest.every(r => r.s === "≤"), mayor = P.rest.every(r => r.s === "≥");
+  const cab = menor ? ["Recurso", "se usa", "disponible", "sobra"] : mayor ? ["Requerimiento", "se obtiene", "mínimo", "excedente"] : ["Restricción", "vale en el óptimo", "límite", "holgura"];
+  res.innerHTML = `<table><tr><th>${cab[0]}</th><th>${cab[1]}</th><th>${cab[2]}</th><th>estado</th><th>${cab[3]}</th><th>precio sombra</th></tr>
+    ${filas.map(f => `<tr><td><i style="background:${COLORES[f.i]}"></i>${f.r.nombre}</td><td>${conU(f.v, f.r)}</td><td>${conU(datos.b[f.i], f.r)}</td>
+      <td><span class="pild ${f.sat ? "sat" : "lib"}">${f.r.s === "≤" ? (f.sat ? "saturado" : "no saturado") : (f.sat ? "justo en el mínimo" : "se pasa")}</span></td>
+      <td>${f.sat ? "0" : conU(f.h, f.r).replace(/^-?0(?= |$)/, "0")}</td><td class="sombra">${spLargo(f)}${f.r.u && !isNaN(f.sp) ? " por " + f.r.u : ""}</td></tr>`).join("")}</table>`;
   // qué significa cada precio sombra, en criollo
-  lec.innerHTML = P.rest.map((r, i) => {
-    const s = Math.abs(sp[i]);
-    if (s < 1e-9) return `<li><b>${r.nombre}:</b> precio sombra 0. ${max ? `Sobran ${fmt(datos.b[i] - (r.a[0] * p.x + r.a[1] * p.y))} ${r.u}: tener más no cambia el beneficio (y se podría disminuir esa cantidad sin perder nada).` : `El alimento ya se pasa del mínimo: exigir un poco más no cuesta nada.`}</li>`;
-    return max ? `<li><b>${r.nombre}:</b> está saturado. Cada ${LARGO[r.u]} más ${r.de || "de"} ${r.nombre} aumentaría el beneficio máximo en <b>$${conFraccion(s)}</b>: es lo máximo que convendría pagar por una unidad extra.</li>`
-      : `<li><b>${r.nombre}:</b> se cumple justo. Exigir 1 ${LARGO[r.u]} más aumentaría el costo mínimo en <b>$${conFraccion(s)}</b>.</li>`;
+  lec.innerHTML = filas.map(f => {
+    const r = f.r, s = Math.abs(f.sp), una = LARGO[r.u] || "unidad";
+    if (isNaN(f.sp)) return `<li><b>${r.nombre}:</b> precio sombra indefinido: si el límite sube, el problema deja de tener óptimo.</li>`;
+    if (s < 1e-9) return `<li><b>${r.nombre}:</b> precio sombra 0. ${r.s === "≤"
+      ? `Sobran ${conU(f.h, r)}: tener más no cambia ${frase()} (se podría disminuir esa cantidad sin perder nada).`
+      : `Se supera el mínimo por ${conU(f.h, r)}: exigir un poco más no cambia ${frase()}.`}</li>`;
+    const verbo = f.sp > 0 ? "aumentaría" : "disminuiría";
+    return r.s === "≤"
+      ? `<li><b>${r.nombre}:</b> está saturado. Cada ${una} más ${r.de || "de"} ${r.nombre} ${verbo} ${frase()} en <b>${U}${conFraccion(s)}</b>${P.tipo === "max" && f.sp > 0 ? ": es lo máximo que convendría pagar por una unidad extra" : ""}.</li>`
+      : `<li><b>${r.nombre}:</b> se cumple justo. Exigir 1 ${una} más ${verbo} ${frase()} en <b>${U}${conFraccion(s)}</b>.</li>`;
   }).join("") + `<li style="color:var(--texto-tenue)">El precio sombra vale mientras el óptimo siga estando en la intersección de las mismas rectas. Probalo en el modo de sensibilidad.</li>`;
-  // el método: evaluar Z en cada vértice
-  // los vértices en orden, recorriendo el borde de la región (como en la guía: A, B, C…)
+}
+// el método: evaluar Z en cada vértice, recorriendo el borde de la región (como en la guía: A, B, C…)
+function pintarVertices(o) {
   const cx = o.V.reduce((s, v) => s + v.x, 0) / o.V.length, cy = o.V.reduce((s, v) => s + v.y, 0) / o.V.length;
   const ang = v => (Math.atan2(v.y - cy, v.x - cx) + 2 * Math.PI) % (2 * Math.PI);
   const V = [...o.V].sort((a, b) => ang(a) - ang(b));   // sentido antihorario
   const i0 = V.reduce((m, v, i) => v.x < V[m].x - 1e-9 || (Math.abs(v.x - V[m].x) < 1e-9 && v.y < V[m].y) ? i : m, 0);   // arranca en el de menor x
   const Vo = V.map((_, j) => V[(i0 + j) % V.length]);
-  ver.innerHTML = `<table><tr><th>Evaluamos ${P.obj.letra} en cada vértice</th><th>${P.x}</th><th>${P.y}</th><th>${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y)}</th></tr>
-    ${Vo.map((v, j) => { const es = o.opt.some(q => q.x === v.x && q.y === v.y); return `<tr><td>${"ABCDEFGH"[j]}${es ? ` <span class="pild lib">★ ${P.tipo === "max" ? "máximo" : "mínimo"}</span>` : ""}</td><td>${fmt(v.x)}</td><td>${fmt(v.y)}</td><td class="${es ? "opt" : ""}">${fmt(v.z)}</td></tr>`; }).join("")}</table>`;
+  document.getElementById("vertices").innerHTML = `<table><tr><th>Evaluamos ${P.obj.letra} en cada vértice</th><th>${P.x}</th><th>${P.y}</th><th>${P.obj.letra} = ${lineaEc(datos.c, P.x, P.y)}</th></tr>
+    ${Vo.map((v, j) => { const es = o.opt.some(q => q.x === v.x && q.y === v.y); return `<tr><td>${"ABCDEFGHIJ"[j]}${es ? ` <span class="pild lib">★ ${P.tipo === "max" ? "máximo" : "mínimo"}</span>` : ""}</td><td>${fmt(v.x)}</td><td>${fmt(v.y)}</td><td class="${es ? "opt" : ""}">${fmt(v.z)}</td></tr>`; }).join("")}</table>`
+    + (o.ilimitado ? `<p class="ayuda-sens">Ojo: con la región no acotada, comparar los vértices no alcanza. ${P.obj.letra} sigue ${P.tipo === "max" ? "creciendo" : "bajando"} más allá de ellos.</p>` : "");
 }
 
 // ---------------------------------------------------------------- análisis de sensibilidad: un slider por coeficiente y por término independiente
 const sensEl = document.getElementById("sens");
 function pintarSens() {
   const orig = copia(P);
-  sensEl.innerHTML = `<div class="grupo" id="g-precios"><div class="rot">${P.obj.nombre} por unidad (coeficientes de ${P.obj.letra})</div></div>
-    <div class="grupo" id="g-limites"><div class="rot">${P.tipo === "max" ? "Disponibilidades" : "Requerimientos mínimos"} (términos independientes)</div></div>
-    <div class="grupo"><button class="accion" id="restaurar">Volver a los datos del enunciado</button>
+  sensEl.innerHTML = `<div class="grupo" id="g-precios"><div class="rot">${P.libre ? `Coeficientes de ${P.obj.letra}` : `${P.obj.nombre} por unidad (coeficientes de ${P.obj.letra})`}</div></div>
+    <div class="grupo" id="g-limites"><div class="rot">${P.libre ? "Términos independientes" : `${P.tipo === "max" ? "Disponibilidades" : "Requerimientos mínimos"} (términos independientes)`}</div></div>
+    <div class="grupo"><button class="accion" id="restaurar">${P.libre ? "Volver a los valores del editor" : "Volver a los datos del enunciado"}</button>
       <p class="ayuda-sens">Fijate qué pasa con la región, el vértice óptimo y los precios sombra. Si un precio cambia mucho, la recta de nivel gira y el óptimo puede saltar a otro vértice.</p></div>`;
   const nombres = [P.queX.replace("unidades del ", "").replace("unidades de ", ""), P.queY.replace("unidades del ", "").replace("unidades de ", "")];
   datos.c.forEach((v, i) => {
     const caja = document.createElement("div"); caja.className = "ctrl"; document.getElementById("g-precios").appendChild(caja);
-    const s = slider(caja, `${P.obj.nombre} de ${nombres[i]} (${P.obj.porU})`, v, orig.c[i] * 0.1, orig.c[i] * 3, orig.c[i] / 100, x => { datos.c[i] = x; marcar(s, x, orig.c[i]); actualizar(); }, x => "$" + fmt(x));
+    const [mn, mx, ps] = P.libre ? rangoLibre(orig.c[i]) : [orig.c[i] * 0.1, orig.c[i] * 3, orig.c[i] / 100];
+    const s = slider(caja, P.libre ? `Coeficiente de ${i ? P.y : P.x}` : `${P.obj.nombre} de ${nombres[i]} (${P.obj.porU})`, v, mn, mx, ps, x => { datos.c[i] = x; marcar(s, x, orig.c[i]); actualizar(); }, x => P.obj.u + fmt(x));
     marcar(s, v, orig.c[i]);
   });
   datos.b.forEach((v, i) => {
     const r = P.rest[i], caja = document.createElement("div"); caja.className = "ctrl"; document.getElementById("g-limites").appendChild(caja);
-    const s = slider(caja, `<i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${COLORES[i]};margin-right:6px"></i>${r.nombre} (${r.u})`, v, orig.b[i] * 0.3, orig.b[i] * 2, orig.b[i] / 200, x => { datos.b[i] = x; marcar(s, x, orig.b[i]); actualizar(); });
+    const [mn, mx, ps] = P.libre ? rangoLibre(orig.b[i]) : [orig.b[i] * 0.3, orig.b[i] * 2, orig.b[i] / 200];
+    const s = slider(caja, `<i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${COLORES[i]};margin-right:6px"></i>${r.nombre}${r.u ? ` (${r.u})` : ""}`, v, mn, mx, ps, x => { datos.b[i] = x; marcar(s, x, orig.b[i]); actualizar(); });
     marcar(s, v, orig.b[i]);
   });
   document.getElementById("restaurar").onclick = () => { datos = copia(P); pintarSens(); actualizar(); };
 }
+// en el problema libre un valor puede ser 0 o negativo: el slider va de v − 2|v| a v + 2|v| (y al menos de −2 a 2)
+const rangoLibre = v => { const s = Math.max(Math.abs(v), 1) * 2; return [v - s, v + s, s / 100]; };
 const marcar = (s, v, o) => s.out.classList.toggle("cambio", Math.abs(v - o) > 1e-9);
 // cuando cambian los datos: si la recta estaba en el óptimo, la sigue
 function actualizar() {
@@ -558,21 +651,76 @@ document.getElementById("modo-sens").onclick = e => {
   if (sens) pintarSens(); else { datos = copia(P); actualizar(); }
 };
 
-// ---------------------------------------------------------------- cambiar de problema
-function elegir(i) {
-  P = PROBLEMAS[i]; datos = copia(P); seguirOptimo = false;
-  document.querySelectorAll("#tabs button").forEach((b, j) => { b.classList.toggle("on", i === j); b.setAttribute("aria-selected", i === j); });
-  pintarEnunciado(); pintarModelo();
+// ---------------------------------------------------------------- editor del problema libre (en el lugar del enunciado)
+const num = s => { const v = parseFloat(String(s).trim().replace(",", ".")); return isFinite(v) && /^\s*-?\d*([.,]\d+)?\s*$/.test(String(s)) ? v : null; };
+const campo = (dato, v, ancho = "") => `<input class="ed-n ${ancho}" inputmode="decimal" data-v="${dato}" value="${String(+v.toFixed(4)).replace(".", ",")}" aria-label="${dato}">`;
+function pintarEditor() {
+  const e = document.getElementById("enunciado");
+  e.innerHTML = `<div class="rot">Armá tu problema</div>
+    <div class="ed-bloque"><div class="ed-tit">Función objetivo</div>
+      <div class="botones seg-ed" role="group" aria-label="Objetivo"><button data-t="max" class="${ed.tipo === "max" ? "on" : ""}">Maximizar</button><button data-t="min" class="${ed.tipo === "min" ? "on" : ""}">Minimizar</button></div>
+      <div class="ed-ec">Z = ${campo("c0", ed.c[0])} x + ${campo("c1", ed.c[1])} y</div></div>
+    <div class="ed-bloque"><div class="ed-tit">Restricciones <span>(hasta ${MAX_REST})</span></div>
+      ${ed.rest.map((r, i) => `<div class="ed-r" style="--c:${COLORES[i]}">
+        <div class="ed-cab"><i></i><input class="ed-nom" data-v="n${i}" value="${r.nombre.replace(/"/g, "&quot;")}" maxlength="18" aria-label="Nombre de la restricción ${i + 1}">
+          ${ed.rest.length > 1 ? `<button class="ed-x" data-q="${i}" aria-label="Quitar la restricción ${i + 1}">✕</button>` : ""}</div>
+        <div class="ed-ec">${campo("a" + i + "0", r.a[0])} x + ${campo("a" + i + "1", r.a[1])} y
+          <select class="ed-s" data-v="s${i}" aria-label="Desigualdad"><option ${r.s === "≤" ? "selected" : ""}>≤</option><option ${r.s === "≥" ? "selected" : ""}>≥</option></select>
+          ${campo("b" + i, r.b, "ancho")}</div></div>`).join("")}
+      ${ed.rest.length < MAX_REST ? `<button class="accion" id="ed-mas">+ Agregar restricción</button>` : ""}</div>
+    <div class="ed-nn">x ≥ 0 ; y ≥ 0 <span>siempre (no negatividad)</span></div>
+    <div class="ed-pie"><button class="accion" id="ed-ejemplo">Volver al ejemplo</button>
+      <span class="ed-ayuda">Los coeficientes pueden ser cualquier número: con coma o con punto.</span></div>`;
+  e.querySelectorAll(".ed-n, .ed-nom").forEach(inp => inp.addEventListener("input", () => leerCampo(inp)));
+  e.querySelectorAll(".ed-s").forEach(s => s.addEventListener("change", () => { ed.rest[+s.dataset.v.slice(1)].s = s.value; aplicarEditor(); }));
+  e.querySelectorAll(".seg-ed button").forEach(b => b.onclick = () => { ed.tipo = b.dataset.t; pintarEditor(); aplicarEditor(true); });
+  e.querySelectorAll(".ed-x").forEach(b => b.onclick = () => { ed.rest.splice(+b.dataset.q, 1); pintarEditor(); aplicarEditor(true); });
+  const mas = document.getElementById("ed-mas");
+  if (mas) mas.onclick = () => { ed.rest.push({ nombre: "Recurso " + (ed.rest.length + 1), a: [1, 1], s: "≤", b: 10 }); pintarEditor(); aplicarEditor(true); };
+  document.getElementById("ed-ejemplo").onclick = () => { ed = EJEMPLO_LIBRE(); pintarEditor(); aplicarEditor(true); };
+}
+// un campo: si el número es válido se aplica al momento; si no, se marca en rojo y no se toca nada
+function leerCampo(inp) {
+  const d = inp.dataset.v;
+  if (d[0] === "n") { ed.rest[+d.slice(1)].nombre = inp.value.trim() || "Restricción " + (+d.slice(1) + 1); aplicarEditor(); return; }
+  const v = num(inp.value); inp.classList.toggle("mal", v === null);
+  if (v === null) return;
+  if (d[0] === "c") ed.c[+d[1]] = v;
+  else if (d[0] === "a") ed.rest[+d[1]].a[+d[2]] = v;
+  else if (d[0] === "b") ed.rest[+d.slice(1)].b = v;
+  aplicarEditor();
+}
+// del editor al problema: se rearma, y la recta de nivel arranca de nuevo si cambió algo grande (max/min, cantidad de restricciones)
+function aplicarEditor(reiniciarK) {
+  P = armarLibre(); datos = copia(P);
   if (sens) pintarSens();
-  const o = optimo(datos);
-  k = Math.round(o.z * (P.tipo === "max" ? 0.45 : 1.6));   // arranca lejos del óptimo: hay que buscarlo
+  pintarModelo();
+  if (reiniciarK) { seguirOptimo = false; k = kInicial(); }
+  actualizar();
+}
+
+// ---------------------------------------------------------------- cambiar de problema
+// la recta arranca lejos del óptimo (hay que buscarlo): a mitad de camino desde la esquina "peor" del gráfico
+function kInicial() {
+  const o = optimo(datos), a = kMin(), b = kMax();
+  if (!o || o.ilimitado) return (a + b) / 2;
+  return P.tipo === "max" ? a + (o.z - a) * 0.45 : o.z + (b - o.z) * 0.4;
+}
+function elegir(i) {
+  const libre = i === PROBLEMAS.length;
+  P = libre ? armarLibre() : PROBLEMAS[i]; datos = copia(P); seguirOptimo = false;
+  document.querySelectorAll("#tabs button").forEach((b, j) => { b.classList.toggle("on", i === j); b.setAttribute("aria-selected", i === j); });
+  libre ? pintarEditor() : pintarEnunciado();
+  pintarModelo();
+  if (sens) pintarSens();
+  k = kInicial();
   ponerK(k);
 }
-document.getElementById("tabs").innerHTML = PROBLEMAS.map((p, i) => `<button role="tab" data-i="${i}"><b>${i + 1}</b>${p.tab}</button>`).join("");
+document.getElementById("tabs").innerHTML = [...PROBLEMAS, LIBRE].map((p, i) => `<button role="tab" data-i="${i}">${p.libre ? "" : `<b>${i + 1}</b>`}${p.tab}</button>`).join("");
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => elegir(+b.dataset.i));
 sliderK = slider(ctrlK, "valor de k", 0, 0, 1, 0.01, v => { k = v; seguirOptimo = Math.abs(k - (optimo(datos)?.z ?? -1)) <= tolK(); dibujar(); });
 document.getElementById("al-optimo").onclick = () => {
-  const o = optimo(datos); if (!o) return;
+  const o = optimo(datos); if (!o || o.ilimitado) return;
   const ini = k, t0 = performance.now();
   (function paso() {
     const t = Math.min(1, (performance.now() - t0) / 600), e = t * t * (3 - 2 * t);
