@@ -66,6 +66,8 @@ const SIMULADORES = [
     desc: "Juntás átomos, movés sus electrones y armás enlaces simples, dobles, triples o iónicos. Te dice al instante si cada átomo completó su octeto." },
   { id: "programacion-lineal", fecha: "2026-11-06", tema: "Programación lineal", titulo: "Programación lineal: método gráfico",
     desc: "Tres problemas con productos e insumos: la región factible, la recta Z = k que movés hasta el óptimo y el análisis de sensibilidad, con recursos saturados y precios sombra." },
+  { id: "espacio-r3", fecha: "2026-11-10", tema: "Álgebra lineal", titulo: "Vectores en R³: combinaciones lineales y subespacios",
+    desc: "Hasta 4 vectores en el espacio: sus combinaciones lineales, el subespacio que generan y cuántos coeficientes quedan libres si fijás el resultado. Con vista plana y proyecciones." },
 ];
 
 function tarjeta(s, { hover = false, sinPortada = false } = {}) {

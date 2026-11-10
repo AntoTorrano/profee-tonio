@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vectores en R³: combinaciones lineales y subespacios · Profee Tonio</title>
+<link rel="stylesheet" href="_sim.css">
+<style>
+  /* Vectores en R³: hasta 4 vectores, sus múltiplos, combinaciones lineales (con el resultado fijo y los
+     grados de libertad que quedan = n − rango), el subespacio que generan y una vista plana
+     (sólo lo que está en el plano, o las proyecciones sobre él). */
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--fondo); }
+  .r3 { padding: 16px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .cab-r3 h1 { margin: 0; font: 800 22px/1.15 Inter, sans-serif; }
+  .cab-r3 h1 small { display: block; margin-top: 4px; font: 500 13px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
+
+  /* compu ancha: vectores | espacio | combinaciones y vistas, a lo ancho de la pantalla */
+  .area { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr) minmax(0, 370px); grid-template-areas: "izq lienzo der"; gap: 14px; align-items: start; }
+  .col-izq { grid-area: izq; } .col-der { grid-area: der; }
+  .col-izq, .col-der { display: grid; gap: 14px; min-width: 0; }
+  .col-lienzo { grid-area: lienzo; position: sticky; top: 14px; min-width: 0; }
+  .tarj { padding: 16px 18px; border-radius: 16px; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); min-width: 0; }
+  .tarj > .rot .interr { text-transform: none; letter-spacing: 0; }
+  .tarj > .rot { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  .lienzo { position: relative; padding: 0; overflow: hidden; height: calc(100vh - 92px); min-height: 420px; }
+  .lienzo canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  .lienzo.plano canvas { cursor: default; touch-action: pan-y; }
+  .lienzo canvas:active { cursor: grabbing; }
+  .sobre { position: absolute; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sobre.arr-izq { top: 12px; left: 12px; right: 12px; pointer-events: none; }
+  .sobre.arr-izq > * { pointer-events: auto; }
+  .sobre.aba-der { bottom: 12px; right: 12px; }
+  .sobre.aba-izq { bottom: 12px; left: 12px; right: 200px; pointer-events: none; }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgb(10 14 20 / .9); box-shadow: inset 0 0 0 1px var(--linea); }
+  .seg button { all: unset; cursor: pointer; padding: 7px 13px; border-radius: 999px; font: 600 13px/1 Inter, sans-serif; color: var(--texto-suave); }
+  .seg button.on { background: var(--neon-core); color: var(--fondo); }
+  .seg button:focus-visible { outline: 2px solid var(--neon-core); }
+  .chip { padding: 7px 12px; border-radius: 999px; font: 600 12.5px/1.3 Inter, sans-serif; color: var(--texto-suave); background: rgb(8 13 26 / .9); box-shadow: inset 0 0 0 1px var(--linea); }
+  .chip b { color: var(--texto); }
+  .redondo { all: unset; cursor: pointer; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; font: 600 18px/1 Inter, sans-serif;
+    color: var(--texto); background: rgb(10 14 20 / .92); box-shadow: inset 0 0 0 1px var(--linea); }
+  .redondo:hover { box-shadow: inset 0 0 0 1px var(--neon-suave); }
+  .redondo.on { color: var(--amarillo); box-shadow: inset 0 0 0 1.5px rgb(255 225 77 / .6); }
+  .pista-txt { font-size: 12px; color: var(--texto-tenue); background: rgb(8 13 26 / .75); padding: 4px 8px; border-radius: 8px; }
+
+  /* vectores */
+  .vec { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--fondo-alt); box-shadow: inset 3px 0 0 var(--c), inset 0 0 0 1px var(--linea); }
+  .vec + .vec { margin-top: 10px; }
+  .vec-cab { display: flex; align-items: center; gap: 8px; font: 700 16px/1 "JetBrains Mono", monospace; color: var(--c); }
+  .vec-cab .ef { margin-left: auto; font: 500 12.5px/1.2 "JetBrains Mono", monospace; color: var(--texto-suave); }
+  .coords { display: flex; align-items: center; gap: 4px; font: 500 16px/1 "JetBrains Mono", monospace; color: var(--texto-tenue); }
+  .num { width: 54px; padding: 8px 4px; border-radius: 9px; border: 0; background: var(--fondo); color: var(--texto); font: 600 15px/1 "JetBrains Mono", monospace; text-align: center; box-shadow: inset 0 0 0 1px var(--linea); }
+  .num:focus { outline: 0; box-shadow: inset 0 0 0 1.5px var(--neon-core), 0 0 0 3px rgb(46 120 255 / .2); }
+  .num.mal { box-shadow: inset 0 0 0 1.5px #FF7A7A; color: #FFB3B3; }
+  .x { all: unset; cursor: pointer; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--texto-tenue); font-size: 14px; }
+  .x:hover { color: #FF9A9A; background: rgb(255 122 122 / .1); }
+  .mas { width: 100%; margin-top: 10px; box-sizing: border-box; }
+  .accion:disabled { opacity: .35; cursor: default; }
+
+  /* sliders */
+  .ctrl { display: grid; gap: 4px; }
+  .ctrl .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; color: var(--texto-suave); }
+  .ctrl .fila b { font: 600 14px/1 "JetBrains Mono", monospace; color: var(--texto); white-space: nowrap; }
+  .ctrl.fijo .fila b::after { content: " 🔒"; font-size: 12px; }
+  .ctrl.fijo input { opacity: .35; }
+  .ctrl .fila span i { font-style: normal; font-weight: 700; color: var(--c, var(--texto)); }
+
+  /* combinaciones */
+  .comb { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--fondo-alt); box-shadow: inset 3px 0 0 var(--c), inset 0 0 0 1px var(--linea); }
+  .comb + .comb { margin-top: 10px; }
+  .comb-ec { font: 600 14px/1.5 "JetBrains Mono", monospace; color: var(--texto); }
+  .comb-ec .w { color: var(--c); }
+  .comb-res { font: 600 14px/1.3 "JetBrains Mono", monospace; color: var(--c); }
+  .interr { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; font: 600 13.5px/1.2 Inter, sans-serif; color: var(--texto); }
+  .interr .p { width: 38px; height: 22px; border-radius: 999px; background: var(--riel); position: relative; flex: none; transition: background .2s; }
+  .interr .p::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--texto-suave); transition: transform .2s, background .2s; }
+  .interr[aria-checked="true"] .p { background: var(--neon); }
+  .interr[aria-checked="true"] .p::after { transform: translateX(16px); background: #fff; }
+  .interr:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 3px; border-radius: 6px; }
+  .interrs { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+  .libertad { padding: 9px 11px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: var(--texto-medio); background: rgb(255 225 77 / .06); box-shadow: inset 0 0 0 1px rgb(255 225 77 / .3); }
+  .libertad b { color: var(--amarillo); }
+  .nota { font-size: 13px; line-height: 1.55; color: var(--texto-tenue); margin: 0; }
+  .nota b { color: var(--texto-suave); }
+
+  /* subespacio y vista plana */
+  .info-sub { display: grid; gap: 8px; font-size: 14px; line-height: 1.55; color: var(--texto-medio); }
+  .info-sub .dim { font: 700 15px/1.3 Inter, sans-serif; color: var(--texto); }
+  .info-sub .ec { font: 600 14px/1.4 "JetBrains Mono", monospace; color: var(--neon-core); }
+  .info-sub .rel { font: 600 13.5px/1.4 "JetBrains Mono", monospace; color: var(--amarillo); }
+  .pild { display: inline-block; padding: 3px 9px; border-radius: 999px; font: 600 12px/1.3 Inter, sans-serif; }
+  .pild.li { color: var(--verde); box-shadow: inset 0 0 0 1px rgb(52 211 153 / .5); background: rgb(52 211 153 / .08); }
+  .pild.ld { color: #FFB3B3; box-shadow: inset 0 0 0 1px rgb(255 122 122 / .5); background: rgb(255 122 122 / .08); }
+  .opciones { display: grid; gap: 8px; }
+  .opc { all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 10px; font: 500 13.5px/1.3 Inter, sans-serif; color: var(--texto-suave); box-shadow: inset 0 0 0 1px var(--linea); }
+  .opc .o { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--texto-tenue); flex: none; }
+  .opc.on { color: var(--texto); box-shadow: inset 0 0 0 1.5px var(--neon-core); background: rgb(46 120 255 / .08); }
+  .opc.on .o { box-shadow: inset 0 0 0 4px var(--neon-core); }
+  .opc:disabled, .opc[aria-disabled="true"] { opacity: .4; cursor: default; }
+  .opc:focus-visible { outline: 2px solid var(--neon-core); }
+  .sub-rot { font: 600 12px/1 Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--texto-tenue); margin: 14px 0 8px; }
+  .normal-ed { display: flex; align-items: center; gap: 4px; margin-top: 6px; font: 500 15px/1 "JetBrains Mono", monospace; color: var(--texto-tenue); }
+
+  @media (max-width: 1279px) {
+    .area { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); grid-template-areas: "lienzo izq" "lienzo der"; }
+    .col-lienzo { grid-row: 1 / span 2; }
+  }
+  @media (max-width: 899px) {
+    .r3 { padding: 10px 12px 32px; gap: 10px; }
+    .cab-r3 h1 { font-size: 19px; }
+    .area { grid-template-columns: minmax(0, 1fr); grid-template-areas: "lienzo" "izq" "der"; gap: 10px; }
+    .col-lienzo { grid-row: auto; top: 0; z-index: 3; padding: 6px 0 8px; background: var(--fondo); }
+    .lienzo { height: min(48vh, 105vw); min-height: 300px; }
+    .seg button { padding: 8px 12px; }
+    .pista-txt .larga { display: none; }
+  }
+  @media (pointer: coarse) {
+    .num { min-height: 44px; font-size: 16px; }
+    .x, .redondo { width: 44px; height: 44px; }
+    .opc { min-height: 44px; box-sizing: border-box; }
+    .seg button { min-height: 36px; box-sizing: border-box; display: inline-flex; align-items: center; }
+  }
+</style>
+</head>
+<body>
+<div class="r3">
+  <div class="cab-r3"><h1>Vectores en R³<small>Combinaciones lineales, subespacio generado y vista plana · arrastrá el espacio para girarlo</small></h1></div>
+  <div class="area">
+    <div class="col-izq">
+      <section class="tarj"><div class="rot">Vectores <span class="nota" id="cuantos"></span></div><div id="vectores"></div>
+        <button class="accion mas" id="mas-vec">+ Agregar vector</button></section>
+    </div>
+
+    <div class="col-lienzo">
+      <section class="tarj lienzo" id="lienzo">
+        <canvas id="cv" aria-label="Espacio R³ con los vectores"></canvas>
+        <div class="sobre arr-izq">
+          <div class="seg" role="group" aria-label="Vista"><button data-m="3d" class="on">3D</button><button data-m="plano">Plano</button></div>
+          <span class="chip" id="chip"></span>
+        </div>
+        <div class="sobre aba-izq"><span class="pista-txt" id="pista">Arrastrá para girar<span class="larga"> · rueda o pellizco para acercar</span></span></div>
+        <div class="sobre aba-der">
+          <button class="redondo on" id="guias" aria-label="Guías al piso" aria-pressed="true" title="Guías al piso: la altura de cada punta">⊥</button>
+          <button class="redondo" id="zoom-menos" aria-label="Alejar">−</button>
+          <button class="redondo" id="zoom-mas" aria-label="Acercar">+</button>
+          <button class="redondo" id="reset" aria-label="Volver a la vista inicial">↺</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-der">
+      <section class="tarj"><div class="rot">Combinaciones lineales</div><div id="combs"></div>
+        <button class="accion mas" id="mas-comb">+ Nueva combinación lineal</button></section>
+      <section class="tarj"><div class="rot">Subespacio generado
+        <button class="interr" id="ver-sub" role="switch" aria-checked="true"><span class="p"></span>Mostrar</button></div>
+        <div class="info-sub" id="info-sub"></div></section>
+      <section class="tarj"><div class="rot">Vista plana</div>
+        <div class="opciones" id="planos"></div>
+        <div class="sub-rot">En el plano mostrar</div>
+        <div class="opciones" id="modos"></div>
+        <div class="interrs" style="margin-top:12px"><button class="interr" id="plano-3d" role="switch" aria-checked="false"><span class="p"></span>Ver el plano en la vista 3D</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- álgebra
+const dot = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+const norm = a => Math.sqrt(dot(a, a));
+const mul = (a, k) => a.map(x => x * k);
+const sumar = (a, b) => a.map((x, i) => x + b[i]);
+const restar = (a, b) => a.map((x, i) => x - b[i]);
+const cruz = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+// Gram–Schmidt: base ortonormal de lo que generan los vectores (descarta los que dependen de los anteriores)
+function ortonormal(lista, tol) {
+  const B = [];
+  lista.forEach(v => { let u = [...v]; B.forEach(b => { u = restar(u, mul(b, dot(u, b))); }); const n = norm(u); if (n > tol) B.push(mul(u, 1 / n)); });
+  return B;
+}
+// núcleo de la matriz cuyas columnas son los vectores: las combinaciones que dan 0 (eliminación de Gauss)
+function nucleo(cols, tol) {
+  const n = cols.length, A = [0, 1, 2].map(r => cols.map(c => c[r])), piv = [];
+  let fila = 0;
+  for (let j = 0; j < n && fila < 3; j++) {
+    let p = fila; for (let i = fila + 1; i < 3; i++) if (Math.abs(A[i][j]) > Math.abs(A[p][j])) p = i;
+    if (Math.abs(A[p][j]) <= tol) continue;
+    [A[p], A[fila]] = [A[fila], A[p]];
+    const d = A[fila][j]; for (let k = 0; k < n; k++) A[fila][k] /= d;
+    for (let i = 0; i < 3; i++) if (i !== fila) { const f = A[i][j]; for (let k = 0; k < n; k++) A[i][k] -= f * A[fila][k]; }
+    piv.push(j); fila++;
+  }
+  const libres = [...Array(n).keys()].filter(j => !piv.includes(j));
+  // una solución por cada columna libre: x_libre = 1, x_pivote = −(lo que quedó en la fila)
+  return { piv, crudo: libres.map(f => { const x = Array(n).fill(0); x[f] = 1; piv.forEach((p, r) => x[p] = -A[r][f]); return { libre: f, x }; }) };
+}
+
+// ---------------------------------------------------------------- formato
+const fmt = (v, d = 2) => { const r = Math.round(v * 10 ** d) / 10 ** d; return (Object.is(r, -0) ? 0 : r).toLocaleString("es-AR", { maximumFractionDigits: d }).replace("-", "−"); };
+function fraccion(v) {
+  if (Math.abs(v - Math.round(v)) < 1e-6) return fmt(Math.round(v));
+  for (let d = 2; d <= 12; d++) { const n = Math.round(v * d); if (Math.abs(v - n / d) < 1e-6) return (n < 0 ? "−" : "") + Math.abs(n) + "/" + d; }
+  return fmt(v);
+}
+const tupla = v => "(" + v.map(c => fmt(c)).join("; ") + ")";
+const SUB = "₀₁₂₃₄₅₆₇₈₉";
+const sub = n => String(n).replace(/\d/g, d => SUB[d]);
+const num = s => { const t = String(s).trim().replace("−", "-").replace(",", "."); return /^-?\d*\.?\d+$/.test(t) || /^-?\d+\.?$/.test(t) ? parseFloat(t) : null; };
+const enCampo = v => String(+(+v).toFixed(4)).replace(".", ",");
+
+// ---------------------------------------------------------------- estado
+const MAX_V = 4, MAX_W = 3, RANGO = 4;   // coeficientes de −4 a 4
+const COL_V = ["#4FC3E8", "#FF8A8A", "#B08CFF", "#FFB454"], COL_W = ["#FFE14D", "#34D399", "#FF6FB5"];
+let vs = [{ b: [2, 0, 1], l: 1 }, { b: [0, 2, 1], l: 1 }];
+let ws = [];
+let ver = { modo: "3d", sub: true, plano: "z", normal: [1, 1, 1], muestra: "proy", plano3d: false, guias: true };
+const CAM0 = { yaw: -0.62, pitch: 0.42, zoom: 1 };
+let cam = { ...CAM0 };
+
+const vec = i => mul(vs[i].b, vs[i].l);                        // el vector de verdad: la base escalada por λ
+const vecs = () => vs.map((_, i) => vec(i));
+const wvec = w => w.a.reduce((s, a, i) => sumar(s, mul(vec(i), a)), [0, 0, 0]);
+const escala = () => Math.max(1, ...vecs().map(norm));
+const tol = () => 1e-9 * escala();
+const baseSpan = () => ortonormal(vecs(), tol());
+// base ortonormal del núcleo (para mover los coeficientes sin cambiar el resultado)
+function baseNucleo() {
+  const { crudo } = nucleo(vecs(), tol());
+  const n = vs.length, B = [];
+  crudo.forEach(({ x }) => { let u = [...x]; B.forEach(b => { u = restar(u, mul(b, dot(u, b))); }); const m = norm(u); if (m > 1e-9) B.push(mul(u, 1 / m)); });
+  return B;   // vectores de R^n
+}
+
+// ---------------------------------------------------------------- dibujo
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), caja = document.getElementById("lienzo");
+let W = 600, H = 500, dpr = 1;
+function medir() { const r = cv.getBoundingClientRect(); dpr = Math.min(devicePixelRatio || 1, 2); W = Math.max(10, r.width); H = Math.max(10, r.height); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); pedir(); }
+new ResizeObserver(medir).observe(caja);
+let pendiente = false;
+function pedir() { if (!pendiente) { pendiente = true; requestAnimationFrame(() => { pendiente = false; dibujar(); }); } }
+
+// tamaño del mundo: los vectores y las combinaciones entran con margen
+function mundo() {
+  // también los puntos intermedios de la construcción de cada combinación (α₁v₁, α₁v₁ + α₂v₂, …)
+  const cadenas = ws.flatMap(w => w.a.map((_, i) => w.a.slice(0, i + 1).reduce((s, a, k) => sumar(s, mul(vec(k), a)), [0, 0, 0])));
+  const todo = [...vecs(), ...ws.map(wvec), ...vs.map(v => v.b), ...cadenas];
+  return Math.max(3, Math.ceil(Math.max(...todo.map(v => Math.max(...v.map(Math.abs))), 1) * 1.25));
+}
+// cámara ortográfica: giro alrededor del eje z (yaw) y elevación (pitch); z hacia arriba
+// con una perspectiva suave (lo cercano un poco más grande): k = F / (F − profundidad)
+function proy(p) {
+  const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+  const x1 = p[0] * cy - p[1] * sy, y1 = p[0] * sy + p[1] * cy, z1 = p[2];
+  const d = -y1 * cp + z1 * sp, F = 5.2 * S, k = F / (F - d);
+  const s = cam.zoom * Math.min(W, H) / ((W < 600 ? 2.5 : 2.15) * S) * k;   // en el celu, un poco más chico: entra la construcción entera
+  return { x: W / 2 + s * x1, y: H / 2 + H * 0.04 - s * (y1 * sp + z1 * cp), d, k };
+}
+// hacia dónde está la cámara (en coordenadas del mundo): sirve para sombrear y para saber qué cara se ve
+const haciaCamara = () => { const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch); return [-sy * cp, -cy * cp, sp]; };
+// lo lejano, más tenue: 0,45 (al fondo) … 1 (adelante)
+const niebla = d => Math.max(.4, Math.min(1, .72 + .28 * d / (1.6 * S)));
+let S = 4;
+
+function linea(a, b, col, ancho = 1, alfa = 1, dash) {
+  ctx.save(); ctx.globalAlpha = alfa; ctx.strokeStyle = col; ctx.lineWidth = ancho; ctx.lineCap = "round"; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+}
+function flecha(a, b, col, o = {}) {   // a, b en pantalla
+  const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+  if (L < 1) { ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, 7); ctx.fill(); ctx.restore(); return; }
+  const ux = dx / L, uy = dy / L, cab = Math.min(o.cab ?? 14, L * .45), an = o.ancho ?? 3;
+  const bx = b.x - ux * cab, by = b.y - uy * cab;
+  ctx.save(); ctx.lineCap = "round"; ctx.globalAlpha = o.alfa ?? 1;
+  if (o.dash) ctx.setLineDash(o.dash);
+  if (o.glow !== false) { ctx.globalAlpha = (o.alfa ?? 1) * .4; ctx.strokeStyle = col; ctx.lineWidth = an * 3; ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(bx, by); ctx.stroke(); ctx.shadowBlur = 0; ctx.globalAlpha = o.alfa ?? 1; }
+  ctx.strokeStyle = col; ctx.lineWidth = an; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.setLineDash([]); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(b.x, b.y);
+  ctx.lineTo(bx - uy * cab * .45, by + ux * cab * .45); ctx.lineTo(bx + uy * cab * .45, by - ux * cab * .45); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+// mezclar un color #rrggbb con blanco (luz) o negro (sombra): f > 1 aclara, f < 1 oscurece
+function tono(hex, f) {
+  const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const r = c.map(v => f >= 1 ? v + (255 - v) * Math.min(1, f - 1) : v * f);
+  return `rgb(${r.map(v => Math.round(Math.max(0, Math.min(255, v)))).join(",")})`;
+}
+// flecha en el espacio: varilla con brillo + punta cónica de verdad, iluminada, que se acorta según hacia dónde apunte
+function flecha3D(a, b, col, o = {}) {
+  const v = restar(b, a), L = norm(v); if (L < 1e-9) return;
+  const u = mul(v, 1 / L), h = Math.min(o.cab ?? S * .085, L * .4), r = h * .36;
+  const base = restar(b, mul(u, h)), P0 = proy(a), PB = proy(base), PT = proy(b);
+  const nb = niebla((P0.d + PT.d) / 2), an = (o.ancho ?? 3) * (P0.k + PT.k) / 2;
+  ctx.save(); ctx.lineCap = "round";
+  if (o.dash) ctx.setLineDash(o.dash);
+  if (o.glow !== false) { ctx.globalAlpha = .38 * nb * (o.alfa ?? 1); ctx.strokeStyle = col; ctx.lineWidth = an * 3; ctx.shadowColor = col; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.moveTo(P0.x, P0.y); ctx.lineTo(PB.x, PB.y); ctx.stroke(); ctx.shadowBlur = 0; }
+  ctx.globalAlpha = nb * (o.alfa ?? 1); ctx.strokeStyle = tono(col, .6 + .4 * nb + .1); ctx.lineWidth = an;
+  ctx.beginPath(); ctx.moveTo(P0.x, P0.y); ctx.lineTo(PB.x, PB.y); ctx.stroke(); ctx.setLineDash([]);
+  // el cono: círculo de la base y triángulos hasta la punta; sólo las caras que miran a la cámara, con luz desde arriba
+  const e = Math.abs(u[2]) < .9 ? [0, 0, 1] : [1, 0, 0], e1 = (() => { const c = cruz(u, e); return mul(c, 1 / norm(c)); })(), e2 = cruz(u, e1);
+  const cam3 = haciaCamara(), luz = (() => { const l = sumar(sumar(cam3, [0, 0, 1.1]), mul(cruz([0, 0, 1], cam3), -.5)); return mul(l, 1 / norm(l)); })();
+  const N = 18, aro = [...Array(N)].map((_, i) => { const t = i / N * 2 * Math.PI; return sumar(base, sumar(mul(e1, r * Math.cos(t)), mul(e2, r * Math.sin(t)))); });
+  const caras = [];
+  for (let i = 0; i < N; i++) {
+    const p1 = aro[i], p2 = aro[(i + 1) % N], mid = mul(sumar(p1, p2), .5);
+    const n = (() => { const radial = restar(mid, base), c = sumar(mul(radial, 1 / r), mul(u, r / h)); return mul(c, 1 / norm(c)); })();
+    if (dot(n, cam3) <= 0) continue;
+    caras.push({ d: proy(mid).d, pts: [PT, proy(p1), proy(p2)], f: .55 + .75 * Math.max(0, dot(n, luz)) });
+  }
+  if (dot(mul(u, -1), cam3) > 0) caras.push({ d: PB.d - 1e-3, pts: aro.map(proy), f: .5 });   // la base, si se ve
+  caras.sort((x, y) => x.d - y.d).forEach(c => {
+    ctx.globalAlpha = Math.min(1, nb + .15) * (o.alfa ?? 1); ctx.fillStyle = tono(col, c.f);
+    ctx.beginPath(); c.pts.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = .6; ctx.stroke();
+  });
+  ctx.restore();
+}
+// guía al piso: de la punta baja punteado hasta z = 0, y en el piso queda su "sombra" desde el origen
+function guiaPiso(p, col) {
+  if (Math.abs(p[2]) < 1e-9 && Math.hypot(p[0], p[1]) < 1e-9) return;
+  const pie = [p[0], p[1], 0];
+  ctx.save(); ctx.globalAlpha = .55;
+  if (Math.abs(p[2]) > 1e-9) linea(proy(p), proy(pie), col, 1.3, .7, [3, 4]);
+  linea(proy([0, 0, 0]), proy(pie), col, 2, .28);
+  const q = proy(pie); ctx.globalAlpha = .7; ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(q.x, q.y, 4 * q.k, 2.2 * q.k, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function rotulo(t, p, col, o = {}) {
+  ctx.save(); ctx.font = `${o.peso || 700} ${o.tam || 14}px ${o.mono === false ? "Inter, sans-serif" : "'JetBrains Mono', monospace"}`;
+  ctx.textAlign = o.alin || "left"; ctx.textBaseline = "middle";
+  const w = ctx.measureText(t).width, x = p.x + (o.dx ?? 8), y = p.y + (o.dy ?? -10), x0 = ctx.textAlign === "center" ? x - w / 2 : ctx.textAlign === "right" ? x - w : x;
+  ctx.fillStyle = "rgba(4,6,13,.75)"; ctx.fillRect(x0 - 4, y - 10, w + 8, 20);
+  ctx.fillStyle = col; ctx.fillText(t, x, y); ctx.restore();
+}
+function poligono(pts, relleno, alfa, borde) {
+  ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+  ctx.globalAlpha = alfa; ctx.fillStyle = relleno; ctx.fill();
+  if (borde) { ctx.globalAlpha = Math.min(1, alfa * 4); ctx.strokeStyle = borde; ctx.lineWidth = 1.2; ctx.setLineDash([6, 6]); ctx.stroke(); }
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- el plano elegido para la vista plana
+const PLANOS = [
+  { id: "z", nombre: "z = 0 (plano xy)", n: [0, 0, 1], u: [[1, 0, 0], [0, 1, 0]], ejes: ["x", "y"] },
+  { id: "y", nombre: "y = 0 (plano xz)", n: [0, 1, 0], u: [[1, 0, 0], [0, 0, 1]], ejes: ["x", "z"] },
+  { id: "x", nombre: "x = 0 (plano yz)", n: [1, 0, 0], u: [[0, 1, 0], [0, 0, 1]], ejes: ["y", "z"] },
+  { id: "xyz", nombre: "x + y + z = 0", n: [1, 1, 1] },
+  { id: "gen", nombre: "el plano que generan los vectores" },
+  { id: "otro", nombre: "otro: con su normal (a; b; c)" },
+];
+// base ortonormal (u₁, u₂) de un plano por el origen con normal n
+function baseDePlano(n) {
+  const m = mul(n, 1 / norm(n)), e = Math.abs(m[0]) < .8 ? [1, 0, 0] : [0, 1, 0];
+  const u1 = cruz(m, e); const a = mul(u1, 1 / norm(u1)); return [a, cruz(m, a)];
+}
+function planoActual() {
+  const P = PLANOS.find(p => p.id === ver.plano);
+  if (P.u) return { n: P.n, u: P.u, ejes: P.ejes, nombre: P.nombre };
+  let n = P.id === "xyz" ? P.n : P.id === "otro" ? ver.normal : null;
+  if (P.id === "gen") { const B = baseSpan(); if (B.length !== 2) return null; return { n: cruz(B[0], B[1]), u: B, ejes: ["u₁", "u₂"], nombre: "el plano generado" }; }
+  if (!n || norm(n) < 1e-12) return null;
+  return { n, u: baseDePlano(n), ejes: ["u₁", "u₂"], nombre: P.id === "xyz" ? P.nombre : ecPlano(n) };
+}
+const enPlano = (v, n) => Math.abs(dot(v, n)) / norm(n) <= 1e-9 * Math.max(1, norm(v));
+
+// ---------------------------------------------------------------- vista 3D
+function dibujar3D() {
+  const O = proy([0, 0, 0]);
+  const paso = S <= 5 ? 1 : S <= 12 ? 2 : 5;
+  // caja de referencia [−S, S]³: las aristas del fondo más tenues
+  const esq = [-1, 1];
+  for (const a of esq) for (const b of esq) {
+    [[[-S, a * S, b * S], [S, a * S, b * S]], [[a * S, -S, b * S], [a * S, S, b * S]], [[a * S, b * S, -S], [a * S, b * S, S]]].forEach(([p, q]) => {
+      const P = proy(p), Q = proy(q); linea(P, Q, "#2A3D62", 1, .25 + .35 * niebla((P.d + Q.d) / 2) - .2);
+    });
+  }
+  // piso z = 0: la cuadrícula se desvanece hacia el fondo
+  for (let t = -S; t <= S + 1e-9; t += paso) {
+    [[[t, -S, 0], [t, S, 0]], [[-S, t, 0], [S, t, 0]]].forEach(([p, q]) => {
+      const n = 8; for (let i = 0; i < n; i++) {   // en tramos, cada uno con su niebla
+        const a = sumar(p, mul(restar(q, p), i / n)), b = sumar(p, mul(restar(q, p), (i + 1) / n)), A = proy(a), B = proy(b);
+        linea(A, B, Math.abs(t) < 1e-9 ? "#33507F" : "#1C2C49", 1, Math.pow(niebla((A.d + B.d) / 2), 2.2));
+      }
+    });
+  }
+  // el subespacio generado
+  const B = baseSpan();
+  if (ver.sub) {
+    if (B.length === 2) {
+      const [u, v] = B, L = S * 0.95, esqs = [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([a, b]) => proy(sumar(mul(u, a * L), mul(v, b * L))));
+      poligono(esqs, "#2E78FF", .17, "#7FB6FF");
+      for (let k = -2; k <= 2; k++) { if (!k) continue; const f = k / 2 * L;
+        linea(proy(sumar(mul(u, f), mul(v, -L))), proy(sumar(mul(u, f), mul(v, L))), "#7FB6FF", 1, .2);
+        linea(proy(sumar(mul(v, f), mul(u, -L))), proy(sumar(mul(v, f), mul(u, L))), "#7FB6FF", 1, .2); }
+    } else if (B.length === 1) {
+      const a = proy(mul(B[0], -S * 1.4)), b = proy(mul(B[0], S * 1.4));
+      linea(a, b, "#2E78FF", 9, .25); linea(a, b, "#7FB6FF", 2.5, .9);
+    }
+  }
+  if (ver.plano3d) { const pl = planoActual(); if (pl) { const [u, v] = pl.u, L = S;
+    poligono([[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([a, b]) => proy(sumar(mul(u, a * L), mul(v, b * L)))), "#FFE14D", .07, "#FFE14D"); } }
+  // ejes: la parte negativa punteada, la positiva con punta cónica
+  [[1, 0, 0, "x"], [0, 1, 0, "y"], [0, 0, 1, "z"]].forEach(([a, b, c, n]) => {
+    const e = [a, b, c];
+    linea(proy(mul(e, -S)), O, "#AAB6CE", 1.2, .3, [4, 5]);
+    flecha3D([0, 0, 0], mul(e, S * 1.08), "#AAB6CE", { ancho: 1.5, glow: false, cab: S * .06, alfa: .85 });
+    rotulo(n, proy(mul(e, S * 1.08)), "#EDEDED", { dx: 7, dy: -9, tam: 15, mono: false });
+    for (let t = paso; t <= S; t += paso) { const p = proy(mul(e, t)); ctx.save(); ctx.globalAlpha = niebla(p.d); ctx.fillStyle = "#7C93C7"; ctx.beginPath(); ctx.arc(p.x, p.y, 2 * p.k, 0, 7); ctx.fill(); ctx.restore(); }
+  });
+  // guías al piso de cada punta (debajo de los vectores)
+  if (ver.guias) { vs.forEach((_, i) => guiaPiso(vec(i), COL_V[i])); ws.forEach((w, j) => guiaPiso(wvec(w), COL_W[j])); }
+  // vectores (de atrás hacia adelante)
+  const cosas = [];
+  vs.forEach((v, i) => { const e = vec(i);
+    if (v.l !== 1) cosas.push({ d: proy(v.b).d, f: () => flecha3D([0, 0, 0], v.b, COL_V[i], { ancho: 1.5, glow: false, alfa: .4, dash: [5, 5] }) });   // la base sin escalar, tenue
+    cosas.push({ d: proy(e).d, f: () => { flecha3D([0, 0, 0], e, COL_V[i], { ancho: 3.2 }); rotulo((v.l !== 1 ? fmt(v.l) : "") + "v" + sub(i + 1), proy(e), COL_V[i]); } });
+  });
+  ws.forEach((w, j) => {
+    const r = wvec(w);
+    if (w.cadena && vs.length) {   // la construcción: α₁v₁, después α₂v₂ desde la punta, y así
+      let p = [0, 0, 0];
+      w.a.forEach((a, i) => { const q = sumar(p, mul(vec(i), a)), pp = p;
+        cosas.push({ d: (proy(pp).d + proy(q).d) / 2, f: () => flecha3D(pp, q, COL_V[i], { ancho: 2, glow: false, alfa: .8, cab: S * .06 }) }); p = q; });
+    }
+    cosas.push({ d: proy(r).d + .001, f: () => { flecha3D([0, 0, 0], r, COL_W[j], { ancho: 3.6 }); rotulo("w" + sub(j + 1), proy(r), COL_W[j]); } });
+  });
+  cosas.sort((a, b) => a.d - b.d).forEach(c => c.f());
+  ctx.save(); ctx.fillStyle = "#F8FAFC"; ctx.beginPath(); ctx.arc(O.x, O.y, 3.5, 0, 7); ctx.fill(); ctx.restore();
+}
+
+// ---------------------------------------------------------------- vista plana
+function dibujarPlano() {
+  const pl = planoActual();
+  if (!pl) { rotulo(ver.plano === "gen" ? "Los vectores no generan un plano: elegí otro." : "La normal no puede ser (0; 0; 0).", { x: W / 2, y: H / 2 }, "#FF9A9A", { alin: "center", mono: false, dx: 0, dy: 0 }); return { fuera: [] }; }
+  const [u1, u2] = pl.u, n = pl.n, c2 = v => [dot(v, u1), dot(v, u2)];
+  const todos = [...vs.map((v, i) => ({ v: vec(i), col: COL_V[i], nom: (v.l !== 1 ? fmt(v.l) : "") + "v" + sub(i + 1) })), ...ws.map((w, j) => ({ v: wvec(w), col: COL_W[j], nom: "w" + sub(j + 1) }))];
+  const Sp = Math.max(3, Math.ceil(Math.max(1, ...todos.map(t => Math.max(...c2(t.v).map(Math.abs)))) * 1.25));
+  const s = Math.min(W, H) / (2.3 * Sp), cx = W / 2, cy = H / 2 + 14, P = ([a, b]) => ({ x: cx + a * s, y: cy - b * s });
+  const paso = Sp <= 5 ? 1 : Sp <= 12 ? 2 : 5, Ax = Math.ceil((W / 2) / s), Ay = Math.ceil((H / 2) / s);
+  for (let t = -Ax; t <= Ax; t += paso) linea(P([t, -Ay]), P([t, Ay]), "#16233A", 1);
+  for (let t = -Ay; t <= Ay; t += paso) linea(P([-Ax, t]), P([Ax, t]), "#16233A", 1);
+  // el subespacio en el plano: la intersección (sólo lo del plano) o la proyección
+  if (ver.sub) {
+    const B = baseSpan(); let dirs;
+    if (ver.muestra === "proy") dirs = B.map(c2);
+    else { const m = B.map(b => dot(b, n));   // direcciones del subespacio que están en el plano
+      dirs = B.length === 3 ? [[1, 0], [0, 1]] : B.length === 2 ? (Math.abs(m[0]) + Math.abs(m[1]) < 1e-9 ? [[1, 0], [0, 1]] : [c2(sumar(mul(B[0], m[1]), mul(B[1], -m[0])))])
+        : B.length === 1 && Math.abs(m[0]) < 1e-9 ? [c2(B[0])] : []; }
+    const D = ortonormal(dirs.map(d => [...d, 0]), 1e-9).map(d => [d[0], d[1]]);
+    if (D.length === 2) { ctx.save(); ctx.globalAlpha = .12; ctx.fillStyle = "#2E78FF"; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    else if (D.length === 1) { const L = Math.max(Ax, Ay) * 2; const a = P([-D[0][0] * L, -D[0][1] * L]), b = P([D[0][0] * L, D[0][1] * L]); linea(a, b, "#2E78FF", 9, .25); linea(a, b, "#7FB6FF", 2.5, .9); }
+  }
+  // ejes del plano
+  linea(P([-Ax, 0]), P([Ax, 0]), "#AAB6CE", 1.4, .6); linea(P([0, -Ay]), P([0, Ay]), "#AAB6CE", 1.4, .6);
+  ctx.save(); ctx.fillStyle = "#7C93C7"; ctx.font = "11px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
+  for (let t = paso; t <= Ax; t += paso) { [t, -t].forEach(k => { const p = P([k, 0]); if (p.x > 20 && p.x < W - 20) ctx.fillText(fmt(k), p.x, p.y + 15); }); }
+  ctx.textAlign = "right"; for (let t = paso; t <= Ay; t += paso) { [t, -t].forEach(k => { const p = P([0, k]); if (p.y > 60 && p.y < H - 50) ctx.fillText(fmt(k), p.x - 7, p.y + 4); }); }
+  ctx.restore();
+  rotulo(pl.ejes[0], { x: W - 22, y: cy }, "#EDEDED", { dx: 0, dy: -12, alin: "right", mono: false });
+  rotulo(pl.ejes[1], { x: cx, y: 64 }, "#EDEDED", { dx: 8, dy: 0, mono: false });
+  // la construcción de cada combinación: α₁v₁, después α₂v₂ desde la punta, y así.
+  // Proyectar es lineal: la cadena de las proyecciones termina justo en la proyección de w.
+  // En «sólo lo del plano» se dibuja si todos los tramos están en el plano; si no, se avisa.
+  const sinCadena = [];
+  ws.forEach((w, j) => {
+    if (!w.cadena || !vs.length) return;
+    const tramos = w.a.map((a, i) => ({ v: mul(vec(i), a), i })).filter(s => norm(s.v) > 1e-9);
+    if (ver.muestra === "solo" && !tramos.every(s => enPlano(s.v, n))) { if (tramos.length) sinCadena.push("w" + sub(j + 1)); return; }
+    let p = [0, 0, 0];
+    tramos.forEach(s => { const q = sumar(p, s.v), dentro = enPlano(s.v, n);
+      flecha(P(c2(p)), P(c2(q)), COL_V[s.i], { ancho: 2, glow: false, alfa: .8, cab: 10, dash: dentro ? null : [6, 5] }); p = q; });
+  });
+  // vectores: sólo los del plano, o la proyección de todos (punteada si el vector no estaba en el plano)
+  const fuera = [], O = P([0, 0]);
+  todos.forEach(t => {
+    const dentro = enPlano(t.v, n);
+    if (ver.muestra === "solo" && !dentro) { fuera.push(t.nom); return; }
+    const q = P(c2(t.v));
+    flecha(O, q, t.col, { ancho: dentro ? 3.2 : 2.4, dash: dentro ? null : [7, 6], glow: dentro });
+    rotulo(dentro ? t.nom : "proy " + t.nom, q, t.col);
+  });
+  ctx.save(); ctx.fillStyle = "#F8FAFC"; ctx.beginPath(); ctx.arc(O.x, O.y, 3.5, 0, 7); ctx.fill(); ctx.restore();
+  return { fuera, pl, sinCadena };
+}
+
+function dibujar() {
+  S = mundo();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#080D1A"; ctx.fillRect(0, 0, W, H);
+  const chip = document.getElementById("chip");
+  if (ver.modo === "3d") {
+    dibujar3D();
+    const r = baseSpan().length;
+    chip.innerHTML = vs.length ? `⟨${vs.map((_, i) => "v" + sub(i + 1)).join(", ")}⟩ = <b>${["el origen", "una recta", "un plano", "todo R³"][r]}</b>` : "Agregá un vector";
+  } else {
+    const { fuera, pl, sinCadena = [] } = dibujarPlano();
+    chip.innerHTML = pl ? `<b>${pl.nombre}</b> · ${ver.muestra === "proy" ? "proyecciones" : "sólo lo que está en el plano"}${fuera.length ? ` · fuera: ${fuera.join(", ")}` : ""}${sinCadena.length ? ` · la construcción de ${sinCadena.join(", ")} sale del plano` : ""}` : "";
+  }
+}
+
+// ---------------------------------------------------------------- girar, acercar (mouse, dedo, pellizco)
+const punteros = new Map(); let pellizco = null;
+cv.addEventListener("pointerdown", e => { if (ver.modo !== "3d") return; inercia = null; cv.setPointerCapture(e.pointerId); punteros.set(e.pointerId, [e.clientX, e.clientY]);
+  if (punteros.size === 2) { const [a, b] = [...punteros.values()]; pellizco = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: cam.zoom }; } });
+cv.addEventListener("pointermove", e => {
+  if (!punteros.has(e.pointerId)) return;
+  const prev = punteros.get(e.pointerId); punteros.set(e.pointerId, [e.clientX, e.clientY]);
+  if (punteros.size === 2 && pellizco) { const [a, b] = [...punteros.values()]; cam.zoom = Math.max(.4, Math.min(4, pellizco.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pellizco.d)); pedir(); return; }
+  const dy = (e.clientX - prev[0]) * 0.008, dp = (e.clientY - prev[1]) * 0.008;
+  cam.yaw += dy; cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch + dp));
+  inercia = { y: dy, p: dp, t: performance.now() };
+  pedir();
+});
+// al soltar, sigue girando un poco y frena solo (el movimiento es lo que más ayuda a "leer" el 3D)
+let inercia = null;
+function girarSolo() {
+  if (!inercia || punteros.size) return;
+  inercia.y *= .93; inercia.p *= .93;
+  if (Math.abs(inercia.y) + Math.abs(inercia.p) < 2e-4) { inercia = null; return; }
+  cam.yaw += inercia.y; cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch + inercia.p)); pedir(); requestAnimationFrame(girarSolo);
+}
+["pointerup", "pointercancel"].forEach(ev => cv.addEventListener(ev, e => {
+  punteros.delete(e.pointerId); if (punteros.size < 2) pellizco = null;
+  if (!punteros.size && inercia && performance.now() - inercia.t < 80) requestAnimationFrame(girarSolo); else if (!punteros.size) inercia = null;
+}));
+cv.addEventListener("wheel", e => { if (ver.modo !== "3d") return; e.preventDefault(); cam.zoom = Math.max(.4, Math.min(4, cam.zoom * Math.exp(-e.deltaY * 0.0015))); pedir(); }, { passive: false });
+document.getElementById("zoom-mas").onclick = () => { cam.zoom = Math.min(4, cam.zoom * 1.2); pedir(); };
+document.getElementById("zoom-menos").onclick = () => { cam.zoom = Math.max(.4, cam.zoom / 1.2); pedir(); };
+document.getElementById("reset").onclick = () => { cam = { ...CAM0 }; inercia = null; pedir(); };
+document.getElementById("guias").onclick = e => { ver.guias = !ver.guias; e.currentTarget.classList.toggle("on", ver.guias); e.currentTarget.setAttribute("aria-pressed", ver.guias); pedir(); };
+
+// ---------------------------------------------------------------- sliders
+function slider(caja, et, valor, min, max, paso, alCambiar, fmtV = v => fmt(v)) {
+  caja.innerHTML = `<div class="fila"><span>${et}</span><b></b></div><input type="range" min="${min}" max="${max}" step="${paso}">`;
+  const inp = caja.querySelector("input"), out = caja.querySelector("b");
+  const pintar = v => { out.textContent = fmtV(v); inp.style.setProperty("--p", ((v - min) / (max - min) * 100) + "%"); };
+  inp.setAttribute("aria-label", et.replace(/<[^>]+>/g, ""));
+  inp.addEventListener("input", () => { const v = +inp.value; pintar(v); alCambiar(v); });
+  const api = { poner(v) { inp.value = v; pintar(v); }, fijo(si) { inp.disabled = si; caja.classList.toggle("fijo", si); } };
+  api.poner(valor); return api;
+}
+
+// ---------------------------------------------------------------- panel de vectores
+function pintarVectores() {
+  const cont = document.getElementById("vectores");
+  document.getElementById("cuantos").textContent = `${vs.length} de ${MAX_V}`;
+  cont.innerHTML = vs.map((v, i) => `<div class="vec" style="--c:${COL_V[i]}">
+    <div class="vec-cab">v${sub(i + 1)}<span class="ef" data-ef="${i}"></span><button class="x" data-q="${i}" aria-label="Quitar v${i + 1}">✕</button></div>
+    <div class="coords">(${[0, 1, 2].map(k => `<input class="num" inputmode="decimal" data-v="${i},${k}" value="${enCampo(v.b[k])}" aria-label="v${i + 1}, coordenada ${"xyz"[k]}">`).join(";")})</div>
+    <div class="ctrl" data-l="${i}"></div></div>`).join("") || `<p class="nota">No hay vectores. Agregá uno.</p>`;
+  vs.forEach((v, i) => {
+    slider(cont.querySelector(`[data-l="${i}"]`), `escala λ${sub(i + 1)}`, v.l, -3, 3, .05, x => { v.l = x; cambiaronLosVectores(); });
+  });
+  cont.querySelectorAll(".num").forEach(inp => inp.addEventListener("input", () => {
+    const [i, k] = inp.dataset.v.split(",").map(Number), x = num(inp.value);
+    inp.classList.toggle("mal", x === null); if (x === null) return;
+    vs[i].b[k] = x; cambiaronLosVectores();
+  }));
+  cont.querySelectorAll(".x").forEach(b => b.onclick = () => { const i = +b.dataset.q; vs.splice(i, 1); ws.forEach(w => { w.a.splice(i, 1); w.fija = false; }); pintarTodo(); });
+  document.getElementById("mas-vec").disabled = vs.length >= MAX_V;
+  efectivos();
+}
+function efectivos() { vs.forEach((v, i) => { const e = document.querySelector(`[data-ef="${i}"]`); if (e) e.textContent = v.l !== 1 ? `${fmt(v.l)}·v${sub(i + 1)} = ${tupla(vec(i))}` : ""; }); }
+// si cambian los vectores, las combinaciones fijas se sueltan (su resultado ya no sería el mismo)
+function cambiaronLosVectores() {
+  const soltar = ws.some(w => w.fija); ws.forEach(w => w.fija = false);
+  efectivos(); if (soltar) pintarCombs(); else actualizarCombs(); pintarSub(); pintarPlanos(); pedir();
+}
+document.getElementById("mas-vec").onclick = () => {
+  const sug = [[2, 0, 1], [0, 2, 1], [1, 1, 3], [1, -1, 0]].find(s => !vs.some(v => v.b.join() === s.join())) || [1, 0, 0];
+  vs.push({ b: [...sug], l: 1 }); ws.forEach(w => { w.a.push(0); w.fija = false; }); pintarTodo();
+};
+
+// ---------------------------------------------------------------- combinaciones lineales
+const sliders = [];   // sliders[j][i]: coeficiente i de la combinación j
+function pintarCombs() {
+  const cont = document.getElementById("combs");
+  cont.innerHTML = ws.map((w, j) => `<div class="comb" style="--c:${COL_W[j]}">
+    <div class="vec-cab" style="--c:${COL_W[j]}">w${sub(j + 1)}<span class="ef comb-res" data-res="${j}"></span><button class="x" data-qw="${j}" aria-label="Quitar w${j + 1}">✕</button></div>
+    <div class="comb-ec" data-ec="${j}"></div>
+    <div class="interrs"><button class="interr" data-fija="${j}" role="switch" aria-checked="${w.fija}"><span class="p"></span>Fijar el resultado</button>
+      <button class="interr" data-cad="${j}" role="switch" aria-checked="${w.cadena}"><span class="p"></span>Ver la construcción</button></div>
+    <div data-lib="${j}"></div>
+    ${vs.map((_, i) => `<div class="ctrl" style="--c:${COL_V[i]}" data-a="${j},${i}"></div>`).join("")}</div>`).join("")
+    || `<p class="nota">Una combinación lineal es <b>w = α₁v₁ + α₂v₂ + …</b> Creá una y mové los coeficientes.</p>`;
+  sliders.length = 0;
+  ws.forEach((w, j) => {
+    sliders[j] = vs.map((_, i) => slider(cont.querySelector(`[data-a="${j},${i}"]`), `<i>α${sub(i + 1)}</i> (de v${sub(i + 1)})`, w.a[i], -RANGO, RANGO, .05, x => moverCoef(j, i, x)));
+    cont.querySelector(`[data-fija="${j}"]`).onclick = () => { w.fija = !w.fija; if (w.fija) w.t = wvec(w); pintarCombs(); pedir(); };
+    cont.querySelector(`[data-cad="${j}"]`).onclick = e => { w.cadena = !w.cadena; e.currentTarget.setAttribute("aria-checked", w.cadena); pedir(); };
+    cont.querySelector(`[data-qw="${j}"]`).onclick = () => { ws.splice(j, 1); pintarCombs(); pedir(); };
+  });
+  document.getElementById("mas-comb").disabled = ws.length >= MAX_W || !vs.length;
+  actualizarCombs();
+}
+// con el resultado fijo: w = Σαᵢvᵢ no puede cambiar. Los α se mueven sólo en el núcleo (las combinaciones que dan 0):
+// α_nuevo = α + N·s. Para llevar αⱼ al valor pedido con el menor cambio posible, s = Nⱼᵀ·δ / |Nⱼ|².
+// Si la fila Nⱼ es 0, ese coeficiente está determinado: no tiene libertad.
+function moverCoef(j, i, x) {
+  const w = ws[j];
+  if (!w.fija) { w.a[i] = x; actualizarCombs(); pedir(); return; }
+  const N = baseNucleo(), fila = N.map(b => b[i]), nf = dot(fila, fila);
+  if (nf < 1e-12) { sliders[j][i].poner(w.a[i]); return; }
+  let delta = x - w.a[i];
+  const paso = d => w.a.map((a, k) => a + N.reduce((s, b, m) => s + b[k] * fila[m] * d / nf, 0));
+  // si algún otro coeficiente se saldría de [−4, 4], el movimiento se acorta hasta el borde
+  let nuevo = paso(delta), f = 1;
+  nuevo.forEach((a, k) => { if (Math.abs(a) > RANGO + 1e-9) { const lim = Math.sign(a) * RANGO, d0 = nuevo[k] - w.a[k]; if (Math.abs(d0) > 1e-12) f = Math.min(f, (lim - w.a[k]) / d0); } });
+  if (f < 1) nuevo = paso(delta * Math.max(0, f));
+  w.a = nuevo;
+  sliders[j].forEach((s, k) => s.poner(w.a[k]));
+  actualizarCombs(); pedir();
+}
+function actualizarCombs() {
+  const N = baseNucleo(), n = vs.length, r = n - N.length;
+  ws.forEach((w, j) => {
+    const r3 = wvec(w);
+    const res = document.querySelector(`[data-res="${j}"]`); if (res) res.textContent = "= " + tupla(r3);
+    const ec = document.querySelector(`[data-ec="${j}"]`);
+    if (ec) ec.innerHTML = `<span class="w">w${sub(j + 1)}</span> = ` + (w.a.map((a, i) => `${fmt(a)}·<span style="color:${COL_V[i]}">v${sub(i + 1)}</span>`).join(" + ").replace(/\+ −/g, "− ") || "0");
+    const lib = document.querySelector(`[data-lib="${j}"]`);
+    if (lib) lib.innerHTML = !w.fija ? "" : `<div class="libertad">Resultado fijo en <b>${tupla(w.t)}</b>. Grados de libertad: n − rango = ${n} − ${r} = <b>${n - r}</b>.
+      ${n - r === 0 ? "Los vectores son LI: la combinación que da ese resultado es única, no se puede mover ningún coeficiente." :
+        n - r === 1 ? "Podés mover un coeficiente: los demás se acomodan solos para que el resultado no cambie." :
+        `Podés mover ${n - r} coeficientes con libertad: los demás se acomodan solos.`}</div>`;
+    (sliders[j] || []).forEach((s, i) => s.fijo(w.fija && N.every(b => Math.abs(b[i]) < 1e-9)));
+  });
+}
+document.getElementById("mas-comb").onclick = () => { ws.push({ a: vs.map((_, i) => i < 2 ? 1 : 0), fija: false, cadena: true, t: null }); pintarCombs(); pedir(); };
+
+// ---------------------------------------------------------------- subespacio generado
+function entero(v) {   // escala un vector para que quede con números lindos (enteros si se puede)
+  const nz = v.filter(c => Math.abs(c) > 1e-9); if (!nz.length) return v;
+  for (let d = 1; d <= 12; d++) { const w = v.map(c => c * d); if (w.every(c => Math.abs(c - Math.round(c)) < 1e-6)) {
+    const e = w.map(Math.round), g = e.reduce((a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; }, 0) || 1;
+    const s = (e.find(c => c !== 0) < 0 ? -1 : 1); return e.map(c => s * c / g); } }
+  const m = Math.min(...nz.map(Math.abs)); return v.map(c => +(c / m).toFixed(3));
+}
+function ecPlano(n) {
+  const e = entero(n); let s = "";
+  e.forEach((c, k) => { if (Math.abs(c) < 1e-12) return; const m = Math.abs(c) === 1 ? "" : fmt(Math.abs(c), 3); s += (c < 0 ? (s ? " − " : "−") : (s ? " + " : "")) + m + "xyz"[k]; });
+  return s + " = 0";
+}
+function pintarSub() {
+  const el = document.getElementById("info-sub"), n = vs.length;
+  if (!n) { el.innerHTML = `<p class="nota">Sin vectores, el subespacio es sólo el origen.</p>`; return; }
+  const B = baseSpan(), r = B.length, gen = `⟨${vs.map((_, i) => "v" + sub(i + 1)).join(", ")}⟩`;
+  const { crudo } = nucleo(vecs(), tol());
+  let txt = `<div class="dim">${gen} = ${["{0}: sólo el origen", "una recta por el origen", "un plano por el origen", "todo R³"][r]} · dimensión ${r}</div>`;
+  if (r === 1) { const d = vecs().find(v => norm(v) > tol()); txt += `<div class="ec">t·${tupla(entero(d))}, con t ∈ R</div>`; }
+  if (r === 2) { const [a, b] = vecs().filter((v, i, L) => ortonormal(L.slice(0, i + 1), tol()).length > ortonormal(L.slice(0, i), tol()).length); txt += `<div class="ec">${ecPlano(cruz(a, b))}</div>`; }
+  txt += `<div>${r === n ? `<span class="pild li">linealmente independientes</span> rango ${r} = cantidad de vectores` : `<span class="pild ld">linealmente dependientes</span> rango ${r} &lt; ${n} vectores`}</div>`;
+  if (crudo.length) {   // la relación de dependencia más simple: el vector "libre" en función de los anteriores
+    const { libre, x } = crudo[0], partes = x.map((c, i) => i === libre || Math.abs(c) < 1e-9 ? null : `${fraccion(-c)}·v${sub(i + 1)}`).filter(Boolean);
+    txt += `<div class="rel">v${sub(libre + 1)} = ${partes.length ? partes.join(" + ").replace(/\+ −/g, "− ") : "0"}</div>`;
+  }
+  el.innerHTML = txt;
+}
+document.getElementById("ver-sub").onclick = e => { ver.sub = !ver.sub; e.currentTarget.setAttribute("aria-checked", ver.sub); pedir(); };
+
+// ---------------------------------------------------------------- vista plana: qué plano y qué mostrar
+function pintarPlanos() {
+  const r = baseSpan().length, cont = document.getElementById("planos");
+  cont.innerHTML = PLANOS.map(p => {
+    const no = p.id === "gen" && r !== 2;
+    return `<button class="opc ${ver.plano === p.id ? "on" : ""}" data-p="${p.id}" ${no ? 'aria-disabled="true"' : ""}><span class="o"></span>${p.nombre}${no ? " (necesita rango 2)" : ""}</button>`
+      + (p.id === "otro" && ver.plano === "otro" ? `<div class="normal-ed">n = (${[0, 1, 2].map(k => `<input class="num" inputmode="decimal" data-n="${k}" value="${enCampo(ver.normal[k])}" aria-label="normal, ${"abc"[k]}">`).join(";")})</div>` : "");
+  }).join("");
+  cont.querySelectorAll(".opc").forEach(b => b.onclick = () => { if (b.getAttribute("aria-disabled") === "true") return; ver.plano = b.dataset.p; pintarPlanos(); pedir(); });
+  cont.querySelectorAll("[data-n]").forEach(inp => inp.addEventListener("input", () => { const x = num(inp.value); inp.classList.toggle("mal", x === null); if (x === null) return; ver.normal[+inp.dataset.n] = x; pedir(); }));
+  if (ver.plano === "gen" && r !== 2) { ver.plano = "z"; pintarPlanos(); }
+  document.getElementById("modos").innerHTML = [["proy", "Las proyecciones de todos los vectores"], ["solo", "Sólo los vectores que están en el plano"]].map(([m, t]) =>
+    `<button class="opc ${ver.muestra === m ? "on" : ""}" data-mo="${m}"><span class="o"></span>${t}</button>`).join("");
+  document.querySelectorAll("[data-mo]").forEach(b => b.onclick = () => { ver.muestra = b.dataset.mo; pintarPlanos(); pedir(); });
+}
+document.getElementById("plano-3d").onclick = e => { ver.plano3d = !ver.plano3d; e.currentTarget.setAttribute("aria-checked", ver.plano3d); pedir(); };
+document.querySelectorAll(".seg [data-m]").forEach(b => b.onclick = () => {
+  ver.modo = b.dataset.m; document.querySelectorAll(".seg [data-m]").forEach(o => o.classList.toggle("on", o === b));
+  caja.classList.toggle("plano", ver.modo === "plano");
+  document.getElementById("pista").innerHTML = ver.modo === "3d" ? 'Arrastrá para girar<span class="larga"> · rueda o pellizco para acercar</span>' : "Elegí el plano en «Vista plana»";
+  ["zoom-mas", "zoom-menos", "reset", "guias"].forEach(id => document.getElementById(id).style.display = ver.modo === "3d" ? "" : "none");
+  pedir();
+});
+
+function pintarTodo() { pintarVectores(); pintarCombs(); pintarSub(); pintarPlanos(); pedir(); }
+
+// embebido en la ficha del sitio: avisa su alto y cuándo lo están usando
+if (parent !== window) {
+  const avisar = d => parent.postMessage({ profee: d.tipo, ...d }, "*");
+  new ResizeObserver(() => avisar({ tipo: "alto", alto: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+  addEventListener("pointerdown", e => avisar({ tipo: "en-uso", puntero: e.pointerType }), { capture: true, passive: true });
+}
+pintarTodo();
+medir();
+</script>
+</body>
+</html>
