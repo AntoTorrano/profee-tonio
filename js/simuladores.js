@@ -68,6 +68,8 @@ const SIMULADORES = [
     desc: "Tres problemas con productos e insumos: la región factible, la recta Z = k que movés hasta el óptimo y el análisis de sensibilidad, con recursos saturados y precios sombra." },
   { id: "espacio-r3", fecha: "2026-11-10", tema: "Álgebra lineal", titulo: "Vectores en R³: combinaciones lineales y subespacios",
     desc: "Hasta 4 vectores en el espacio: sus combinaciones lineales, el subespacio que generan y cuántos coeficientes quedan libres si fijás el resultado. Con vista plana y proyecciones." },
+  { id: "leyes-de-newton", fecha: "2026-11-19", tema: "Física", titulo: "Leyes de Newton: un carrito en una recta",
+    desc: "Modo cinemático con posición, velocidad y aceleración; modo dinámico con fuerza y masa (a = F/m). Gráficos x, v y a en vivo, estela y la opción de habilitar números negativos." },
 ];
 
 function tarjeta(s, { hover = false, sinPortada = false } = {}) {

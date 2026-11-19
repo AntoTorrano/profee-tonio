@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leyes de Newton en una recta · Profee Tonio</title>
+<link rel="stylesheet" href="_sim.css">
+<style>
+  /* Un carrito que se mueve sobre la recta numérica. Modo cinemático (x, v, a) y modo dinámico (F, m → a = F/m).
+     Los negativos se pueden apagar para empezar con todo ≥ 0, y después prenderlos para hablar de sentidos
+     y de sistema de referencia (incluso dar vuelta el eje). */
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--fondo); }
+  .nw { padding: 16px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .cab-nw h1 { margin: 0; font: 800 22px/1.15 Inter, sans-serif; }
+  .cab-nw h1 small { display: block; margin-top: 4px; font: 500 13px/1.3 Inter, sans-serif; color: var(--texto-tenue); }
+  .area { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .col-ctrl { display: grid; gap: 14px; min-width: 0; }
+  .col-escena { display: grid; gap: 14px; min-width: 0; position: sticky; top: 14px; }
+  .tarj { padding: 16px 18px; border-radius: 16px; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--linea); min-width: 0; }
+  .tarj > .rot { margin-bottom: 12px; }
+  .seg { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--fondo-alt); box-shadow: inset 0 0 0 1px var(--linea); }
+  .seg button { all: unset; cursor: pointer; flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; font: 600 14px/1 Inter, sans-serif; color: var(--texto-suave); }
+  .seg button.on { background: var(--neon-core); color: var(--fondo); box-shadow: 0 0 14px rgb(127 182 255 / .35); }
+  .seg button:focus-visible { outline: 2px solid var(--neon-core); }
+  .seg.chico button { padding: 7px 10px; font-size: 13px; }
+
+  .ctrl { display: grid; gap: 4px; }
+  .ctrl + .ctrl { margin-top: 14px; }
+  .ctrl .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--texto-suave); }
+  .ctrl .fila span b { font-weight: 700; }
+  .ctrl .fila > b { font: 600 15px/1 "JetBrains Mono", monospace; color: var(--texto); white-space: nowrap; }
+  .ctrl.calc .fila > b { color: var(--amarillo); }
+  .ctrl.vivo .fila > b::after { content: " ●"; color: var(--verde); font-size: 10px; vertical-align: 2px; }
+  .lectura { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: 10px; background: rgb(255 225 77 / .06); box-shadow: inset 0 0 0 1px rgb(255 225 77 / .3); margin-top: 14px; font-size: 14px; color: var(--texto-medio); }
+  .lectura b { font: 700 16px/1 "JetBrains Mono", monospace; color: var(--amarillo); }
+  .nota { font-size: 13px; line-height: 1.55; color: var(--texto-tenue); margin: 12px 0 0; }
+  .nota b { color: var(--texto-suave); }
+
+  .interr { all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; font: 600 14px/1.25 Inter, sans-serif; color: var(--texto); padding: 4px 0; }
+  .interr small { display: block; font: 500 12.5px/1.35 Inter, sans-serif; color: var(--texto-tenue); }
+  .interr .p { width: 40px; height: 23px; border-radius: 999px; background: var(--riel); position: relative; flex: none; transition: background .2s; }
+  .interr .p::after { content: ""; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: var(--texto-suave); transition: transform .2s, background .2s; }
+  .interr[aria-checked="true"] .p { background: var(--neon); }
+  .interr[aria-checked="true"] .p::after { transform: translateX(17px); background: #fff; }
+  .interr:focus-visible { outline: 2px solid var(--neon-core); outline-offset: 3px; border-radius: 6px; }
+  .interr + .interr { margin-top: 10px; }
+  .oculto { display: none !important; }
+  .fila-eje { margin-top: 12px; display: grid; gap: 6px; font-size: 13.5px; color: var(--texto-suave); }
+
+  .pista { position: relative; padding: 0; overflow: hidden; }
+  .pista canvas { display: block; width: 100%; height: 300px; }
+  .pista .sobre { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+  .pista .sobre > * { pointer-events: auto; }
+  .boton { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font: 600 13.5px/1 Inter, sans-serif;
+    color: var(--texto); background: rgb(10 14 20 / .92); box-shadow: inset 0 0 0 1px var(--linea); }
+  .boton:hover { box-shadow: inset 0 0 0 1px var(--neon-suave); }
+  .boton.play { color: var(--fondo); background: var(--verde); box-shadow: 0 0 14px rgb(52 211 153 / .35); }
+  .chip { margin-left: auto; padding: 8px 13px; border-radius: 999px; font: 600 13px/1.25 Inter, sans-serif; color: var(--texto-suave); background: rgb(8 13 26 / .92); box-shadow: inset 0 0 0 1px var(--linea); }
+  .chip.frena { color: #FFB3B3; box-shadow: inset 0 0 0 1px rgb(255 122 122 / .55); }
+  .chip.acelera { color: var(--verde); box-shadow: inset 0 0 0 1px rgb(52 211 153 / .55); }
+  .chip.borde { color: var(--amarillo); box-shadow: inset 0 0 0 1px rgb(255 225 77 / .6); }
+  .graficos { padding: 0; overflow: hidden; }
+  .graficos canvas { display: block; width: 100%; height: 330px; }
+
+  @media (max-width: 899px) {
+    .nw { padding: 10px 12px 32px; gap: 10px; }
+    .cab-nw h1 { font-size: 19px; }
+    .area { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    /* en el celu: la pista arriba y fija; los controles pasan por debajo; los gráficos al final */
+    .col-escena { display: contents; }
+    .pista { position: sticky; top: 0; z-index: 3; box-shadow: inset 0 0 0 1px var(--linea), 0 10px 20px rgb(4 6 13 / .8); order: -1; }
+    .pista canvas { height: 215px; }
+    .pista { display: flex; flex-direction: column; }
+    .pista .sobre { position: static; padding: 10px 10px 0; order: -1; }   /* botones y aviso arriba del dibujo, no encima */
+    .graficos { order: 2; }
+    .graficos canvas { height: 300px; }
+    .chip { margin-left: 0; }
+  }
+  @media (pointer: coarse) { .boton { min-height: 40px; box-sizing: border-box; } .seg button { min-height: 40px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; } }
+</style>
+</head>
+<body>
+<div class="nw">
+  <div class="cab-nw"><h1>Leyes de Newton en una recta<small>Posición, velocidad y aceleración · fuerza y masa</small></h1></div>
+  <div class="area">
+    <div class="col-ctrl">
+      <section class="tarj">
+        <div class="seg" role="group" aria-label="Modo"><button data-modo="cin" class="on">Cinemático</button><button data-modo="din">Dinámico</button></div>
+        <div id="ctrl-cin" style="margin-top:16px">
+          <div class="ctrl" id="c-x"></div><div class="ctrl" id="c-v"></div><div class="ctrl" id="c-a"></div>
+          <p class="nota" id="nota-cin"></p>
+        </div>
+        <div id="ctrl-din" class="oculto" style="margin-top:16px">
+          <div class="ctrl" id="c-f"></div><div class="ctrl" id="c-m"></div>
+          <div class="lectura">a = F / m <b id="a-din"></b></div>
+          <p class="nota" id="nota-din"></p>
+        </div>
+      </section>
+      <section class="tarj">
+        <div class="rot">Opciones</div>
+        <button class="interr" id="neg" role="switch" aria-checked="false"><span class="p"></span><span>Usar números negativos<small>Para hablar de sentidos y de sistema de referencia</small></span></button>
+        <div class="fila-eje oculto" id="fila-eje"><span>Sentido positivo del eje</span>
+          <div class="seg chico" role="group" aria-label="Sentido positivo"><button data-s="1" class="on">→ hacia la derecha</button><button data-s="-1">← hacia la izquierda</button></div></div>
+        <div style="margin-top:14px"><button class="interr" id="estela" role="switch" aria-checked="true"><span class="p"></span><span>Estela<small>Dónde estuvo cada medio segundo</small></span></button></div>
+        <div class="fila-eje"><span>Velocidad de la simulación</span>
+          <div class="seg chico" role="group" aria-label="Velocidad de la simulación"><button data-r="0.25">¼×</button><button data-r="0.5">½×</button><button data-r="1" class="on">1×</button></div></div>
+      </section>
+    </div>
+    <div class="col-escena">
+      <section class="tarj pista">
+        <canvas id="cv-pista" aria-label="La recta numérica con el carrito"></canvas>
+        <div class="sobre">
+          <button class="boton play" id="play">⏸ Pausa</button>
+          <button class="boton" id="reiniciar">↺ Reiniciar</button>
+          <span class="chip" id="chip"></span>
+        </div>
+      </section>
+      <section class="tarj graficos"><canvas id="cv-graf" aria-label="Gráficos de x, v y a en función del tiempo"></canvas></section>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- estado físico
+// Se guarda en el "mundo" (positivo = hacia la derecha). Lo que se muestra es en el sistema de referencia
+// elegido: valor mostrado = s · valor del mundo, con s = +1 (eje hacia la derecha) o −1 (hacia la izquierda).
+const L = 50;                         // la pista va de −50 m a 50 m (o de 0 a 50 sin negativos)
+const VMAX = 10, AMAX = 3, FMAX = 10, MMIN = 1, MMAX = 10;
+let modo = "cin", neg = false, s = 1, estela = true, ritmo = 1, corriendo = true;
+let p = 0, u = 0, acel = 0;           // posición, velocidad y aceleración (mundo)
+let F = 0, m = 2;                     // dinámico: fuerza (mundo) y masa
+let t = 0, borde = false;
+let marcas = [], proxMarca = 0;       // la estela: posiciones cada 0,5 s
+let hist = [];                        // historia para los gráficos: { t, x, v, a }
+
+const fmt = (v, d = 1) => { const r = Math.round(v * 10 ** d) / 10 ** d; return (Object.is(r, -0) ? 0 : r).toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−"); };
+const lo = () => neg ? -L : 0;
+const aDin = () => F / m;
+const aActual = () => modo === "din" ? aDin() : acel;
+
+// ---------------------------------------------------------------- sliders (con el valor que sigue al movimiento)
+function slider(caja, et, min, max, paso, alCambiar, unidad) {
+  caja.innerHTML = `<div class="fila"><span>${et}</span><b></b></div><input type="range" min="${min}" max="${max}" step="${paso}">`;
+  const inp = caja.querySelector("input"), out = caja.querySelector(".fila > b");   // el valor (no la letra de la etiqueta)
+  let lmin = min, lmax = max, tocando = false;
+  const pintar = v => { out.textContent = fmt(v, paso < .1 ? 2 : 1) + " " + unidad; inp.style.setProperty("--p", ((Math.max(lmin, Math.min(lmax, v)) - lmin) / (lmax - lmin) * 100) + "%"); };
+  inp.setAttribute("aria-label", et.replace(/<[^>]+>/g, ""));
+  inp.addEventListener("input", () => { alCambiar(+inp.value); pintar(+inp.value); });
+  ["pointerdown", "touchstart"].forEach(ev => inp.addEventListener(ev, () => tocando = true, { passive: true }));
+  ["pointerup", "pointercancel", "touchend", "blur"].forEach(ev => inp.addEventListener(ev, () => tocando = false));
+  return {
+    poner(v) { if (tocando) return; inp.value = Math.max(lmin, Math.min(lmax, v)); pintar(v); },
+    rango(a, b) { lmin = a; lmax = b; inp.min = a; inp.max = b; },
+    vivo(si) { caja.classList.toggle("vivo", si); },
+  };
+}
+const sx = slider(document.getElementById("c-x"), "<b style='color:#7FB6FF'>x</b> · posición", -L, L, .1, v => { p = s * v; borde = false; limpiarEstela(); }, "m");
+const sv = slider(document.getElementById("c-v"), "<b style='color:#4FC3E8'>v</b> · velocidad", -VMAX, VMAX, .1, v => { u = s * v; borde = false; }, "m/s");
+const sa = slider(document.getElementById("c-a"), "<b style='color:#FFE14D'>a</b> · aceleración", -AMAX, AMAX, .05, v => { acel = s * v; borde = false; }, "m/s²");
+const sf = slider(document.getElementById("c-f"), "<b style='color:#34D399'>F</b> · fuerza neta", -FMAX, FMAX, .1, v => { F = s * v; borde = false; }, "N");
+const sm = slider(document.getElementById("c-m"), "<b>m</b> · masa", MMIN, MMAX, .1, v => { m = v; borde = false; }, "kg");
+
+function rangos() {
+  sx.rango(neg ? -L : 0, L); sv.rango(neg ? -VMAX : 0, VMAX); sa.rango(neg ? -AMAX : 0, AMAX); sf.rango(neg ? -FMAX : 0, FMAX); sm.rango(MMIN, MMAX);
+}
+function sincronizar() {   // los sliders muestran el estado (en el sistema de referencia elegido)
+  sx.poner(s * p); sv.poner(s * u); sa.poner(s * acel); sf.poner(s * F); sm.poner(m);
+  document.getElementById("a-din").textContent = fmt(s * aDin(), 2) + " m/s²";
+  const mueve = corriendo && !borde;
+  sx.vivo(mueve && Math.abs(u) > 1e-9 || mueve && Math.abs(aActual()) > 1e-9); sv.vivo(mueve && Math.abs(aActual()) > 1e-9);
+}
+
+// ---------------------------------------------------------------- simulación (aceleración constante en cada paso: exacta)
+let antes = performance.now();
+function paso(ahora) {
+  const dt = Math.min(.05, (ahora - antes) / 1000) * ritmo; antes = ahora;
+  if (corriendo && !borde && dt > 0) {
+    const a = aActual();
+    let pn = p + u * dt + a * dt * dt / 2, un = u + a * dt;
+    // la pista se termina: el carrito se detiene en el borde
+    if (pn > L || pn < lo()) { pn = Math.max(lo(), Math.min(L, pn)); borde = true; }
+    p = pn; u = un; t += dt;
+    if (modo === "din") acel = a;
+    if (t >= proxMarca) { marcas.push(p); if (marcas.length > 40) marcas.shift(); proxMarca = t + .5; }
+    hist.push({ t, x: p, v: u, a });
+    while (hist.length && hist[0].t < t - 12) hist.shift();
+  }
+  sincronizar(); dibujarPista(); dibujarGraficos(); pintarChip();
+  requestAnimationFrame(paso);
+}
+function limpiarEstela() { marcas = []; proxMarca = t; }
+
+// ---------------------------------------------------------------- dibujo: la pista
+const cvP = document.getElementById("cv-pista"), cP = cvP.getContext("2d");
+const cvG = document.getElementById("cv-graf"), cG = cvG.getContext("2d");
+function ajustar(cv) { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); } return { W: r.width, H: r.height, d }; }
+function flechaH(c, x0, y, x1, col, ancho = 4) {
+  const L = x1 - x0; if (Math.abs(L) < 2) return;
+  const dir = Math.sign(L), cab = Math.min(13, Math.abs(L) * .5);
+  c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = ancho; c.lineCap = "round";
+  c.globalAlpha = .35; c.shadowColor = col; c.shadowBlur = 12; c.beginPath(); c.moveTo(x0, y); c.lineTo(x1 - dir * cab, y); c.stroke(); c.shadowBlur = 0; c.globalAlpha = 1;
+  c.beginPath(); c.moveTo(x0, y); c.lineTo(x1 - dir * cab, y); c.stroke();
+  c.beginPath(); c.moveTo(x1, y); c.lineTo(x1 - dir * cab, y - cab * .55); c.lineTo(x1 - dir * cab, y + cab * .55); c.closePath(); c.fill(); c.restore();
+}
+function texto(c, s, x, y, col, o = {}) { c.save(); c.font = `${o.peso || 600} ${o.tam || 13}px ${o.mono ? "'JetBrains Mono', monospace" : "Inter, sans-serif"}`; c.fillStyle = col; c.textAlign = o.alin || "center"; c.textBaseline = "middle"; c.fillText(s, x, y); c.restore(); }
+function dibujarPista() {
+  const { W, H, d } = ajustar(cvP); cP.setTransform(d, 0, 0, d, 0, 0);
+  cP.fillStyle = "#080D1A"; cP.fillRect(0, 0, W, H);
+  const mg = 34, a0 = lo(), X = w => mg + (w - a0) / (L - a0) * (W - 2 * mg), yS = H - 70;
+  // la recta numérica: marcas cada 5 m (cada 10 si la pantalla es angosta); el 0 bien marcado
+  const pasoN = (W - 2 * mg) / ((L - a0) / 5) < 26 ? 10 : 5;
+  cP.strokeStyle = "#AAB6CE"; cP.globalAlpha = .7; cP.lineWidth = 2; cP.beginPath(); cP.moveTo(mg - 14, yS); cP.lineTo(W - mg + 14, yS); cP.stroke(); cP.globalAlpha = 1;
+  for (let w = a0; w <= L + 1e-9; w += pasoN) {
+    const x = X(w), cero = Math.abs(w) < 1e-9;
+    cP.strokeStyle = cero ? "#F8FAFC" : "#7C93C7"; cP.lineWidth = cero ? 2.5 : 1.3; cP.beginPath(); cP.moveTo(x, yS - (cero ? 10 : 6)); cP.lineTo(x, yS + (cero ? 10 : 6)); cP.stroke();
+    texto(cP, fmt(s * w, 0), x, yS + 22, cero ? "#F8FAFC" : "#7C93C7", { mono: true, tam: cero ? 13 : 11.5, peso: cero ? 700 : 500 });
+  }
+  // el sentido positivo del eje
+  const derecha = s > 0;
+  texto(cP, derecha ? "x (m) →" : "← x (m)", derecha ? W - mg : mg, yS + 44, "#7FB6FF", { alin: derecha ? "right" : "left", tam: 12.5 });
+  if (neg) texto(cP, "origen", X(0), yS + 44, "#AAB6CE", { tam: 11.5, peso: 500 });
+  // estela: dónde estuvo cada medio segundo
+  if (estela) marcas.forEach((w, i) => { cP.save(); cP.globalAlpha = .15 + .6 * (i + 1) / marcas.length; cP.fillStyle = "#7FB6FF"; cP.beginPath(); cP.arc(X(w), yS, 4, 0, 7); cP.fill(); cP.restore(); });
+  // el carrito (en el modo dinámico, más grande si tiene más masa)
+  const xc = X(p), ancho = modo === "din" ? 34 + 4 * Math.sqrt(m) * 3 : 46, alto = modo === "din" ? 22 + 2.2 * Math.sqrt(m) * 3 : 30, yc = yS - 8 - alto;
+  cP.save(); cP.shadowColor = "#2E78FF"; cP.shadowBlur = 18; cP.fillStyle = "#1A3566"; cP.strokeStyle = "#7FB6FF"; cP.lineWidth = 2;
+  cP.beginPath(); cP.roundRect(xc - ancho / 2, yc, ancho, alto, 7); cP.fill(); cP.shadowBlur = 0; cP.stroke(); cP.restore();
+  [-1, 1].forEach(k => { cP.save(); cP.fillStyle = "#AAB6CE"; cP.beginPath(); cP.arc(xc + k * ancho * .28, yS - 5, 5, 0, 7); cP.fill(); cP.restore(); });
+  if (modo === "din") texto(cP, fmt(m, 1) + " kg", xc, yc + alto / 2, "#F8FAFC", { tam: 11.5, mono: true });
+  // el punto exacto de la posición
+  cP.save(); cP.fillStyle = "#F8FAFC"; cP.beginPath(); cP.arc(xc, yS, 3, 0, 7); cP.fill(); cP.restore();
+  // flechas: fuerza (dinámico), velocidad y aceleración; largo proporcional al valor
+  const esc = (W - 2 * mg) / 2 / 3.2;   // el máximo de cada magnitud ocupa ~ 1/6 de la pista
+  let y = yc - 18;
+  const fila = (val, max, col, nom, uni) => {
+    const largo = val / max * esc;
+    if (Math.abs(val) < 1e-6) { texto(cP, `${nom} = 0`, xc, y, col, { mono: true, tam: 12 }); }
+    else { flechaH(cP, xc, y, xc + largo, col, 4); texto(cP, `${nom} = ${fmt(s * val, 2)} ${uni}`, xc + largo + Math.sign(largo) * 8, y - 13, col, { mono: true, tam: 12, alin: largo > 0 ? "left" : "right" }); }
+    y -= 40;
+  };
+  if (modo === "din") fila(F, FMAX, "#34D399", "F", "N");
+  fila(aActual(), modo === "din" ? FMAX / MMIN : AMAX, "#FFE14D", "a", "m/s²");
+  fila(u, VMAX, "#4FC3E8", "v", "m/s");
+  // tiempo
+  texto(cP, `t = ${fmt(t, 1)} s`, W - 16, W < 600 ? 16 : 64, "#7C93C7", { alin: "right", mono: true, tam: 12.5 });
+}
+
+// ---------------------------------------------------------------- dibujo: x(t), v(t), a(t)
+function dibujarGraficos() {
+  const { W, H, d } = ajustar(cvG); cG.setTransform(d, 0, 0, d, 0, 0);
+  cG.fillStyle = "#080D1A"; cG.fillRect(0, 0, W, H);
+  const filas = [
+    { k: "x", nom: "x (m)", col: "#7FB6FF", max: L, min: lo() },
+    { k: "v", nom: "v (m/s)", col: "#4FC3E8", max: VMAX, min: neg ? -VMAX : 0 },
+    { k: "a", nom: "a (m/s²)", col: "#FFE14D", max: modo === "din" ? FMAX / MMIN : AMAX, min: neg ? -(modo === "din" ? FMAX / MMIN : AMAX) : 0 },
+  ];
+  const izq = 64, der = 14, alto = (H - 20) / 3, t1 = Math.max(10, t), t0 = t1 - 10;
+  filas.forEach((f, i) => {
+    const y0 = 10 + i * alto, y1 = y0 + alto - 14, yv = v => y1 - (Math.max(f.min, Math.min(f.max, v)) - f.min) / (f.max - f.min) * (y1 - y0), xt = tt => izq + (tt - t0) / 10 * (W - izq - der);
+    cG.strokeStyle = "#16233A"; cG.lineWidth = 1; cG.strokeRect(izq, y0, W - izq - der, y1 - y0);
+    if (f.min < 0) { cG.strokeStyle = "#33507F"; cG.beginPath(); cG.moveTo(izq, yv(0)); cG.lineTo(W - der, yv(0)); cG.stroke(); }
+    texto(cG, f.nom, 8, (y0 + y1) / 2, f.col, { alin: "left", tam: 12.5 });
+    texto(cG, fmt(f.max, 0), izq - 6, y0 + 6, "#7C93C7", { alin: "right", tam: 10.5, mono: true });
+    texto(cG, fmt(f.min, 0), izq - 6, y1 - 6, "#7C93C7", { alin: "right", tam: 10.5, mono: true });
+    // en un sistema de referencia dado vuelta, se grafica el valor mostrado (s · mundo)
+    cG.save(); cG.beginPath(); cG.rect(izq, y0 - 2, W - izq - der, y1 - y0 + 4); cG.clip();
+    cG.strokeStyle = f.col; cG.lineWidth = 2.4; cG.lineJoin = "round"; cG.beginPath();
+    hist.forEach((h, j) => { const X = xt(h.t), Y = yv(s * h[f.k]); j ? cG.lineTo(X, Y) : cG.moveTo(X, Y); });
+    cG.stroke(); cG.restore();
+    if (i === 2) for (let k = Math.ceil(t0); k <= t1; k += 2) texto(cG, k + " s", xt(k), y1 + 10, "#7C93C7", { tam: 10.5, mono: true });
+  });
+}
+
+// ---------------------------------------------------------------- qué está pasando (en palabras)
+function pintarChip() {
+  const ch = document.getElementById("chip"), a = aActual(), v = u;
+  ch.className = "chip";
+  if (borde) { ch.classList.add("borde"); ch.textContent = "Llegó al borde de la pista: reiniciá o cambiá los valores"; return; }
+  if (!corriendo) { ch.textContent = "En pausa"; return; }
+  const quieto = Math.abs(v) < 1e-6, sinA = Math.abs(a) < 1e-6;
+  if (quieto && sinA) ch.textContent = modo === "din" ? "En reposo: sin fuerza neta, sigue quieto" : "En reposo";
+  else if (sinA) ch.textContent = modo === "din" ? "Sin fuerza neta: velocidad constante (1.ª ley)" : "Velocidad constante (MRU)";
+  else if (quieto) { ch.classList.add("acelera"); ch.textContent = "Arranca: la aceleración le cambia la velocidad"; }
+  else if (Math.sign(v) === Math.sign(a)) { ch.classList.add("acelera"); ch.textContent = "Acelera: v y a tienen el mismo sentido"; }
+  else { ch.classList.add("frena"); ch.textContent = "Frena: v y a tienen sentidos opuestos"; }
+}
+function pintarNotas() {
+  document.getElementById("nota-cin").innerHTML = `<b>x</b> dice dónde está. <b>v</b> es cuánto cambia x por segundo. <b>a</b> es cuánto cambia v por segundo.
+    Tocar x lo mueve de golpe; tocar v cambia el ritmo al que avanza; tocar a cambia cómo cambia la velocidad. Los marcados con ● se mueven solos.`;
+  document.getElementById("nota-din").innerHTML = `<b>2.ª ley:</b> la fuerza neta acelera al carrito: a = F/m. Con la misma fuerza, más masa acelera menos.
+    <b>1.ª ley:</b> con F = 0 la velocidad no cambia: si se estaba moviendo, sigue moviéndose.`;
+}
+
+// ---------------------------------------------------------------- controles
+document.querySelectorAll("[data-modo]").forEach(b => b.onclick = () => {
+  modo = b.dataset.modo; document.querySelectorAll("[data-modo]").forEach(o => o.classList.toggle("on", o === b));
+  document.getElementById("ctrl-cin").classList.toggle("oculto", modo !== "cin");
+  document.getElementById("ctrl-din").classList.toggle("oculto", modo !== "din");
+  if (modo === "din") acel = aDin();
+  borde = false;
+});
+document.getElementById("neg").onclick = e => {
+  neg = !neg; e.currentTarget.setAttribute("aria-checked", neg);
+  document.getElementById("fila-eje").classList.toggle("oculto", !neg);
+  if (!neg) {   // sin negativos: eje hacia la derecha y todo ≥ 0
+    s = 1; document.querySelectorAll("[data-s]").forEach(o => o.classList.toggle("on", o.dataset.s === "1"));
+    p = Math.max(0, p); u = Math.max(0, u); acel = Math.max(0, acel); F = Math.max(0, F); hist = []; limpiarEstela();
+  }
+  borde = false; rangos();
+};
+document.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { s = +b.dataset.s; document.querySelectorAll("[data-s]").forEach(o => o.classList.toggle("on", o === b)); });
+document.getElementById("estela").onclick = e => { estela = !estela; e.currentTarget.setAttribute("aria-checked", estela); };
+document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { ritmo = +b.dataset.r; document.querySelectorAll("[data-r]").forEach(o => o.classList.toggle("on", o === b)); });
+const btnPlay = document.getElementById("play");
+btnPlay.onclick = () => { corriendo = !corriendo; btnPlay.textContent = corriendo ? "⏸ Pausa" : "▶ Seguir"; btnPlay.classList.toggle("play", corriendo); };
+// reiniciar: el carrito vuelve al origen, quieto; la aceleración (o la fuerza y la masa) quedan como estaban, para repetir el experimento
+document.getElementById("reiniciar").onclick = () => { p = 0; u = 0; t = 0; borde = false; hist = []; limpiarEstela(); };
+
+// embebido en la ficha del sitio: avisa su alto y cuándo lo están usando
+if (parent !== window) {
+  const avisar = d => parent.postMessage({ profee: d.tipo, ...d }, "*");
+  new ResizeObserver(() => avisar({ tipo: "alto", alto: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+  addEventListener("pointerdown", e => avisar({ tipo: "en-uso", puntero: e.pointerType }), { capture: true, passive: true });
+}
+rangos(); pintarNotas(); sincronizar();
+requestAnimationFrame(t0 => { antes = t0; requestAnimationFrame(paso); });
+</script>
+</body>
+</html>
